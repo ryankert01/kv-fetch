@@ -22,6 +22,11 @@ def git_commit() -> dict:
     return {"commit": commit, "dirty": dirty}
 
 
+# Captured when the process imports this module (i.e. when the code was loaded), not when
+# a long job finishes: HEAD may have moved in between.
+GIT_AT_START = git_commit()
+
+
 def provenance(cfg: dict, **fields: Any) -> dict:
     """Required fields per spec: model, context length, page size, w, git commit.
 
@@ -40,7 +45,7 @@ def provenance(cfg: dict, **fields: Any) -> dict:
         "context_length": fields.pop("context_length"),
         "page_size": defs["page_size"],
         "w": defs["w"],
-        "git": git_commit(),
+        "git": GIT_AT_START,
         "config_path": cfg.get("_meta", {}).get("config_path"),
         "timestamp": _dt.datetime.now().isoformat(timespec="seconds"),
         "host": platform.node(),
@@ -53,6 +58,7 @@ def provenance(cfg: dict, **fields: Any) -> dict:
     except ImportError:
         pass
     out.update(fields)
+    out["resolved_config"] = {k: v for k, v in cfg.items() if k != "_meta"}
     return out
 
 
