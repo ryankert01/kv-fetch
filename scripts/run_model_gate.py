@@ -4,6 +4,7 @@
   python scripts/run_model_gate.py configs/model_gate.yaml --worker 0/6 --device cuda:0   # shard of all jobs
 """
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -75,19 +76,30 @@ def main() -> None:
     p.add_argument("--model")
     p.add_argument("--length", type=int)
     p.add_argument("--worker", help="i/n: run every n-th job starting at i")
+    p.add_argument("--claim", action="store_true",
+                   help="work-queue mode: take any unclaimed job (atomic .claim files), so workers balance")
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--skip-done", action="store_true")
     args = p.parse_args()
     cfg = config_from_args(args)
 
-    if args.worker:
+    if args.claim:
+        jobs = all_jobs(cfg)
+    elif args.worker:
         i, n = map(int, args.worker.split("/"))
         jobs = all_jobs(cfg)[i::n]
     else:
         jobs = [(args.model, args.length)]
     for m, L in jobs:
-        if args.skip_done and job_path(cfg, m, L).exists():
+        out = job_path(cfg, m, L)
+        if args.skip_done and out.exists():
             continue
+        if args.claim:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                os.close(os.open(str(out) + ".claim", os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            except FileExistsError:
+                continue
         run_job(cfg, m, L, args.device)
 
 
