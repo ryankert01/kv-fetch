@@ -1,0 +1,71 @@
+# Shared definitions (spec §3). Every other config inherits this file.
+# No script may hard-code any of these values.
+
+definitions:
+  page_size: 16                 # tokens per page; sweep 32 / 64 later
+  w: 8                          # future-importance window: M_w(p,t) = sum_{s=t+1}^{t+w} m(p,s)
+  budget_fracs: [0.01, 0.05, 0.10]   # B as a fraction of eligible pages
+  budget_rounding: ceil         # B_pages = ceil(frac * n_eligible), at least 1
+  k_grid: [1, 2, 4, 8, 16]      # prediction horizons for recall@B,k
+
+  # Which pages are subject to the tiering decision. Pinned pages are always in
+  # Tier 1, count toward the GPU budget in Figure A, but are excluded from
+  # recall / lead time / churn / trajectory metrics (otherwise the attention
+  # sink trivially inflates recall).
+  pinned:
+    sink_pages: 1               # first N pages (attention sink)
+    recent_prompt_pages: 0      # last N full prompt pages (local window), 0 = none
+    decode_region: true         # pages touching generated tokens (incl. the partial last prompt page)
+
+  # GQA: tiers live at KV-head granularity, but the spec says keep per-head data.
+  # Traces store query heads; aggregation is an analysis-time view.
+  head_views: [query, kv_mean]  # query = per query head; kv_mean = mean over the GQA group
+
+# Trajectory classifier (spec §3). Classification runs on the instantaneous mass m,
+# NOT on M_w: a forward window sum turns any step change into a w-step ramp.
+trajectory:
+  budget_frac: 0.05             # "high" = inside top-B of m at this budget
+  exit_ratio: 0.5               # hysteresis: leave "high" when m < exit_ratio * top-B cutoff
+  floor_ratio: 0.1              # "deep low": m < floor_ratio * top-B cutoff
+  smooth_ema_alpha: null        # optional causal EMA on m before classifying; null = raw
+  stable_high_min_frac: 0.9     # high for >= this fraction of steps -> stable-high
+  min_initial_low_steps: 4      # an onset counts as a rise only after this many low steps
+  sudden_max_rise_steps: 2      # deep-low -> high within this many steps -> sudden-jump
+  oscillating_min_transitions: 4  # in<->out transitions (with hysteresis) -> oscillating
+
+lead_time:
+  budget_frac: 0.05
+  truth: m                      # "actually top-B" = first step its instantaneous m is in top-B
+  mode: first                   # first = spec definition; contiguous = only the unbroken predicted run before the need
+  required_lead: 0              # steps of lead needed for no stall (0 = Tier 2 promotion is free)
+
+# Trace storage (spec §7 Phase 0; open item §9.3).
+trace:
+  format: full                  # full | topk
+  topk: 512                     # used when format == topk: top-K pages + residual sum per (t,l,h)
+  mass_dtype: float16
+  prefill_obs_window: 32        # also record m for the last N prompt queries (end-of-prefill signal)
+  flush_every: 64               # decode steps buffered on GPU before copying to host
+
+# Reference predictors used only to exercise the metric pipeline end to end.
+# The Phase 2 predictor comparison is NOT implemented here.
+reference_predictors:
+  ema_alpha: 0.3
+
+# Phase 1 decision point (spec §7). Must be filled in by the human BEFORE Phase 1 runs.
+decision_point:
+  GRADUAL_SHARE_MIN: null
+  LEAD_TIME_MIN: null
+
+models:
+  local_files_only: true
+  dtype: bfloat16
+  attn_implementation: sdpa
+  prefill_chunk_size: 8192
+  chat_template_kwargs:
+    enable_thinking: false      # Qwen3: no <think> block
+    date_string: "26 Jul 2024"  # Llama-3.x templates otherwise inject today's date
+
+paths:
+  trace_dir: traces
+  results_dir: results

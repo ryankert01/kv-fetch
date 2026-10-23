@@ -1,0 +1,34 @@
+inherit: base.yaml
+
+data:
+  paul_graham_essays: /share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow
+  pg19_test: /share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow
+
+# Faithful re-implementation of NVIDIA/RULER scripts/data/synthetic/niah.py.
+# Deviation: sentence splitting uses a regex instead of nltk.sent_tokenize.
+ruler:
+  template: "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?"
+  answer_prefix: " The special magic {type_needle_v} for {query} mentioned in the provided text are"
+  needle: "One of the special magic {type_needle_v} for {key} is: {value}."
+  noise_sentence: "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again."
+  num_depths: 40
+  number_digits: 7
+  tokens_to_generate: 128
+  incremental: {essay: 500, noise: 25, needle: 25}
+  shuffle_seed: 42
+  tasks:
+    niah_single_1:   {type_haystack: noise,  type_needle_k: words, type_needle_v: numbers, num_needle_k: 1, num_needle_v: 1, num_needle_q: 1}
+    niah_single_2:   {type_haystack: essay,  type_needle_k: words, type_needle_v: numbers, num_needle_k: 1, num_needle_v: 1, num_needle_q: 1}
+    niah_single_3:   {type_haystack: essay,  type_needle_k: words, type_needle_v: uuids,   num_needle_k: 1, num_needle_v: 1, num_needle_q: 1}
+    niah_multikey_1: {type_haystack: essay,  type_needle_k: words, type_needle_v: numbers, num_needle_k: 4, num_needle_v: 1, num_needle_q: 1}
+    niah_multikey_2: {type_haystack: needle, type_needle_k: words, type_needle_v: numbers, num_needle_k: 1, num_needle_v: 1, num_needle_q: 1}
+    niah_multikey_3: {type_haystack: needle, type_needle_k: uuids, type_needle_v: uuids,   num_needle_k: 1, num_needle_v: 1, num_needle_q: 1}
+    niah_multivalue: {type_haystack: essay,  type_needle_k: words, type_needle_v: numbers, num_needle_k: 1, num_needle_v: 4, num_needle_q: 1}
+    niah_multiquery: {type_haystack: essay,  type_needle_k: words, type_needle_v: numbers, num_needle_k: 1, num_needle_v: 1, num_needle_q: 4}
+
+# Placeholder "gradual" task (spec §6 long generation) until the custom multi-turn
+# re-reference task is specified (open item §9.2). No reference answer: trace only.
+longgen:
+  template: "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough."
+  answer_prefix: ""
+  min_book_tokens_slack: 1.05   # only books with >= slack * budget tokens are used

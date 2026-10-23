@@ -1,0 +1,26 @@
+inherit: tasks.yaml
+
+# Spec §4 / §7 Phase 0: RULER needle + multi-key gate.
+gate:
+  candidates:          # iteration-model candidates (1.5B-4B)
+    - meta-llama/Llama-3.2-1B-Instruct
+    - meta-llama/Llama-3.2-3B-Instruct
+    - Qwen/Qwen2.5-1.5B-Instruct
+    - Qwen/Qwen2.5-3B-Instruct
+    - Qwen/Qwen3-1.7B
+    - Qwen/Qwen3-4B
+  reference_candidates:  # §4 requires the reference model to pass too
+    - meta-llama/Llama-3.1-8B-Instruct
+    - Qwen/Qwen2.5-7B-Instruct
+    - Qwen/Qwen3-8B
+  lengths: [16384, 32768]
+  tasks: [niah_single_1, niah_single_2, niah_single_3, niah_multikey_1, niah_multikey_2, niah_multikey_3]
+  groups:
+    needle: [niah_single_1, niah_single_2, niah_single_3]
+    multikey: [niah_multikey_1, niah_multikey_2, niah_multikey_3]
+  num_samples: 50
+  seed: 0
+  # RULER's own bar: Llama-2-7B's score at 4K. A model passes a length when the mean
+  # score of EVERY group is >= this.
+  pass_threshold: 85.6
+  out_dir: results/model_gate

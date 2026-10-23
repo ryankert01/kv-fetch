@@ -1,0 +1,37 @@
+inherit: base.yaml
+
+# Spec §7 Phase 0: estimate trace size before running anything.
+# Model scenarios read num_hidden_layers / heads from the cached HF config.json.
+trace_size:
+  page_sizes: [16, 32, 64]
+  topk: 512
+  residual_bytes: 4            # fp32 residual sum per (t,l,h)
+  scenarios:
+    - name: spec_headline
+      description: "128K ctx / 2K steps / 32 layers / 8 KV heads (spec Phase 0 sizing target)"
+      ctx: 131072
+      decode_steps: 2048
+      layers: 32
+      heads: {kv: 8}
+      samples: 1
+    - name: small_eval
+      description: "32K ctx / 256 steps / 4 traced layers, 20 samples x 2 tasks"
+      model: meta-llama/Llama-3.2-3B-Instruct
+      ctx: 32768
+      decode_steps: 256
+      layers: 4
+      samples: 40
+    - name: large_32k
+      description: "reference model, 32K ctx / 2K steps / all layers, 100 samples x 4 traced tasks"
+      model: meta-llama/Llama-3.1-8B-Instruct
+      ctx: 32768
+      decode_steps: 2048
+      layers: all
+      samples: 400
+    - name: large_128k
+      description: "reference model, 128K ctx / 2K steps / all layers, 100 samples x 4 traced tasks"
+      model: meta-llama/Llama-3.1-8B-Instruct
+      ctx: 131072
+      decode_steps: 2048
+      layers: all
+      samples: 400
