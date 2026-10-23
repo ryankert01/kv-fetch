@@ -1,0 +1,1003 @@
+{
+  "provenance": {
+    "model": "meta-llama/Llama-3.2-3B-Instruct",
+    "context_length": 32768,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "930422eec4d584423b715f4600da16b71d5a91f4",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/small_eval.yaml",
+    "timestamp": "2026-10-23T13:14:38",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX 6000 Ada Generation",
+    "transformers": "4.57.1",
+    "decode_steps": 256,
+    "traced_layers": [
+      3,
+      8,
+      14,
+      24
+    ],
+    "trace_format": "full",
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": true
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "GRADUAL_SHARE_MIN": null,
+        "LEAD_TIME_MIN": null
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 8192,
+        "chat_template_kwargs": {
+          "enable_thinking": false,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "small_eval": {
+        "model": "meta-llama/Llama-3.2-3B-Instruct",
+        "context_length": 32768,
+        "decode_steps": 256,
+        "samples_per_task": 20,
+        "seed": 0,
+        "tasks": [
+          {
+            "name": "ruler_multikey",
+            "kind": "ruler",
+            "ruler_task": "niah_multikey_1",
+            "suppress_stop": true
+          },
+          {
+            "name": "longgen",
+            "kind": "longgen",
+            "suppress_stop": true
+          }
+        ],
+        "layers": {
+          "mode": "auto",
+          "fracs": [
+            0.1,
+            0.5,
+            0.9
+          ],
+          "probe": {
+            "ruler_task": "niah_single_2",
+            "samples": 4,
+            "steps": 8,
+            "seed": 1
+          }
+        },
+        "analysis": {
+          "budget_frac": 0.05,
+          "k": [
+            1,
+            4
+          ],
+          "predictors": [
+            "last_step",
+            "ema"
+          ],
+          "topk_coverage_K": [
+            128,
+            256,
+            512,
+            1024
+          ]
+        },
+        "analysis_workers": 16,
+        "max_wall_s": 3600,
+        "trace_dir": "traces/small_eval",
+        "out_dir": "results/small_eval"
+      }
+    }
+  },
+  "probe": {
+    "layer": 8,
+    "layer_scores": [
+      0.0015,
+      0.0006,
+      0.2714,
+      0.0031,
+      0.2172,
+      0.2533,
+      0.0431,
+      0.0218,
+      0.6658,
+      0.3303,
+      0.4345,
+      0.0023,
+      0.4306,
+      0.579,
+      0.5997,
+      0.3835,
+      0.2032,
+      0.3125,
+      0.3709,
+      0.0415,
+      0.2312,
+      0.3639,
+      0.0908,
+      0.2253,
+      0.2494,
+      0.0653,
+      0.1053,
+      0.0355
+    ],
+    "top_heads": [
+      {
+        "layer": 8,
+        "head": 8,
+        "score": 0.6657702326774597
+      },
+      {
+        "layer": 14,
+        "head": 2,
+        "score": 0.5996883660554886
+      },
+      {
+        "layer": 13,
+        "head": 23,
+        "score": 0.578998938202858
+      },
+      {
+        "layer": 13,
+        "head": 9,
+        "score": 0.4596632048487663
+      },
+      {
+        "layer": 14,
+        "head": 22,
+        "score": 0.45032526552677155
+      },
+      {
+        "layer": 10,
+        "head": 4,
+        "score": 0.43445590138435364
+      },
+      {
+        "layer": 12,
+        "head": 1,
+        "score": 0.4305966645479202
+      },
+      {
+        "layer": 12,
+        "head": 16,
+        "score": 0.4267180860042572
+      }
+    ]
+  },
+  "traced_layers": [
+    3,
+    8,
+    14,
+    24
+  ],
+  "timing": {
+    "load_s": 3.181444752961397,
+    "probe_s": 39.168140585534275,
+    "total_s": 615.6645234785974,
+    "within_budget": true
+  },
+  "trace_dir": "traces/small_eval/meta-llama__Llama-3.2-3B-Instruct__32768",
+  "tasks": {
+    "ruler_multikey": {
+      "metrics": {
+        "n_samples": 20,
+        "topk_coverage": {
+          "128": 0.915963551402092,
+          "256": 0.9418750643730164,
+          "512": 0.9677112966775894,
+          "1024": 0.9892872780561447
+        },
+        "query": {
+          "pinned_mass_share": 0.7748413741588592,
+          "true_topB_churn_Mw": 0.1611425719748088,
+          "recall_last_step_k1": 0.8321165829896927,
+          "recall_last_step_k4": 0.7921571999788284,
+          "churn_last_step": 0.7313617640625806,
+          "recall_ema_k1": 0.8631260097026825,
+          "recall_ema_k4": 0.8283534437417984,
+          "churn_ema": 0.22960712987622872,
+          "lead_last_step": {
+            "events": 1833426,
+            "censored": 195648,
+            "missed_rate": 0.0012484823494376103,
+            "median": -1.0,
+            "p10": -1.0,
+            "p90": -1.0,
+            "on_time_rate": 0.0
+          },
+          "lead_ema": {
+            "events": 1833426,
+            "censored": 195648,
+            "missed_rate": 0.33392348532201466,
+            "median": -7.0,
+            "p10": -100.0,
+            "p90": -1.0,
+            "on_time_rate": 0.00014399272182242425
+          },
+          "trajectory": {
+            "n_pages": 3894048,
+            "all": {
+              "stable-low": 0.4788084276310924,
+              "stable-high": 0.005441381308088652,
+              "oscillating": 0.40773174855574457,
+              "sudden-jump": 0.017901679691673035,
+              "gradual-rise": 0.07696592337844833,
+              "other": 0.013150839434953036
+            },
+            "ever_high": {
+              "stable-high": 0.010440271095245486,
+              "oscillating": 0.7823068717372613,
+              "sudden-jump": 0.03434760007784996,
+              "gradual-rise": 0.14767300059865635,
+              "other": 0.025232256490986895
+            },
+            "onsets_after_low": 1405274,
+            "gradual_share_of_onsets": 0.8116040003586489,
+            "rise_steps": {
+              "median": 7.0,
+              "p25": 3.0,
+              "p75": 13.0,
+              "p90": 24.0
+            }
+          },
+          "needle_pages_trajectory": {
+            "stable-low": 0.19401041666666669,
+            "stable-high": 0.08723958333333333,
+            "oscillating": 0.6606770833333335,
+            "sudden-jump": 0.005989583333333333,
+            "gradual-rise": 0.0375,
+            "other": 0.014583333333333332
+          }
+        },
+        "kv_mean": {
+          "pinned_mass_share": 0.7748413681983948,
+          "true_topB_churn_Mw": 0.14861383910851791,
+          "recall_last_step_k1": 0.8553656756877899,
+          "recall_last_step_k4": 0.8169829815626144,
+          "churn_last_step": 0.6657135609657248,
+          "recall_ema_k1": 0.8791906267404557,
+          "recall_ema_k4": 0.8461414068937302,
+          "churn_ema": 0.21411742753203647,
+          "lead_last_step": {
+            "events": 590456,
+            "censored": 65216,
+            "missed_rate": 0.0012261709593940954,
+            "median": -1.0,
+            "p10": -1.0,
+            "p90": -1.0,
+            "on_time_rate": 0.0
+          },
+          "lead_ema": {
+            "events": 590456,
+            "censored": 65216,
+            "missed_rate": 0.32759087891392413,
+            "median": -6.0,
+            "p10": -98.0,
+            "p90": -1.0,
+            "on_time_rate": 0.00017274784234557698
+          },
+          "trajectory": {
+            "n_pages": 1298016,
+            "all": {
+              "stable-low": 0.4948459803268989,
+              "stable-high": 0.007212545916229076,
+              "oscillating": 0.3783504979907798,
+              "sudden-jump": 0.013997516209353352,
+              "gradual-rise": 0.08613684268915021,
+              "other": 0.019456616867588688
+            },
+            "ever_high": {
+              "stable-high": 0.014277914527724653,
+              "oscillating": 0.7489804757678078,
+              "sudden-jump": 0.027709402804339804,
+              "gradual-rise": 0.17051599974378448,
+              "other": 0.03851620715634332
+            },
+            "onsets_after_low": 421810,
+            "gradual_share_of_onsets": 0.8508380550484815,
+            "rise_steps": {
+              "median": 8.0,
+              "p25": 4.0,
+              "p75": 18.0,
+              "p90": 34.0
+            }
+          }
+        }
+      },
+      "task_score": 95.0,
+      "natural_stop_steps": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        6,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "prompt_tokens": 32509,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 5469475.",
+          "prefill_s": 8.149558425880969,
+          "decode_s": 11.557350729592144
+        },
+        {
+          "index": 1,
+          "prompt_tokens": 32502,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 9676435.",
+          "prefill_s": 8.46203914936632,
+          "decode_s": 12.46651125419885
+        },
+        {
+          "index": 2,
+          "prompt_tokens": 32505,
+          "natural_stop_step": 5,
+          "score": 0.0,
+          "pred": " 7329520.",
+          "prefill_s": 8.322669547982514,
+          "decode_s": 13.501523504033685
+        },
+        {
+          "index": 3,
+          "prompt_tokens": 32509,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 5782171.",
+          "prefill_s": 8.642991811968386,
+          "decode_s": 12.251698715612292
+        },
+        {
+          "index": 4,
+          "prompt_tokens": 32507,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 8236804.",
+          "prefill_s": 8.6818159641698,
+          "decode_s": 12.116435134783387
+        },
+        {
+          "index": 5,
+          "prompt_tokens": 32506,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 4859491.",
+          "prefill_s": 8.80539596453309,
+          "decode_s": 8.505400883033872
+        },
+        {
+          "index": 6,
+          "prompt_tokens": 32507,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 1232339.",
+          "prefill_s": 5.4278896283358335,
+          "decode_s": 6.2813705848529935
+        },
+        {
+          "index": 7,
+          "prompt_tokens": 32509,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 2404966.",
+          "prefill_s": 5.4327699933201075,
+          "decode_s": 6.4928242694586515
+        },
+        {
+          "index": 8,
+          "prompt_tokens": 32505,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 2542078.",
+          "prefill_s": 5.544467979110777,
+          "decode_s": 7.725597106851637
+        },
+        {
+          "index": 9,
+          "prompt_tokens": 32508,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 5575102.",
+          "prefill_s": 5.430944008752704,
+          "decode_s": 7.436588914133608
+        },
+        {
+          "index": 10,
+          "prompt_tokens": 32508,
+          "natural_stop_step": 6,
+          "score": 1.0,
+          "pred": ": 7933414.",
+          "prefill_s": 5.498887622728944,
+          "decode_s": 7.93651775829494
+        },
+        {
+          "index": 11,
+          "prompt_tokens": 32506,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 7625469.",
+          "prefill_s": 5.479159784503281,
+          "decode_s": 6.966744837351143
+        },
+        {
+          "index": 12,
+          "prompt_tokens": 32510,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 8822269.",
+          "prefill_s": 5.488808583468199,
+          "decode_s": 7.52998261153698
+        },
+        {
+          "index": 13,
+          "prompt_tokens": 31919,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 1177205.",
+          "prefill_s": 5.328797142021358,
+          "decode_s": 9.320818465203047
+        },
+        {
+          "index": 14,
+          "prompt_tokens": 32510,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 5682634.",
+          "prefill_s": 5.490804304368794,
+          "decode_s": 7.72266408521682
+        },
+        {
+          "index": 15,
+          "prompt_tokens": 32507,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 6557882.",
+          "prefill_s": 5.561405102722347,
+          "decode_s": 6.871404755860567
+        },
+        {
+          "index": 16,
+          "prompt_tokens": 32511,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 7217581.",
+          "prefill_s": 5.586760848760605,
+          "decode_s": 6.166973853483796
+        },
+        {
+          "index": 17,
+          "prompt_tokens": 32505,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 8179235.",
+          "prefill_s": 5.53184299916029,
+          "decode_s": 6.157400166615844
+        },
+        {
+          "index": 18,
+          "prompt_tokens": 32506,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 1717179.",
+          "prefill_s": 5.53528902772814,
+          "decode_s": 6.147390169091523
+        },
+        {
+          "index": 19,
+          "prompt_tokens": 32507,
+          "natural_stop_step": 5,
+          "score": 1.0,
+          "pred": " 5495057.",
+          "prefill_s": 5.527442424558103,
+          "decode_s": 6.159599872305989
+        }
+      ],
+      "timing": {
+        "build_s": 1.5820385459810495,
+        "trace_s": 305.9747623242438,
+        "analysis_wait_s": 0.4126894501969218,
+        "mean_prefill_s": 6.396487015672028,
+        "mean_decode_step_ms": 33.19897993559054
+      }
+    },
+    "longgen": {
+      "metrics": {
+        "n_samples": 20,
+        "topk_coverage": {
+          "128": 0.9051549643278122,
+          "256": 0.9352379888296127,
+          "512": 0.9646798133850097,
+          "1024": 0.9886419117450714
+        },
+        "query": {
+          "pinned_mass_share": 0.764181324839592,
+          "true_topB_churn_Mw": 0.15500723871208266,
+          "recall_last_step_k1": 0.805099356174469,
+          "recall_last_step_k4": 0.7589727431535721,
+          "churn_last_step": 0.7354934723801817,
+          "recall_ema_k1": 0.8401396989822387,
+          "recall_ema_k4": 0.7976159185171128,
+          "churn_ema": 0.22720465386916183,
+          "lead_last_step": {
+            "events": 1858097,
+            "censored": 195648,
+            "missed_rate": 0.0016253188073604339,
+            "median": -1.0,
+            "p10": -1.0,
+            "p90": -1.0,
+            "on_time_rate": 0.0
+          },
+          "lead_ema": {
+            "events": 1858097,
+            "censored": 195648,
+            "missed_rate": 0.33045583734326034,
+            "median": -7.0,
+            "p10": -100.0,
+            "p90": -1.0,
+            "on_time_rate": 9.687330639896625e-05
+          },
+          "trajectory": {
+            "n_pages": 3895968,
+            "all": {
+              "stable-low": 0.4727348889929281,
+              "stable-high": 0.004700500620128297,
+              "oscillating": 0.41284142990907524,
+              "sudden-jump": 0.018683418344298517,
+              "gradual-rise": 0.07870675529162457,
+              "other": 0.012333006841945314
+            },
+            "ever_high": {
+              "stable-high": 0.008914871327538399,
+              "oscillating": 0.7829864356481914,
+              "sudden-jump": 0.0354345811134997,
+              "gradual-rise": 0.14927358865314516,
+              "other": 0.023390523257625324
+            },
+            "onsets_after_low": 1465086,
+            "gradual_share_of_onsets": 0.8146545663531014,
+            "rise_steps": {
+              "median": 7.0,
+              "p25": 3.0,
+              "p75": 14.0,
+              "p90": 24.0
+            }
+          }
+        },
+        "kv_mean": {
+          "pinned_mass_share": 0.7641813367605209,
+          "true_topB_churn_Mw": 0.14426474567259057,
+          "recall_last_step_k1": 0.8270909637212753,
+          "recall_last_step_k4": 0.7811594426631927,
+          "churn_last_step": 0.6673565578390862,
+          "recall_ema_k1": 0.8538493514060974,
+          "recall_ema_k4": 0.8123881459236145,
+          "churn_ema": 0.21099935610889714,
+          "lead_last_step": {
+            "events": 601123,
+            "censored": 65216,
+            "missed_rate": 0.001763366232867483,
+            "median": -1.0,
+            "p10": -1.0,
+            "p90": -1.0,
+            "on_time_rate": 0.0
+          },
+          "lead_ema": {
+            "events": 601123,
+            "censored": 65216,
+            "missed_rate": 0.32350450739698866,
+            "median": -6.0,
+            "p10": -97.0,
+            "p90": -1.0,
+            "on_time_rate": 0.00011644871349124888
+          },
+          "trajectory": {
+            "n_pages": 1298656,
+            "all": {
+              "stable-low": 0.4868849025454008,
+              "stable-high": 0.005983878717689673,
+              "oscillating": 0.38502728975186656,
+              "sudden-jump": 0.014360230884853263,
+              "gradual-rise": 0.08923379247468152,
+              "other": 0.018509905625508218
+            },
+            "ever_high": {
+              "stable-high": 0.011661864457650519,
+              "oscillating": 0.7503721711987514,
+              "sudden-jump": 0.027986373731916682,
+              "gradual-rise": 0.1739059967585089,
+              "other": 0.03607359385317246
+            },
+            "onsets_after_low": 449124,
+            "gradual_share_of_onsets": 0.8628864188954498,
+            "rise_steps": {
+              "median": 9.0,
+              "p25": 4.0,
+              "p75": 18.0,
+              "p90": 35.0
+            }
+          }
+        }
+      },
+      "task_score": null,
+      "natural_stop_steps": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text is a collection of reminiscences of the author's experiences in St. Paul, Minnesota, during the mid-19th century. The author, Frank Moore, worked as a journalist and printer in St. Paul and w",
+          "prefill_s": 5.4311289973556995,
+          "decode_s": 6.144206532277167
+        },
+        {
+          "index": 1,
+          "prompt_tokens": 32511,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The story begins with a letter from Henry Milner Rideout to Charles Townsend Copeland, describing the arrival of Mr. Peachey Carnehan, who has returned from Kafiristan with a king's head in a bag. The",
+          "prefill_s": 5.482495119795203,
+          "decode_s": 6.147834132425487
+        },
+        {
+          "index": 2,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a preface, which is a translation of a book titled \"Travels in Morocco\" by James Richardson. The preface is produced by Carlo Traverso, Tom Allen, and the Online Distributed Proof",
+          "prefill_s": 5.513677937909961,
+          "decode_s": 6.160360938869417
+        },
+        {
+          "index": 3,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a philosophical introduction by the author, who reflects on the nature of self-awareness and the difficulty of describing oneself accurately. The author notes that he has always b",
+          "prefill_s": 5.493822722695768,
+          "decode_s": 6.149371901527047
+        },
+        {
+          "index": 4,
+          "prompt_tokens": 32510,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The story begins with Pauline, a young girl, writing a letter to her uncle, Paul Almy Shaw, in New York City. She is seeking his help in getting her sister, Hilary, who is ill, a change of scenery. Pa",
+          "prefill_s": 5.557759456336498,
+          "decode_s": 6.148246858268976
+        },
+        {
+          "index": 5,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The story begins with a description of a mysterious and ancient palace, known as the Silver Palace, which is said to be hidden deep within the Sierra Madre mountains of Mexico. The palace is believed ",
+          "prefill_s": 5.542307210154831,
+          "decode_s": 6.158870400860906
+        },
+        {
+          "index": 6,
+          "prompt_tokens": 32510,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a story about a stagecoach ride from Sand Hill to Pine, produced by Donald Lainson. The story is told from the perspective of Bret Harte, and it follows the journey of a stagecoac",
+          "prefill_s": 5.5736751379445195,
+          "decode_s": 6.147616663016379
+        },
+        {
+          "index": 7,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a preface by S. F. Felton, an author who has written a book titled \"The Portraits of English Authors on Gardening, with Biographical Notices of Them.\" The preface explains that th",
+          "prefill_s": 5.549340084195137,
+          "decode_s": 6.150261884555221
+        },
+        {
+          "index": 8,
+          "prompt_tokens": 32508,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a preface by Harvey Waterman Thayer, introducing the reader to the study of Laurence Sterne's influence in Germany during the 18th century. Thayer explains that the study is a con",
+          "prefill_s": 5.563580863177776,
+          "decode_s": 6.135859152302146
+        },
+        {
+          "index": 9,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The story begins with a description of a stagecoach ride from Williams to Bear Tooth, a valley in the Bear Tooth Range. The narrator, Wayland Norcross, is a young man from the East who has come to Bea",
+          "prefill_s": 5.541177815757692,
+          "decode_s": 6.1617997558787465
+        },
+        {
+          "index": 10,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a preface produced by Steven Gibbs, Richard J. Shiffer, and the Project Gutenberg Online Distributed Proofreading Team. The preface notes that every effort has been made to replic",
+          "prefill_s": 5.537411828525364,
+          "decode_s": 6.301742658019066
+        },
+        {
+          "index": 11,
+          "prompt_tokens": 32509,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The story begins with a scene at the Northumberland Club, where the narrator, Hungerford, is discussing the bankruptcy of Royster & Axtell with his friend Macloud. Hungerford is relieved that he is no",
+          "prefill_s": 5.552581856958568,
+          "decode_s": 6.714843721129
+        },
+        {
+          "index": 12,
+          "prompt_tokens": 32511,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "Here is a detailed summary of the text:\n\n**Chapter I: Enter Eleanor**\n\nThe story begins with Eleanor, a 10-year-old girl, sitting in a hansom cab on Fifth Avenue in New York City. She is accompanied b",
+          "prefill_s": 5.547664173878729,
+          "decode_s": 6.2086672224104404
+        },
+        {
+          "index": 13,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The novel \"Jennie Gerhardt\" by Theodore Dreiser begins with the introduction of the main character, Jennie Gerhardt, a young woman who is struggling to make ends meet with her family. The story takes ",
+          "prefill_s": 5.520727291703224,
+          "decode_s": 6.192373419180512
+        },
+        {
+          "index": 14,
+          "prompt_tokens": 32257,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The book \"The 'Patriotes' of '37: A Chronicle of the Lower Canadian Rebellion\" is a historical account of the Lower Canadian Rebellion of 1837-1838. The book is written by Alfred D. Deceles and produc",
+          "prefill_s": 5.524785189889371,
+          "decode_s": 6.523976086638868
+        },
+        {
+          "index": 15,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a description of the protagonist, Jose Ariza, a young man who is about to serve in the Church. The story is set in Cartagena, Colombia, in the early 20th century. The text is a de",
+          "prefill_s": 5.54198685195297,
+          "decode_s": 6.198976339772344
+        },
+        {
+          "index": 16,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a dedication to Mr. Pierre Lorillard, expressing gratitude for his interest in the explorations of the ruined monuments of Central America. The author, Augustus Le Plongeon, M.D.,",
+          "prefill_s": 5.577563672326505,
+          "decode_s": 6.164951886050403
+        },
+        {
+          "index": 17,
+          "prompt_tokens": 32512,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with a preface by John Ruskin, introducing his work \"The Stones of Venice\" and explaining its purpose. Ruskin explains that he has been researching the history of Venice and its archit",
+          "prefill_s": 5.537455545738339,
+          "decode_s": 6.205365717411041
+        },
+        {
+          "index": 18,
+          "prompt_tokens": 32300,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The book \"The Church\" by E.E. Holmes, B.D., Archdeacon of London, is a course of instructions given at All Saints Margaret Street in Lent, 1910. The book is a collection of lectures on the Church, its",
+          "prefill_s": 5.565500020049512,
+          "decode_s": 6.324028983712196
+        },
+        {
+          "index": 19,
+          "prompt_tokens": 32511,
+          "natural_stop_step": null,
+          "score": null,
+          "pred": "The text begins with an introduction by F. Hopkinson Smith, who is introducing a book about the Latin Quarter of Paris. The book is written by F. Berkeley Smith, and it is a collection of stories and ",
+          "prefill_s": 5.631656087934971,
+          "decode_s": 6.52246876899153
+        }
+      ],
+      "timing": {
+        "build_s": 2.9676134446635842,
+        "trace_s": 238.18626057635993,
+        "analysis_wait_s": 23.34898078162223,
+        "mean_prefill_s": 5.539314893214032,
+        "mean_decode_step_ms": 24.482710396724883
+      }
+    }
+  }
+}

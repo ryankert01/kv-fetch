@@ -1,0 +1,701 @@
+{
+  "all_pass": true,
+  "reports": [
+    {
+      "model": "meta-llama/Llama-3.2-1B-Instruct",
+      "fp32": {
+        "prompt_len": 1920,
+        "prefill_chunk": 1904,
+        "isolation_decode": {
+          "max_abs_diff": 7.152557373046875e-07,
+          "max_diff_over_bound": 0.03338559344410896
+        },
+        "isolation_obs": {
+          "max_abs_diff": 1.0132789611816406e-06,
+          "max_diff_over_bound": 0.04820840805768967
+        },
+        "max_logit": 43.939483642578125,
+        "crosspath_max_abs_diff_decode": 5.900859832763672e-06,
+        "crosspath_max_abs_diff_obs": 7.033348083496094e-06,
+        "pass": true
+      },
+      "bf16": {
+        "tokens_identical_traced_vs_untraced": true,
+        "max_row_sum_err": 0.0003743767738342285,
+        "topb_overlap_vs_eager": 0.9941842215401786,
+        "roundtrip_full": true,
+        "roundtrip_topk": true,
+        "topk_residual_err": 2.384185791015625e-07,
+        "full_bytes": 8008944,
+        "topk_bytes": 12072352,
+        "decode_s_per_step_traced_all_layers": 0.020396044357649742,
+        "decode_s_per_step_untraced": 0.01487483102227411,
+        "pass": true
+      },
+      "pass": true,
+      "provenance": {
+        "model": "meta-llama/Llama-3.2-1B-Instruct",
+        "context_length": 1920,
+        "page_size": 16,
+        "w": 8,
+        "git": {
+          "commit": "9c5cfa85ae7563b16afbbbb10a61d2463b6096c1",
+          "dirty": false
+        },
+        "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/smoke_2k.yaml",
+        "timestamp": "2026-10-23T13:35:13",
+        "host": "gpuserv4",
+        "torch": "2.8.0+cu128",
+        "gpu": "NVIDIA RTX A6000",
+        "transformers": "4.57.1",
+        "resolved_config": {
+          "definitions": {
+            "page_size": 16,
+            "w": 8,
+            "budget_fracs": [
+              0.01,
+              0.05,
+              0.1
+            ],
+            "budget_rounding": "ceil",
+            "k_grid": [
+              1,
+              2,
+              4,
+              8,
+              16
+            ],
+            "pinned": {
+              "sink_pages": 1,
+              "recent_prompt_pages": 0,
+              "decode_region": true
+            },
+            "head_views": [
+              "query",
+              "kv_mean"
+            ]
+          },
+          "trajectory": {
+            "budget_frac": 0.05,
+            "exit_ratio": 0.5,
+            "floor_ratio": 0.1,
+            "smooth_ema_alpha": null,
+            "stable_high_min_frac": 0.9,
+            "min_initial_low_steps": 4,
+            "sudden_max_rise_steps": 2,
+            "oscillating_min_transitions": 4
+          },
+          "lead_time": {
+            "budget_frac": 0.05,
+            "truth": "m",
+            "mode": "first",
+            "required_lead": 0
+          },
+          "trace": {
+            "format": "full",
+            "topk": 512,
+            "mass_dtype": "float16",
+            "prefill_obs_window": 32,
+            "flush_every": 64
+          },
+          "reference_predictors": {
+            "ema_alpha": 0.3
+          },
+          "decision_point": {
+            "GRADUAL_SHARE_MIN": null,
+            "LEAD_TIME_MIN": null
+          },
+          "models": {
+            "local_files_only": true,
+            "dtype": "bfloat16",
+            "attn_implementation": "sdpa",
+            "prefill_chunk_size": 32768,
+            "chat_template_kwargs": {
+              "enable_thinking": false,
+              "date_string": "26 Jul 2024"
+            }
+          },
+          "paths": {
+            "trace_dir": "traces",
+            "results_dir": "results"
+          },
+          "data": {
+            "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+            "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+          },
+          "ruler": {
+            "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+            "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+            "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+            "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+            "num_depths": 40,
+            "number_digits": 7,
+            "tokens_to_generate": 128,
+            "incremental": {
+              "essay": 500,
+              "noise": 25,
+              "needle": 25
+            },
+            "shuffle_seed": 42,
+            "tasks": {
+              "niah_single_1": {
+                "type_haystack": "noise",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_single_2": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_single_3": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "uuids",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_1": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 4,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_2": {
+                "type_haystack": "needle",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_3": {
+                "type_haystack": "needle",
+                "type_needle_k": "uuids",
+                "type_needle_v": "uuids",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multivalue": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 4,
+                "num_needle_q": 1
+              },
+              "niah_multiquery": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 4
+              }
+            }
+          },
+          "longgen": {
+            "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+            "answer_prefix": "",
+            "min_book_tokens_slack": 1.05
+          },
+          "smoke": {
+            "models": [
+              "meta-llama/Llama-3.2-1B-Instruct",
+              "Qwen/Qwen2.5-1.5B-Instruct",
+              "Qwen/Qwen3-1.7B"
+            ],
+            "task": "niah_single_2",
+            "context_length": 2048,
+            "decode_steps": 32,
+            "fp32_atol": 1e-05,
+            "fp32_logit_rtol": 5e-07,
+            "fp32_crosspath_atol": 0.005,
+            "row_sum_atol": 0.005,
+            "bf16_topb_frac": 0.05,
+            "bf16_min_topb_overlap": 0.9,
+            "out": "results/smoke_2k.json"
+          }
+        }
+      },
+      "answer": [
+        "9294187"
+      ],
+      "generated": " 9294187."
+    },
+    {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "fp32": {
+        "prompt_len": 1920,
+        "prefill_chunk": 1904,
+        "isolation_decode": {
+          "max_abs_diff": 0.0006532669067382812,
+          "max_diff_over_bound": 0.08189680427312851
+        },
+        "isolation_obs": {
+          "max_abs_diff": 0.00030875205993652344,
+          "max_diff_over_bound": 0.12325932085514069
+        },
+        "max_logit": 23348.048828125,
+        "crosspath_max_abs_diff_decode": 0.0017257332801818848,
+        "crosspath_max_abs_diff_obs": 0.000423431396484375,
+        "pass": true
+      },
+      "bf16": {
+        "tokens_identical_traced_vs_untraced": true,
+        "max_row_sum_err": 0.0003802776336669922,
+        "topb_overlap_vs_eager": 0.9029017857142857,
+        "roundtrip_full": true,
+        "roundtrip_topk": true,
+        "topk_residual_err": 2.384185791015625e-07,
+        "full_bytes": 5260568,
+        "topk_bytes": 7927248,
+        "decode_s_per_step_traced_all_layers": 0.0262612143771783,
+        "decode_s_per_step_untraced": 0.022823261397500193,
+        "pass": true
+      },
+      "pass": true,
+      "provenance": {
+        "model": "Qwen/Qwen2.5-1.5B-Instruct",
+        "context_length": 1920,
+        "page_size": 16,
+        "w": 8,
+        "git": {
+          "commit": "9c5cfa85ae7563b16afbbbb10a61d2463b6096c1",
+          "dirty": false
+        },
+        "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/smoke_2k.yaml",
+        "timestamp": "2026-10-23T13:35:55",
+        "host": "gpuserv4",
+        "torch": "2.8.0+cu128",
+        "gpu": "NVIDIA RTX A6000",
+        "transformers": "4.57.1",
+        "resolved_config": {
+          "definitions": {
+            "page_size": 16,
+            "w": 8,
+            "budget_fracs": [
+              0.01,
+              0.05,
+              0.1
+            ],
+            "budget_rounding": "ceil",
+            "k_grid": [
+              1,
+              2,
+              4,
+              8,
+              16
+            ],
+            "pinned": {
+              "sink_pages": 1,
+              "recent_prompt_pages": 0,
+              "decode_region": true
+            },
+            "head_views": [
+              "query",
+              "kv_mean"
+            ]
+          },
+          "trajectory": {
+            "budget_frac": 0.05,
+            "exit_ratio": 0.5,
+            "floor_ratio": 0.1,
+            "smooth_ema_alpha": null,
+            "stable_high_min_frac": 0.9,
+            "min_initial_low_steps": 4,
+            "sudden_max_rise_steps": 2,
+            "oscillating_min_transitions": 4
+          },
+          "lead_time": {
+            "budget_frac": 0.05,
+            "truth": "m",
+            "mode": "first",
+            "required_lead": 0
+          },
+          "trace": {
+            "format": "full",
+            "topk": 512,
+            "mass_dtype": "float16",
+            "prefill_obs_window": 32,
+            "flush_every": 64
+          },
+          "reference_predictors": {
+            "ema_alpha": 0.3
+          },
+          "decision_point": {
+            "GRADUAL_SHARE_MIN": null,
+            "LEAD_TIME_MIN": null
+          },
+          "models": {
+            "local_files_only": true,
+            "dtype": "bfloat16",
+            "attn_implementation": "sdpa",
+            "prefill_chunk_size": 32768,
+            "chat_template_kwargs": {
+              "enable_thinking": false,
+              "date_string": "26 Jul 2024"
+            }
+          },
+          "paths": {
+            "trace_dir": "traces",
+            "results_dir": "results"
+          },
+          "data": {
+            "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+            "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+          },
+          "ruler": {
+            "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+            "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+            "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+            "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+            "num_depths": 40,
+            "number_digits": 7,
+            "tokens_to_generate": 128,
+            "incremental": {
+              "essay": 500,
+              "noise": 25,
+              "needle": 25
+            },
+            "shuffle_seed": 42,
+            "tasks": {
+              "niah_single_1": {
+                "type_haystack": "noise",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_single_2": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_single_3": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "uuids",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_1": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 4,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_2": {
+                "type_haystack": "needle",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_3": {
+                "type_haystack": "needle",
+                "type_needle_k": "uuids",
+                "type_needle_v": "uuids",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multivalue": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 4,
+                "num_needle_q": 1
+              },
+              "niah_multiquery": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 4
+              }
+            }
+          },
+          "longgen": {
+            "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+            "answer_prefix": "",
+            "min_book_tokens_slack": 1.05
+          },
+          "smoke": {
+            "models": [
+              "meta-llama/Llama-3.2-1B-Instruct",
+              "Qwen/Qwen2.5-1.5B-Instruct",
+              "Qwen/Qwen3-1.7B"
+            ],
+            "task": "niah_single_2",
+            "context_length": 2048,
+            "decode_steps": 32,
+            "fp32_atol": 1e-05,
+            "fp32_logit_rtol": 5e-07,
+            "fp32_crosspath_atol": 0.005,
+            "row_sum_atol": 0.005,
+            "bf16_topb_frac": 0.05,
+            "bf16_min_topb_overlap": 0.9,
+            "out": "results/smoke_2k.json"
+          }
+        }
+      },
+      "answer": [
+        "9294187"
+      ],
+      "generated": " 9294187."
+    },
+    {
+      "model": "Qwen/Qwen3-1.7B",
+      "fp32": {
+        "prompt_len": 1920,
+        "prefill_chunk": 1904,
+        "isolation_decode": {
+          "max_abs_diff": 1.7881393432617188e-06,
+          "max_diff_over_bound": 0.07532193511724472
+        },
+        "isolation_obs": {
+          "max_abs_diff": 3.039836883544922e-06,
+          "max_diff_over_bound": 0.12062311172485352
+        },
+        "max_logit": 37.88860321044922,
+        "crosspath_max_abs_diff_decode": 9.08970832824707e-06,
+        "crosspath_max_abs_diff_obs": 3.191828727722168e-05,
+        "pass": true
+      },
+      "bf16": {
+        "tokens_identical_traced_vs_untraced": true,
+        "max_row_sum_err": 0.0003565549850463867,
+        "topb_overlap_vs_eager": 0.9902543048469388,
+        "roundtrip_full": true,
+        "roundtrip_topk": true,
+        "topk_residual_err": 2.384185791015625e-07,
+        "full_bytes": 7009552,
+        "topk_bytes": 10565056,
+        "decode_s_per_step_traced_all_layers": 0.031233035448578098,
+        "decode_s_per_step_untraced": 0.02732902359698088,
+        "pass": true
+      },
+      "pass": true,
+      "provenance": {
+        "model": "Qwen/Qwen3-1.7B",
+        "context_length": 1920,
+        "page_size": 16,
+        "w": 8,
+        "git": {
+          "commit": "9c5cfa85ae7563b16afbbbb10a61d2463b6096c1",
+          "dirty": false
+        },
+        "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/smoke_2k.yaml",
+        "timestamp": "2026-10-23T13:36:36",
+        "host": "gpuserv4",
+        "torch": "2.8.0+cu128",
+        "gpu": "NVIDIA RTX A6000",
+        "transformers": "4.57.1",
+        "resolved_config": {
+          "definitions": {
+            "page_size": 16,
+            "w": 8,
+            "budget_fracs": [
+              0.01,
+              0.05,
+              0.1
+            ],
+            "budget_rounding": "ceil",
+            "k_grid": [
+              1,
+              2,
+              4,
+              8,
+              16
+            ],
+            "pinned": {
+              "sink_pages": 1,
+              "recent_prompt_pages": 0,
+              "decode_region": true
+            },
+            "head_views": [
+              "query",
+              "kv_mean"
+            ]
+          },
+          "trajectory": {
+            "budget_frac": 0.05,
+            "exit_ratio": 0.5,
+            "floor_ratio": 0.1,
+            "smooth_ema_alpha": null,
+            "stable_high_min_frac": 0.9,
+            "min_initial_low_steps": 4,
+            "sudden_max_rise_steps": 2,
+            "oscillating_min_transitions": 4
+          },
+          "lead_time": {
+            "budget_frac": 0.05,
+            "truth": "m",
+            "mode": "first",
+            "required_lead": 0
+          },
+          "trace": {
+            "format": "full",
+            "topk": 512,
+            "mass_dtype": "float16",
+            "prefill_obs_window": 32,
+            "flush_every": 64
+          },
+          "reference_predictors": {
+            "ema_alpha": 0.3
+          },
+          "decision_point": {
+            "GRADUAL_SHARE_MIN": null,
+            "LEAD_TIME_MIN": null
+          },
+          "models": {
+            "local_files_only": true,
+            "dtype": "bfloat16",
+            "attn_implementation": "sdpa",
+            "prefill_chunk_size": 32768,
+            "chat_template_kwargs": {
+              "enable_thinking": false,
+              "date_string": "26 Jul 2024"
+            }
+          },
+          "paths": {
+            "trace_dir": "traces",
+            "results_dir": "results"
+          },
+          "data": {
+            "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+            "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+          },
+          "ruler": {
+            "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+            "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+            "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+            "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+            "num_depths": 40,
+            "number_digits": 7,
+            "tokens_to_generate": 128,
+            "incremental": {
+              "essay": 500,
+              "noise": 25,
+              "needle": 25
+            },
+            "shuffle_seed": 42,
+            "tasks": {
+              "niah_single_1": {
+                "type_haystack": "noise",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_single_2": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_single_3": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "uuids",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_1": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 4,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_2": {
+                "type_haystack": "needle",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multikey_3": {
+                "type_haystack": "needle",
+                "type_needle_k": "uuids",
+                "type_needle_v": "uuids",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 1
+              },
+              "niah_multivalue": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 4,
+                "num_needle_q": 1
+              },
+              "niah_multiquery": {
+                "type_haystack": "essay",
+                "type_needle_k": "words",
+                "type_needle_v": "numbers",
+                "num_needle_k": 1,
+                "num_needle_v": 1,
+                "num_needle_q": 4
+              }
+            }
+          },
+          "longgen": {
+            "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+            "answer_prefix": "",
+            "min_book_tokens_slack": 1.05
+          },
+          "smoke": {
+            "models": [
+              "meta-llama/Llama-3.2-1B-Instruct",
+              "Qwen/Qwen2.5-1.5B-Instruct",
+              "Qwen/Qwen3-1.7B"
+            ],
+            "task": "niah_single_2",
+            "context_length": 2048,
+            "decode_steps": 32,
+            "fp32_atol": 1e-05,
+            "fp32_logit_rtol": 5e-07,
+            "fp32_crosspath_atol": 0.005,
+            "row_sum_atol": 0.005,
+            "bf16_topb_frac": 0.05,
+            "bf16_min_topb_overlap": 0.9,
+            "out": "results/smoke_2k.json"
+          }
+        }
+      },
+      "answer": [
+        "9294187"
+      ],
+      "generated": ":\n\n**9294187**\n\nThis number is highlighted in the text as a \"special magic number for abandoned-shawl.\""
+    }
+  ]
+}

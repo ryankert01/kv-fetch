@@ -1,0 +1,3639 @@
+{
+  "provenance": {
+    "model": "Qwen/Qwen3-1.7B",
+    "context_length": 32768,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "66c01a9bb1df060b48b36c7f7dc2f9948a8ada22",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/model_gate.yaml",
+    "timestamp": "2026-10-23T13:22:15",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX A6000",
+    "transformers": "4.57.1",
+    "num_samples": 50,
+    "seed": 0,
+    "max_position_embeddings": 40960,
+    "provenance_note": "git commit corrected from 9c5cfa8 (HEAD when the job finished) to 66c01a9, the commit the worker loaded at start; pre-00f1503 provenance read HEAD at job end. Config: configs/model_gate.yaml at 66c01a9 (prefill_chunk_size 8192)."
+  },
+  "per_task": {
+    "niah_single_1": 100.0,
+    "niah_single_2": 100.0,
+    "niah_single_3": 100.0,
+    "niah_multikey_1": 98.0,
+    "niah_multikey_2": 74.0,
+    "niah_multikey_3": 46.0
+  },
+  "groups": {
+    "needle": 100.0,
+    "multikey": 72.66666666666667
+  },
+  "pass_threshold": 85.6,
+  "passed": false,
+  "wall_s": 1694.6277110483497,
+  "records": [
+    {
+      "task": "niah_single_1",
+      "index": 0,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1652000"
+      ],
+      "pred": " **1652000**.",
+      "score": 1.0,
+      "prefill_s": 4.952752864919603,
+      "decode_s": 0.33747879415750504
+    },
+    {
+      "task": "niah_single_1",
+      "index": 1,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7548969"
+      ],
+      "pred": " **7548969**.",
+      "score": 1.0,
+      "prefill_s": 4.607804785482585,
+      "decode_s": 0.26012748666107655
+    },
+    {
+      "task": "niah_single_1",
+      "index": 2,
+      "prompt_tokens": 32634,
+      "answers": [
+        "9926169"
+      ],
+      "pred": " **9926169**.",
+      "score": 1.0,
+      "prefill_s": 4.701681103557348,
+      "decode_s": 0.2599456552416086
+    },
+    {
+      "task": "niah_single_1",
+      "index": 3,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2763454"
+      ],
+      "pred": " **2763454**.",
+      "score": 1.0,
+      "prefill_s": 4.718483758158982,
+      "decode_s": 0.2609446430578828
+    },
+    {
+      "task": "niah_single_1",
+      "index": 4,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6616983"
+      ],
+      "pred": " **6616983**.",
+      "score": 1.0,
+      "prefill_s": 4.733665805310011,
+      "decode_s": 0.2605353631079197
+    },
+    {
+      "task": "niah_single_1",
+      "index": 5,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9694233"
+      ],
+      "pred": " **9694233**.",
+      "score": 1.0,
+      "prefill_s": 4.672672456130385,
+      "decode_s": 0.26240628119558096
+    },
+    {
+      "task": "niah_single_1",
+      "index": 6,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3647258"
+      ],
+      "pred": " **3647258**.",
+      "score": 1.0,
+      "prefill_s": 4.763403482735157,
+      "decode_s": 0.26424358505755663
+    },
+    {
+      "task": "niah_single_1",
+      "index": 7,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9385030"
+      ],
+      "pred": " **9385030**.",
+      "score": 1.0,
+      "prefill_s": 4.70757663808763,
+      "decode_s": 0.2633625576272607
+    },
+    {
+      "task": "niah_single_1",
+      "index": 8,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9337275"
+      ],
+      "pred": " **9337275**.",
+      "score": 1.0,
+      "prefill_s": 4.790885231457651,
+      "decode_s": 0.2609071219339967
+    },
+    {
+      "task": "niah_single_1",
+      "index": 9,
+      "prompt_tokens": 32637,
+      "answers": [
+        "5356321"
+      ],
+      "pred": " **5356321**.",
+      "score": 1.0,
+      "prefill_s": 4.8051527282223105,
+      "decode_s": 0.2638780763372779
+    },
+    {
+      "task": "niah_single_1",
+      "index": 10,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2209689"
+      ],
+      "pred": " **2209689**.",
+      "score": 1.0,
+      "prefill_s": 4.829218598082662,
+      "decode_s": 0.26461771689355373
+    },
+    {
+      "task": "niah_single_1",
+      "index": 11,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9151751"
+      ],
+      "pred": " **9151751**.",
+      "score": 1.0,
+      "prefill_s": 4.834849960170686,
+      "decode_s": 0.26151571422815323
+    },
+    {
+      "task": "niah_single_1",
+      "index": 12,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9837299"
+      ],
+      "pred": " **9837299**.",
+      "score": 1.0,
+      "prefill_s": 4.8435368267819285,
+      "decode_s": 0.2623771335929632
+    },
+    {
+      "task": "niah_single_1",
+      "index": 13,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6565376"
+      ],
+      "pred": " **6565376**.",
+      "score": 1.0,
+      "prefill_s": 4.851907027885318,
+      "decode_s": 0.2627389943227172
+    },
+    {
+      "task": "niah_single_1",
+      "index": 14,
+      "prompt_tokens": 32637,
+      "answers": [
+        "7929245"
+      ],
+      "pred": " **7929245**.",
+      "score": 1.0,
+      "prefill_s": 4.862574569880962,
+      "decode_s": 0.26276622526347637
+    },
+    {
+      "task": "niah_single_1",
+      "index": 15,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6054737"
+      ],
+      "pred": " **6054737**.",
+      "score": 1.0,
+      "prefill_s": 4.873451253399253,
+      "decode_s": 0.2624909682199359
+    },
+    {
+      "task": "niah_single_1",
+      "index": 16,
+      "prompt_tokens": 32637,
+      "answers": [
+        "3748552"
+      ],
+      "pred": " **3748552**.",
+      "score": 1.0,
+      "prefill_s": 4.884856762364507,
+      "decode_s": 0.30154390539973974
+    },
+    {
+      "task": "niah_single_1",
+      "index": 17,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3101395"
+      ],
+      "pred": " **3101395**.",
+      "score": 1.0,
+      "prefill_s": 4.885718619450927,
+      "decode_s": 0.26211544033139944
+    },
+    {
+      "task": "niah_single_1",
+      "index": 18,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6923530"
+      ],
+      "pred": " **6923530**.",
+      "score": 1.0,
+      "prefill_s": 4.890747208148241,
+      "decode_s": 0.28097188007086515
+    },
+    {
+      "task": "niah_single_1",
+      "index": 19,
+      "prompt_tokens": 32637,
+      "answers": [
+        "5163139"
+      ],
+      "pred": " **5163139**.",
+      "score": 1.0,
+      "prefill_s": 4.894762814044952,
+      "decode_s": 0.2620112244039774
+    },
+    {
+      "task": "niah_single_1",
+      "index": 20,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2134351"
+      ],
+      "pred": " **2134351**.",
+      "score": 1.0,
+      "prefill_s": 4.897675606422126,
+      "decode_s": 0.2619973085820675
+    },
+    {
+      "task": "niah_single_1",
+      "index": 21,
+      "prompt_tokens": 32634,
+      "answers": [
+        "1840715"
+      ],
+      "pred": " **1840715**.",
+      "score": 1.0,
+      "prefill_s": 4.898399654775858,
+      "decode_s": 0.26242691557854414
+    },
+    {
+      "task": "niah_single_1",
+      "index": 22,
+      "prompt_tokens": 32631,
+      "answers": [
+        "8711661"
+      ],
+      "pred": " **8711661**.",
+      "score": 1.0,
+      "prefill_s": 4.914463109336793,
+      "decode_s": 0.2621739599853754
+    },
+    {
+      "task": "niah_single_1",
+      "index": 23,
+      "prompt_tokens": 32634,
+      "answers": [
+        "7500695"
+      ],
+      "pred": " **7500695**.",
+      "score": 1.0,
+      "prefill_s": 4.905202515423298,
+      "decode_s": 0.2621595021337271
+    },
+    {
+      "task": "niah_single_1",
+      "index": 24,
+      "prompt_tokens": 32637,
+      "answers": [
+        "4672402"
+      ],
+      "pred": " **4672402**.",
+      "score": 1.0,
+      "prefill_s": 4.9101877845823765,
+      "decode_s": 0.2644286882132292
+    },
+    {
+      "task": "niah_single_1",
+      "index": 25,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5228194"
+      ],
+      "pred": " **5228194**.",
+      "score": 1.0,
+      "prefill_s": 4.838201411999762,
+      "decode_s": 0.2623788546770811
+    },
+    {
+      "task": "niah_single_1",
+      "index": 26,
+      "prompt_tokens": 32634,
+      "answers": [
+        "9777337"
+      ],
+      "pred": " **9777337**.",
+      "score": 1.0,
+      "prefill_s": 4.924824153073132,
+      "decode_s": 0.262361953034997
+    },
+    {
+      "task": "niah_single_1",
+      "index": 27,
+      "prompt_tokens": 32634,
+      "answers": [
+        "8811731"
+      ],
+      "pred": " **8811731**.",
+      "score": 1.0,
+      "prefill_s": 4.926057679578662,
+      "decode_s": 0.26605438347905874
+    },
+    {
+      "task": "niah_single_1",
+      "index": 28,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2662740"
+      ],
+      "pred": " **2662740**.",
+      "score": 1.0,
+      "prefill_s": 4.928919046185911,
+      "decode_s": 0.3338601738214493
+    },
+    {
+      "task": "niah_single_1",
+      "index": 29,
+      "prompt_tokens": 32634,
+      "answers": [
+        "7930787"
+      ],
+      "pred": " **7930787**.",
+      "score": 1.0,
+      "prefill_s": 4.938067859970033,
+      "decode_s": 0.26418013125658035
+    },
+    {
+      "task": "niah_single_1",
+      "index": 30,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1999959"
+      ],
+      "pred": " **1999959**.",
+      "score": 1.0,
+      "prefill_s": 4.865208176895976,
+      "decode_s": 0.26327499840408564
+    },
+    {
+      "task": "niah_single_1",
+      "index": 31,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9838183"
+      ],
+      "pred": " **9838183**.",
+      "score": 1.0,
+      "prefill_s": 4.940491931512952,
+      "decode_s": 0.26313746999949217
+    },
+    {
+      "task": "niah_single_1",
+      "index": 32,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8281181"
+      ],
+      "pred": " **8281181**.",
+      "score": 1.0,
+      "prefill_s": 4.864102782681584,
+      "decode_s": 0.2626606738194823
+    },
+    {
+      "task": "niah_single_1",
+      "index": 33,
+      "prompt_tokens": 32637,
+      "answers": [
+        "4939322"
+      ],
+      "pred": " **4939322**.",
+      "score": 1.0,
+      "prefill_s": 4.945418486371636,
+      "decode_s": 0.26290390081703663
+    },
+    {
+      "task": "niah_single_1",
+      "index": 34,
+      "prompt_tokens": 32631,
+      "answers": [
+        "3627900"
+      ],
+      "pred": " **3627900**.",
+      "score": 1.0,
+      "prefill_s": 4.958773429505527,
+      "decode_s": 0.2631221506744623
+    },
+    {
+      "task": "niah_single_1",
+      "index": 35,
+      "prompt_tokens": 32634,
+      "answers": [
+        "5293338"
+      ],
+      "pred": " **5293338**.",
+      "score": 1.0,
+      "prefill_s": 4.942834763787687,
+      "decode_s": 0.2633147034794092
+    },
+    {
+      "task": "niah_single_1",
+      "index": 36,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2005470"
+      ],
+      "pred": " **2005470**.",
+      "score": 1.0,
+      "prefill_s": 4.951990562491119,
+      "decode_s": 0.2631076229736209
+    },
+    {
+      "task": "niah_single_1",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5685338"
+      ],
+      "pred": " **5685338**.",
+      "score": 1.0,
+      "prefill_s": 4.8770488342270255,
+      "decode_s": 0.2627822821959853
+    },
+    {
+      "task": "niah_single_1",
+      "index": 38,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9024153"
+      ],
+      "pred": " **9024153**.",
+      "score": 1.0,
+      "prefill_s": 4.883942140266299,
+      "decode_s": 0.26315900031477213
+    },
+    {
+      "task": "niah_single_1",
+      "index": 39,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6252129"
+      ],
+      "pred": " **6252129**.",
+      "score": 1.0,
+      "prefill_s": 4.874784902669489,
+      "decode_s": 0.26287565659731627
+    },
+    {
+      "task": "niah_single_1",
+      "index": 40,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1867978"
+      ],
+      "pred": " **1867978**.",
+      "score": 1.0,
+      "prefill_s": 4.961903776973486,
+      "decode_s": 0.2635177131742239
+    },
+    {
+      "task": "niah_single_1",
+      "index": 41,
+      "prompt_tokens": 32634,
+      "answers": [
+        "4290132"
+      ],
+      "pred": " **4290132**.",
+      "score": 1.0,
+      "prefill_s": 4.95525452401489,
+      "decode_s": 0.26337975542992353
+    },
+    {
+      "task": "niah_single_1",
+      "index": 42,
+      "prompt_tokens": 32043,
+      "answers": [
+        "4628694"
+      ],
+      "pred": " **4628694**.",
+      "score": 1.0,
+      "prefill_s": 4.854483178816736,
+      "decode_s": 0.2601650804281235
+    },
+    {
+      "task": "niah_single_1",
+      "index": 43,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2401274"
+      ],
+      "pred": " **2401274**.",
+      "score": 1.0,
+      "prefill_s": 4.963123911991715,
+      "decode_s": 0.2647195514291525
+    },
+    {
+      "task": "niah_single_1",
+      "index": 44,
+      "prompt_tokens": 32634,
+      "answers": [
+        "5729962"
+      ],
+      "pred": " **5729962**.",
+      "score": 1.0,
+      "prefill_s": 4.962002261541784,
+      "decode_s": 0.2631793664768338
+    },
+    {
+      "task": "niah_single_1",
+      "index": 45,
+      "prompt_tokens": 32634,
+      "answers": [
+        "4522513"
+      ],
+      "pred": " **4522513**.",
+      "score": 1.0,
+      "prefill_s": 4.9626726089045405,
+      "decode_s": 0.2630846183747053
+    },
+    {
+      "task": "niah_single_1",
+      "index": 46,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7205386"
+      ],
+      "pred": " **7205386**.",
+      "score": 1.0,
+      "prefill_s": 4.890557895414531,
+      "decode_s": 0.26266557071357965
+    },
+    {
+      "task": "niah_single_1",
+      "index": 47,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3846995"
+      ],
+      "pred": " **3846995**.\n\nThis number appears in the text as part of a repeated pattern, and it is emphasized as a \"special magic number\" within the context of the text.",
+      "score": 1.0,
+      "prefill_s": 4.964813027530909,
+      "decode_s": 1.1702838707715273
+    },
+    {
+      "task": "niah_single_1",
+      "index": 48,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1328107"
+      ],
+      "pred": " **1328107**.",
+      "score": 1.0,
+      "prefill_s": 4.970629918389022,
+      "decode_s": 0.2635071324184537
+    },
+    {
+      "task": "niah_single_1",
+      "index": 49,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2427900"
+      ],
+      "pred": " **2427900**.",
+      "score": 1.0,
+      "prefill_s": 4.89988611266017,
+      "decode_s": 0.26408560015261173
+    },
+    {
+      "task": "niah_single_2",
+      "index": 0,
+      "prompt_tokens": 32038,
+      "answers": [
+        "7855872"
+      ],
+      "pred": " **7855872**.",
+      "score": 1.0,
+      "prefill_s": 4.837856707163155,
+      "decode_s": 0.2744207987561822
+    },
+    {
+      "task": "niah_single_2",
+      "index": 1,
+      "prompt_tokens": 32041,
+      "answers": [
+        "1632104"
+      ],
+      "pred": " **1632104**.",
+      "score": 1.0,
+      "prefill_s": 4.84139106888324,
+      "decode_s": 0.25952740106731653
+    },
+    {
+      "task": "niah_single_2",
+      "index": 2,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2568781"
+      ],
+      "pred": " **2568781**.",
+      "score": 1.0,
+      "prefill_s": 4.879169147461653,
+      "decode_s": 0.26338538248091936
+    },
+    {
+      "task": "niah_single_2",
+      "index": 3,
+      "prompt_tokens": 32041,
+      "answers": [
+        "5755051"
+      ],
+      "pred": " **5755051**.",
+      "score": 1.0,
+      "prefill_s": 4.850401111878455,
+      "decode_s": 0.25951310247182846
+    },
+    {
+      "task": "niah_single_2",
+      "index": 4,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2826577"
+      ],
+      "pred": " **2826577**.",
+      "score": 1.0,
+      "prefill_s": 4.96197887789458,
+      "decode_s": 0.26709551736712456
+    },
+    {
+      "task": "niah_single_2",
+      "index": 5,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2540686"
+      ],
+      "pred": " **2540686**.",
+      "score": 1.0,
+      "prefill_s": 4.877866760827601,
+      "decode_s": 0.2690403126180172
+    },
+    {
+      "task": "niah_single_2",
+      "index": 6,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4472715"
+      ],
+      "pred": " **4472715**.",
+      "score": 1.0,
+      "prefill_s": 4.853315012529492,
+      "decode_s": 0.25982842594385147
+    },
+    {
+      "task": "niah_single_2",
+      "index": 7,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6201515"
+      ],
+      "pred": " **6201515**.",
+      "score": 1.0,
+      "prefill_s": 4.885187929496169,
+      "decode_s": 0.2663613064214587
+    },
+    {
+      "task": "niah_single_2",
+      "index": 8,
+      "prompt_tokens": 32041,
+      "answers": [
+        "8415699"
+      ],
+      "pred": " **8415699**.",
+      "score": 1.0,
+      "prefill_s": 4.857777938246727,
+      "decode_s": 0.25968644861131907
+    },
+    {
+      "task": "niah_single_2",
+      "index": 9,
+      "prompt_tokens": 32640,
+      "answers": [
+        "3022591"
+      ],
+      "pred": " **3022591**.",
+      "score": 1.0,
+      "prefill_s": 4.887424048036337,
+      "decode_s": 0.2636940320953727
+    },
+    {
+      "task": "niah_single_2",
+      "index": 10,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5106132"
+      ],
+      "pred": " **5106132**.",
+      "score": 1.0,
+      "prefill_s": 4.860540345311165,
+      "decode_s": 0.26030638441443443
+    },
+    {
+      "task": "niah_single_2",
+      "index": 11,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9495906"
+      ],
+      "pred": " **9495906**.",
+      "score": 1.0,
+      "prefill_s": 4.965781519189477,
+      "decode_s": 0.26343838032335043
+    },
+    {
+      "task": "niah_single_2",
+      "index": 12,
+      "prompt_tokens": 32044,
+      "answers": [
+        "6510253"
+      ],
+      "pred": " **6510253**.",
+      "score": 1.0,
+      "prefill_s": 4.857262970879674,
+      "decode_s": 0.26036979258060455
+    },
+    {
+      "task": "niah_single_2",
+      "index": 13,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5180762"
+      ],
+      "pred": " **5180762**.",
+      "score": 1.0,
+      "prefill_s": 4.862152120098472,
+      "decode_s": 0.26101988460868597
+    },
+    {
+      "task": "niah_single_2",
+      "index": 14,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7089255"
+      ],
+      "pred": " **7089255**. This number is noted in the context of the relationship between the monopolies of the large corporations and the cost of labor, as explained in the text.",
+      "score": 1.0,
+      "prefill_s": 4.8944177040830255,
+      "decode_s": 1.0510300444439054
+    },
+    {
+      "task": "niah_single_2",
+      "index": 15,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1523149"
+      ],
+      "pred": " **1523149**.",
+      "score": 1.0,
+      "prefill_s": 4.8982919761911035,
+      "decode_s": 0.2633549040183425
+    },
+    {
+      "task": "niah_single_2",
+      "index": 16,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7891367"
+      ],
+      "pred": " **7891367**.",
+      "score": 1.0,
+      "prefill_s": 4.86710259038955,
+      "decode_s": 0.26135598588734865
+    },
+    {
+      "task": "niah_single_2",
+      "index": 17,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6577189"
+      ],
+      "pred": " **6577189**.",
+      "score": 1.0,
+      "prefill_s": 4.893465467728674,
+      "decode_s": 0.26697931718081236
+    },
+    {
+      "task": "niah_single_2",
+      "index": 18,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7712759"
+      ],
+      "pred": " **7712759**.",
+      "score": 1.0,
+      "prefill_s": 4.866438868455589,
+      "decode_s": 0.2629441311582923
+    },
+    {
+      "task": "niah_single_2",
+      "index": 19,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9195773"
+      ],
+      "pred": " **9195773**.",
+      "score": 1.0,
+      "prefill_s": 4.89686699770391,
+      "decode_s": 0.27015527803450823
+    },
+    {
+      "task": "niah_single_2",
+      "index": 20,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9349619"
+      ],
+      "pred": " **9349619**.",
+      "score": 1.0,
+      "prefill_s": 4.900641651824117,
+      "decode_s": 0.26749852299690247
+    },
+    {
+      "task": "niah_single_2",
+      "index": 21,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2672660"
+      ],
+      "pred": " **2672660**.",
+      "score": 1.0,
+      "prefill_s": 4.899173399433494,
+      "decode_s": 0.2691432349383831
+    },
+    {
+      "task": "niah_single_2",
+      "index": 22,
+      "prompt_tokens": 32038,
+      "answers": [
+        "3437669"
+      ],
+      "pred": " **3437669**.",
+      "score": 1.0,
+      "prefill_s": 4.87081531714648,
+      "decode_s": 0.2622676892206073
+    },
+    {
+      "task": "niah_single_2",
+      "index": 23,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1120829"
+      ],
+      "pred": " **1120829**.",
+      "score": 1.0,
+      "prefill_s": 4.906174627132714,
+      "decode_s": 0.2637438643723726
+    },
+    {
+      "task": "niah_single_2",
+      "index": 24,
+      "prompt_tokens": 32041,
+      "answers": [
+        "8613402"
+      ],
+      "pred": " **8613402**.",
+      "score": 1.0,
+      "prefill_s": 4.870604516938329,
+      "decode_s": 0.265380029566586
+    },
+    {
+      "task": "niah_single_2",
+      "index": 25,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6765836"
+      ],
+      "pred": " **6765836**.",
+      "score": 1.0,
+      "prefill_s": 4.8997258404269814,
+      "decode_s": 0.2683201367035508
+    },
+    {
+      "task": "niah_single_2",
+      "index": 26,
+      "prompt_tokens": 32041,
+      "answers": [
+        "9494427"
+      ],
+      "pred": " **9494427**.",
+      "score": 1.0,
+      "prefill_s": 4.86480388790369,
+      "decode_s": 0.263339183293283
+    },
+    {
+      "task": "niah_single_2",
+      "index": 27,
+      "prompt_tokens": 32038,
+      "answers": [
+        "1749118"
+      ],
+      "pred": " **1749118**. This number is referenced in the context of assessing the impact of increasing company size on productivity, where it represents a threshold that individuals should consider when evaluating the potential loss in productivity from making the company larger.",
+      "score": 1.0,
+      "prefill_s": 4.870233744382858,
+      "decode_s": 1.321417922154069
+    },
+    {
+      "task": "niah_single_2",
+      "index": 28,
+      "prompt_tokens": 32038,
+      "answers": [
+        "3045470"
+      ],
+      "pred": " **3045470**.",
+      "score": 1.0,
+      "prefill_s": 4.868931904435158,
+      "decode_s": 0.2622090494260192
+    },
+    {
+      "task": "niah_single_2",
+      "index": 29,
+      "prompt_tokens": 32041,
+      "answers": [
+        "5766094"
+      ],
+      "pred": " **5766094**.",
+      "score": 1.0,
+      "prefill_s": 4.867860469035804,
+      "decode_s": 0.264377323910594
+    },
+    {
+      "task": "niah_single_2",
+      "index": 30,
+      "prompt_tokens": 32038,
+      "answers": [
+        "1133756"
+      ],
+      "pred": " **1133756**.",
+      "score": 1.0,
+      "prefill_s": 4.869141906499863,
+      "decode_s": 0.2644858779385686
+    },
+    {
+      "task": "niah_single_2",
+      "index": 31,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6399839"
+      ],
+      "pred": " **6399839**.",
+      "score": 1.0,
+      "prefill_s": 4.898852896876633,
+      "decode_s": 0.2657936066389084
+    },
+    {
+      "task": "niah_single_2",
+      "index": 32,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5388567"
+      ],
+      "pred": " **5388567**.",
+      "score": 1.0,
+      "prefill_s": 4.864952395670116,
+      "decode_s": 0.2620804263278842
+    },
+    {
+      "task": "niah_single_2",
+      "index": 33,
+      "prompt_tokens": 32041,
+      "answers": [
+        "3523901"
+      ],
+      "pred": " **3523901**.",
+      "score": 1.0,
+      "prefill_s": 4.868366663344204,
+      "decode_s": 0.26338824443519115
+    },
+    {
+      "task": "niah_single_2",
+      "index": 34,
+      "prompt_tokens": 32038,
+      "answers": [
+        "2188373"
+      ],
+      "pred": " **2188373**.",
+      "score": 1.0,
+      "prefill_s": 4.866355340927839,
+      "decode_s": 0.2602044390514493
+    },
+    {
+      "task": "niah_single_2",
+      "index": 35,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2981958"
+      ],
+      "pred": " **2981958**.",
+      "score": 1.0,
+      "prefill_s": 4.89835914131254,
+      "decode_s": 0.2674039229750633
+    },
+    {
+      "task": "niah_single_2",
+      "index": 36,
+      "prompt_tokens": 32038,
+      "answers": [
+        "2426692"
+      ],
+      "pred": " **2426692**.",
+      "score": 1.0,
+      "prefill_s": 4.863147936761379,
+      "decode_s": 0.26427589263767004
+    },
+    {
+      "task": "niah_single_2",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7390655"
+      ],
+      "pred": " **7390655**.",
+      "score": 1.0,
+      "prefill_s": 4.8939081113785505,
+      "decode_s": 0.26345240511000156
+    },
+    {
+      "task": "niah_single_2",
+      "index": 38,
+      "prompt_tokens": 32038,
+      "answers": [
+        "7383509"
+      ],
+      "pred": " **7383509**.",
+      "score": 1.0,
+      "prefill_s": 4.8645041435956955,
+      "decode_s": 0.26389057748019695
+    },
+    {
+      "task": "niah_single_2",
+      "index": 39,
+      "prompt_tokens": 32041,
+      "answers": [
+        "6352327"
+      ],
+      "pred": " **6352327**.",
+      "score": 1.0,
+      "prefill_s": 4.866149605251849,
+      "decode_s": 0.2600823389366269
+    },
+    {
+      "task": "niah_single_2",
+      "index": 40,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5663765"
+      ],
+      "pred": " **5663765**.",
+      "score": 1.0,
+      "prefill_s": 4.894747022539377,
+      "decode_s": 0.2633297648280859
+    },
+    {
+      "task": "niah_single_2",
+      "index": 41,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6093918"
+      ],
+      "pred": " **6093918**.",
+      "score": 1.0,
+      "prefill_s": 4.894939714111388,
+      "decode_s": 0.26358207780867815
+    },
+    {
+      "task": "niah_single_2",
+      "index": 42,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4148439"
+      ],
+      "pred": " **4148439**. This number is referenced as a \"magic number for legal-exploration\" and is used as a placeholder or reference point in the context of evaluating the impact of technological leverage on employment.",
+      "score": 1.0,
+      "prefill_s": 4.863729500211775,
+      "decode_s": 1.2227351106703281
+    },
+    {
+      "task": "niah_single_2",
+      "index": 43,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1097762"
+      ],
+      "pred": " **1097762**.",
+      "score": 1.0,
+      "prefill_s": 4.9409694923087955,
+      "decode_s": 0.26287264470010996
+    },
+    {
+      "task": "niah_single_2",
+      "index": 44,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8202497"
+      ],
+      "pred": " **8202497**.",
+      "score": 1.0,
+      "prefill_s": 4.898152429610491,
+      "decode_s": 0.2632427792996168
+    },
+    {
+      "task": "niah_single_2",
+      "index": 45,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7316476"
+      ],
+      "pred": " **7316476**.",
+      "score": 1.0,
+      "prefill_s": 4.86611956730485,
+      "decode_s": 0.2602853002026677
+    },
+    {
+      "task": "niah_single_2",
+      "index": 46,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4606685"
+      ],
+      "pred": " **4606685**.",
+      "score": 1.0,
+      "prefill_s": 4.861337817274034,
+      "decode_s": 0.26032628677785397
+    },
+    {
+      "task": "niah_single_2",
+      "index": 47,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7977738"
+      ],
+      "pred": " **7977738**.",
+      "score": 1.0,
+      "prefill_s": 4.864071784541011,
+      "decode_s": 0.26065715961158276
+    },
+    {
+      "task": "niah_single_2",
+      "index": 48,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1094804"
+      ],
+      "pred": " **1094804**. This number is referenced as one of the special magic numbers for pathetic-pilot, and it is associated with the idea that many great things began with someone saying, \"How hard could it be?\"",
+      "score": 1.0,
+      "prefill_s": 4.940107532776892,
+      "decode_s": 1.28455079626292
+    },
+    {
+      "task": "niah_single_2",
+      "index": 49,
+      "prompt_tokens": 32038,
+      "answers": [
+        "1381112"
+      ],
+      "pred": " **1381112**.",
+      "score": 1.0,
+      "prefill_s": 4.863432300277054,
+      "decode_s": 0.2606394160538912
+    },
+    {
+      "task": "niah_single_3",
+      "index": 0,
+      "prompt_tokens": 32044,
+      "answers": [
+        "99c0b33b-2251-48da-95d1-efc4f032f074"
+      ],
+      "pred": ": **99c0b33b-2251-48da-95d1-efc4f032f074**.",
+      "score": 1.0,
+      "prefill_s": 4.838437229394913,
+      "decode_s": 0.9821862392127514
+    },
+    {
+      "task": "niah_single_3",
+      "index": 1,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5f9a5dac-b31d-46e9-9ab4-85a9ee275b48"
+      ],
+      "pred": ": **5f9a5dac-b31d-46e9-9ab4-85a9ee275b48**.",
+      "score": 1.0,
+      "prefill_s": 4.952365950681269,
+      "decode_s": 0.9175142729654908
+    },
+    {
+      "task": "niah_single_3",
+      "index": 2,
+      "prompt_tokens": 32041,
+      "answers": [
+        "eb57ff8f-6236-4946-9199-d90ab382782f"
+      ],
+      "pred": ": **eb57ff8f-6236-4946-9199-d90ab382782f**.",
+      "score": 1.0,
+      "prefill_s": 4.846565155312419,
+      "decode_s": 0.9336314620450139
+    },
+    {
+      "task": "niah_single_3",
+      "index": 3,
+      "prompt_tokens": 32044,
+      "answers": [
+        "1c4658e6-0326-40a1-82dd-4e2d164f7cf3"
+      ],
+      "pred": ":\n\n**1c4658e6-0326-40a1-82dd-4e2d164f7cf3**\n\nThis UUID is highlighted as a special magic uuid for placid-obligation in the text, and it is mentioned in the context of writing about the importance of simple writing, the goal of writers, and the impact of writing on readers and the broader world.",
+      "score": 1.0,
+      "prefill_s": 4.844186271540821,
+      "decode_s": 2.319749449379742
+    },
+    {
+      "task": "niah_single_3",
+      "index": 4,
+      "prompt_tokens": 32640,
+      "answers": [
+        "c0b71420-a4ac-4c93-8fb0-de8a1c1c0bd6"
+      ],
+      "pred": ": **c0b71420-a4ac-4c93-8fb0-de8a1c1c0bd6**.",
+      "score": 1.0,
+      "prefill_s": 4.8827835991978645,
+      "decode_s": 0.8888256205245852
+    },
+    {
+      "task": "niah_single_3",
+      "index": 5,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7da6883d-4a3f-4b8c-9128-80a7eb1d726f"
+      ],
+      "pred": ": **7da6883d-4a3f-4b8c-9128-80a7eb1d726f**.",
+      "score": 1.0,
+      "prefill_s": 4.979487780481577,
+      "decode_s": 0.9855609023943543
+    },
+    {
+      "task": "niah_single_3",
+      "index": 6,
+      "prompt_tokens": 32037,
+      "answers": [
+        "8d553979-fea1-444a-bb48-b556433fbba1"
+      ],
+      "pred": ": \n\n**8d553979-fea1-444a-bb48-b556433fbba1**\n\nThis UUID is highlighted in the text as a special identifier related to the concept of knowing-perfume, which is discussed in the context of writing simply and the importance of honesty in communication.",
+      "score": 1.0,
+      "prefill_s": 4.854202315211296,
+      "decode_s": 1.8691064147278666
+    },
+    {
+      "task": "niah_single_3",
+      "index": 7,
+      "prompt_tokens": 32037,
+      "answers": [
+        "77dfcd60-f96f-4abc-b22d-841c41d41b4a"
+      ],
+      "pred": ":\n\n**77dfcd60-f96f-4abc-b22d-841c41d41b4a**\n\nThis UUID is specifically noted in the text as one of the special magic uuids for big-dollop.",
+      "score": 1.0,
+      "prefill_s": 4.856143603101373,
+      "decode_s": 1.4232776425778866
+    },
+    {
+      "task": "niah_single_3",
+      "index": 8,
+      "prompt_tokens": 32638,
+      "answers": [
+        "b2ca1bff-84ac-4e67-872e-3eb7c5257116"
+      ],
+      "pred": ": **b2ca1bff-84ac-4e67-872e-3eb7c5257116**.",
+      "score": 1.0,
+      "prefill_s": 4.961066295392811,
+      "decode_s": 0.9156764158979058
+    },
+    {
+      "task": "niah_single_3",
+      "index": 9,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5e5c5d5d-f954-472d-90ea-49c4f5c2b337"
+      ],
+      "pred": ": **5e5c5d5d-f954-472d-90ea-49c4f5c2b337**.",
+      "score": 1.0,
+      "prefill_s": 4.993210731074214,
+      "decode_s": 0.9834198663011193
+    },
+    {
+      "task": "niah_single_3",
+      "index": 10,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1c36cc1f-540c-431a-ad22-722a99c595ae"
+      ],
+      "pred": ": **1c36cc1f-540c-431a-ad22-722a99c595ae**.",
+      "score": 1.0,
+      "prefill_s": 4.89049684908241,
+      "decode_s": 0.941894450224936
+    },
+    {
+      "task": "niah_single_3",
+      "index": 11,
+      "prompt_tokens": 32639,
+      "answers": [
+        "9a9daae4-1765-42e6-8dfb-84a256cee4f9"
+      ],
+      "pred": ":\n\n**9a9daae4-1765-42e6-8dfb-84a256cee4f9**\n\nThis uuid is highlighted in the text as a special magic uuid for the concept of \"cowardly-cost,\" which is discussed in the context of writing styles, the importance of simplicity in communication, and the challenges of starting a startup.",
+      "score": 1.0,
+      "prefill_s": 4.970217154361308,
+      "decode_s": 2.120136732235551
+    },
+    {
+      "task": "niah_single_3",
+      "index": 12,
+      "prompt_tokens": 32043,
+      "answers": [
+        "2a1d466b-6421-42a9-a857-bc0a7d0f9dd8"
+      ],
+      "pred": ": **2a1d466b-6421-42a9-a857-bc0a7d0f9dd8**.",
+      "score": 1.0,
+      "prefill_s": 4.856943347491324,
+      "decode_s": 0.9572446690872312
+    },
+    {
+      "task": "niah_single_3",
+      "index": 13,
+      "prompt_tokens": 32038,
+      "answers": [
+        "db41f1e8-6b52-436e-82f1-5a8b8c31b17b"
+      ],
+      "pred": ": **db41f1e8-6b52-436e-82f1-5a8b8c31b17b**.",
+      "score": 1.0,
+      "prefill_s": 4.856364979408681,
+      "decode_s": 1.0112964194267988
+    },
+    {
+      "task": "niah_single_3",
+      "index": 14,
+      "prompt_tokens": 32040,
+      "answers": [
+        "28ec182f-5c12-4f39-b9dd-5955d26b304c"
+      ],
+      "pred": ": **28ec182f-5c12-4f39-b9dd-5955d26b304c**.",
+      "score": 1.0,
+      "prefill_s": 4.806340287439525,
+      "decode_s": 0.956662192940712
+    },
+    {
+      "task": "niah_single_3",
+      "index": 15,
+      "prompt_tokens": 32640,
+      "answers": [
+        "22ec8323-aea3-410c-934f-9495754bb416"
+      ],
+      "pred": ":\n\n**22ec8323-aea3-410c-934f-9495754bb416**\n\nThis uuid is described as a \"special magic uuid\" that represents the recipe for success in certain fields, particularly in the context of being \"relentlessly resourceful\" and \"excessively curious.\" It is noted as one of the \"special magic uuids for tested-liar,\" suggesting it is a unique identifier or marker associated with the qualities of a good startup founder.",
+      "score": 1.0,
+      "prefill_s": 4.8926716996356845,
+      "decode_s": 2.9099781569093466
+    },
+    {
+      "task": "niah_single_3",
+      "index": 16,
+      "prompt_tokens": 32634,
+      "answers": [
+        "cbad66c0-8d76-492b-86cc-a1eff6b594c6"
+      ],
+      "pred": ": **cbad66c0-8d76-492b-86cc-a1eff6b594c6**.",
+      "score": 1.0,
+      "prefill_s": 4.968356396071613,
+      "decode_s": 0.8920671511441469
+    },
+    {
+      "task": "niah_single_3",
+      "index": 17,
+      "prompt_tokens": 32037,
+      "answers": [
+        "79c10518-401b-46f8-ab0f-ecbe8cd4ee0e"
+      ],
+      "pred": ": **79c10518-401b-46f8-ab0f-ecbe8cd4ee0e**.",
+      "score": 1.0,
+      "prefill_s": 4.860179044306278,
+      "decode_s": 0.8785257143899798
+    },
+    {
+      "task": "niah_single_3",
+      "index": 18,
+      "prompt_tokens": 32041,
+      "answers": [
+        "46403293-565d-44a8-8f33-d93e7e4fc409"
+      ],
+      "pred": ":\n\n**46403293-565d-44a8-8f33-d93e7e4fc409**\n\nThis uuid is highlighted in the text as a special magic uuid for earthy-ore, emphasizing its significance in the context of the discussion around writing style, simplicity, and the importance of clear communication.",
+      "score": 1.0,
+      "prefill_s": 4.862547584809363,
+      "decode_s": 1.9920088220387697
+    },
+    {
+      "task": "niah_single_3",
+      "index": 19,
+      "prompt_tokens": 32040,
+      "answers": [
+        "15e33ebe-f1e5-422a-bb29-238550043c6e"
+      ],
+      "pred": ": **15e33ebe-f1e5-422a-bb29-238550043c6e**.",
+      "score": 1.0,
+      "prefill_s": 4.805232317186892,
+      "decode_s": 0.9573466880246997
+    },
+    {
+      "task": "niah_single_3",
+      "index": 20,
+      "prompt_tokens": 32038,
+      "answers": [
+        "a3845a38-6d50-473d-bfd1-fee0894f8d4d"
+      ],
+      "pred": ": **a3845a38-6d50-473d-bfd1-fee0894f8d4d**.",
+      "score": 1.0,
+      "prefill_s": 5.05764386150986,
+      "decode_s": 0.930172111839056
+    },
+    {
+      "task": "niah_single_3",
+      "index": 21,
+      "prompt_tokens": 32037,
+      "answers": [
+        "8c954478-d9ad-4e09-8de4-2b51c2549035"
+      ],
+      "pred": ": **8c954478-d9ad-4e09-8de4-2b51c2549035**.",
+      "score": 1.0,
+      "prefill_s": 4.863569552078843,
+      "decode_s": 0.9568877248093486
+    },
+    {
+      "task": "niah_single_3",
+      "index": 22,
+      "prompt_tokens": 32639,
+      "answers": [
+        "c5415192-fd49-4888-b5df-394c75037ce0"
+      ],
+      "pred": ": **c5415192-fd49-4888-b5df-394c75037ce0**.",
+      "score": 1.0,
+      "prefill_s": 4.968862910754979,
+      "decode_s": 0.9445331003516912
+    },
+    {
+      "task": "niah_single_3",
+      "index": 23,
+      "prompt_tokens": 32636,
+      "answers": [
+        "b2bbacce-f266-4fc2-958b-c9f6ba444579"
+      ],
+      "pred": ": **b2bbacce-f266-4fc2-958b-c9f6ba444579**.",
+      "score": 1.0,
+      "prefill_s": 5.2023435374721885,
+      "decode_s": 0.862755655311048
+    },
+    {
+      "task": "niah_single_3",
+      "index": 24,
+      "prompt_tokens": 32637,
+      "answers": [
+        "baae94ac-4dbf-46e3-a5db-2f62d11497ef"
+      ],
+      "pred": ": **baae94ac-4dbf-46e3-a5db-2f62d11497ef**.",
+      "score": 1.0,
+      "prefill_s": 4.9716991893947124,
+      "decode_s": 0.8644526666030288
+    },
+    {
+      "task": "niah_single_3",
+      "index": 25,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9d4795f4-9de3-4618-829f-eb0dc2cf6710"
+      ],
+      "pred": ": **9d4795f4-9de3-4618-829f-eb0dc2cf6710**.",
+      "score": 1.0,
+      "prefill_s": 4.916686670854688,
+      "decode_s": 0.944223877042532
+    },
+    {
+      "task": "niah_single_3",
+      "index": 26,
+      "prompt_tokens": 32037,
+      "answers": [
+        "9d6a7c99-a328-41bc-861f-bafc628136ca"
+      ],
+      "pred": ": **9d6a7c99-a328-41bc-861f-bafc628136ca**.",
+      "score": 1.0,
+      "prefill_s": 4.865738904103637,
+      "decode_s": 0.8804051745682955
+    },
+    {
+      "task": "niah_single_3",
+      "index": 27,
+      "prompt_tokens": 32638,
+      "answers": [
+        "c7d964c8-6d12-4081-858b-dfa9ea963aba"
+      ],
+      "pred": ": **c7d964c8-6d12-4081-858b-dfa9ea963aba**.",
+      "score": 1.0,
+      "prefill_s": 4.972281651571393,
+      "decode_s": 0.9197283070534468
+    },
+    {
+      "task": "niah_single_3",
+      "index": 28,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2867b8c9-f805-4a05-827b-71fa0bbd41fe"
+      ],
+      "pred": ": **2867b8c9-f805-4a05-827b-71fa0bbd41fe**.",
+      "score": 1.0,
+      "prefill_s": 4.910252400673926,
+      "decode_s": 0.9427091991528869
+    },
+    {
+      "task": "niah_single_3",
+      "index": 29,
+      "prompt_tokens": 32640,
+      "answers": [
+        "268b55f5-18dc-4a78-9a0e-bdd50547af2f"
+      ],
+      "pred": ": **268b55f5-18dc-4a78-9a0e-bdd50547af2f**.",
+      "score": 1.0,
+      "prefill_s": 4.9000944551080465,
+      "decode_s": 0.9420509207993746
+    },
+    {
+      "task": "niah_single_3",
+      "index": 30,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4e4494ea-c907-4278-80a1-0e56134d9895"
+      ],
+      "pred": ": **4e4494ea-c907-4278-80a1-0e56134d9895**.",
+      "score": 1.0,
+      "prefill_s": 4.864854545332491,
+      "decode_s": 0.9832876827567816
+    },
+    {
+      "task": "niah_single_3",
+      "index": 31,
+      "prompt_tokens": 32638,
+      "answers": [
+        "26dd6375-9942-4a0a-99e0-ef1611583df1"
+      ],
+      "pred": ": **26dd6375-9942-4a0a-99e0-ef1611583df1**.",
+      "score": 1.0,
+      "prefill_s": 4.970737994648516,
+      "decode_s": 0.9691724348813295
+    },
+    {
+      "task": "niah_single_3",
+      "index": 32,
+      "prompt_tokens": 32637,
+      "answers": [
+        "8d157779-6349-47ac-a941-023117cce5c6"
+      ],
+      "pred": ": **8d157779-6349-47ac-a941-023117cce5c6**.",
+      "score": 1.0,
+      "prefill_s": 4.970989144407213,
+      "decode_s": 0.9425271460786462
+    },
+    {
+      "task": "niah_single_3",
+      "index": 33,
+      "prompt_tokens": 32640,
+      "answers": [
+        "da578c90-a082-4455-9727-341b58ad51a6"
+      ],
+      "pred": ": **da578c90-a082-4455-9727-341b58ad51a6**.",
+      "score": 1.0,
+      "prefill_s": 4.899502848275006,
+      "decode_s": 0.9680861346423626
+    },
+    {
+      "task": "niah_single_3",
+      "index": 34,
+      "prompt_tokens": 32038,
+      "answers": [
+        "0cfbff6f-a040-4c69-a482-1d4472a705f6"
+      ],
+      "pred": ":\n\n**0cfbff6f-a040-4c69-a482-1d4472a705f6**\n\nThis UUID is highlighted as one of the \"special magic uuids\" for merciful-anatomy in the text, emphasizing its significance in the context of the discussion about the nature of work, ambition, and the challenges of starting a startup.",
+      "score": 1.0,
+      "prefill_s": 4.860777286812663,
+      "decode_s": 2.125215657055378
+    },
+    {
+      "task": "niah_single_3",
+      "index": 35,
+      "prompt_tokens": 32039,
+      "answers": [
+        "0e0e2789-ab09-4df8-b072-009b1d5a2c0a"
+      ],
+      "pred": ": \n\n**0e0e2789-ab09-4df8-b072-009b1d5a2c0a**\n\nThis uuid is a placeholder or a fictional identifier used in the context of the text to illustrate a concept related to trite-birth, which is a term used to describe a situation where someone is born into a life of routine or lack of innovation. The text suggests that this uuid is not a real or meaningful identifier in the context of the discussion, but it is used as a creative or illustrative element within the text.",
+      "score": 1.0,
+      "prefill_s": 4.863958286121488,
+      "decode_s": 3.1417778292670846
+    },
+    {
+      "task": "niah_single_3",
+      "index": 36,
+      "prompt_tokens": 32038,
+      "answers": [
+        "816ee474-a4d4-4138-8248-379ddb14df9a"
+      ],
+      "pred": ":\n\n**816ee474-a4d4-4138-8248-379ddb14df9a**\n\nThis uuid is noted as one of the special magic uuids for fertile-belfry, and it is used to represent a specific concept or entity within the context of the text.",
+      "score": 1.0,
+      "prefill_s": 4.934088590554893,
+      "decode_s": 1.8153236843645573
+    },
+    {
+      "task": "niah_single_3",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8317f6ed-24e3-4356-b69f-0bec12d214e9"
+      ],
+      "pred": ": **8317f6ed-24e3-4356-b69f-0bec12d214e9**.",
+      "score": 1.0,
+      "prefill_s": 4.896055040881038,
+      "decode_s": 0.9475157326087356
+    },
+    {
+      "task": "niah_single_3",
+      "index": 38,
+      "prompt_tokens": 32054,
+      "answers": [
+        "21a3089f-0ee8-4394-8905-49b84d7839f0"
+      ],
+      "pred": ": **21a3089f-0ee8-4394-8905-49b84d7839f0**.",
+      "score": 1.0,
+      "prefill_s": 4.855484892614186,
+      "decode_s": 1.0131742833182216
+    },
+    {
+      "task": "niah_single_3",
+      "index": 39,
+      "prompt_tokens": 32040,
+      "answers": [
+        "04071ec1-ce5b-4f1f-8bde-c7cde82d8590"
+      ],
+      "pred": ":\n\n**04071ec1-ce5b-4f1f-8bde-c7cde82d8590**\n\nThis UUID is highlighted in the text as a notable example of a special magic uuid, though it is noted that in the US, it does not have the monopoly on power it once did, as the text discusses the changing dynamics of power and the shift towards a more measured and transparent approach to power distribution.",
+      "score": 1.0,
+      "prefill_s": 4.807047520764172,
+      "decode_s": 2.4391702795401216
+    },
+    {
+      "task": "niah_single_3",
+      "index": 40,
+      "prompt_tokens": 32640,
+      "answers": [
+        "bba0762b-0f3d-4da6-b803-a1e873adf8c7"
+      ],
+      "pred": ": **bba0762b-0f3d-4da6-b803-a1e873adf8c7**.",
+      "score": 1.0,
+      "prefill_s": 4.8984834514558315,
+      "decode_s": 0.8912240406498313
+    },
+    {
+      "task": "niah_single_3",
+      "index": 41,
+      "prompt_tokens": 32638,
+      "answers": [
+        "f5b02b92-1fd5-4c5d-a046-3f5b719c007f"
+      ],
+      "pred": ": **f5b02b92-1fd5-4c5d-a046-3f5b719c007f**.",
+      "score": 1.0,
+      "prefill_s": 4.965340265072882,
+      "decode_s": 0.9941470939666033
+    },
+    {
+      "task": "niah_single_3",
+      "index": 42,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1899d792-2815-4cc2-b78f-ff800fd15755"
+      ],
+      "pred": ":\n\n**1899d792-2815-4cc2-b78f-ff800fd15755**\n\nThis uuid is described as one of the special magic uuids for imaginary-malice, and it is considered the best short description we'll find of what makes a good startup founder. It is a unique identifier that represents a specific quality or trait that is highly valued in the context of being a successful startup founder.",
+      "score": 1.0,
+      "prefill_s": 4.891978851519525,
+      "decode_s": 2.5373576637357473
+    },
+    {
+      "task": "niah_single_3",
+      "index": 43,
+      "prompt_tokens": 32639,
+      "answers": [
+        "bcc5a50f-78ff-4735-a27d-7da624b3294a"
+      ],
+      "pred": ": **bcc5a50f-78ff-4735-a27d-7da624b3294a**.",
+      "score": 1.0,
+      "prefill_s": 4.965471528470516,
+      "decode_s": 0.9162672981619835
+    },
+    {
+      "task": "niah_single_3",
+      "index": 44,
+      "prompt_tokens": 32639,
+      "answers": [
+        "adc48011-79a3-4927-8ff1-2379ea71a3d7"
+      ],
+      "pred": ": **adc48011-79a3-4927-8ff1-2379ea71a3d7**.",
+      "score": 1.0,
+      "prefill_s": 4.965744640678167,
+      "decode_s": 0.9436517572030425
+    },
+    {
+      "task": "niah_single_3",
+      "index": 45,
+      "prompt_tokens": 32640,
+      "answers": [
+        "0e66df4a-e095-4c87-b73d-5b4d96b6bca3"
+      ],
+      "pred": ":\n\n**0e66df4a-e095-4c87-b73d-5b4d96b6bca3**\n\nThis UUID is described as a \"special magic uuid\" that is \"for needy-folk\" and is used as a \"special magic uuid\" in the context of the text. It is mentioned as a \"special magic uuid\" that is \"for needy-folk\" and is used as a \"special magic uuid\" in the context of the text.",
+      "score": 1.0,
+      "prefill_s": 4.887280587106943,
+      "decode_s": 2.7793098744004965
+    },
+    {
+      "task": "niah_single_3",
+      "index": 46,
+      "prompt_tokens": 32638,
+      "answers": [
+        "bf355f6d-ec78-42ec-8d62-bd311cb0d247"
+      ],
+      "pred": ": **bf355f6d-ec78-42ec-8d62-bd311cb0d247**.",
+      "score": 1.0,
+      "prefill_s": 4.97068449575454,
+      "decode_s": 0.9222283530980349
+    },
+    {
+      "task": "niah_single_3",
+      "index": 47,
+      "prompt_tokens": 32038,
+      "answers": [
+        "77ce9897-12c3-46be-9664-0b9412e7a989"
+      ],
+      "pred": ":\n\n**77ce9897-12c3-46be-9664-0b9412e7a989**\n\nThis UUID is described as one of the \"special magic uuids for victorious-institution\" and is associated with the concept of a startup that is created with the intention of selling it. It is a unique identifier that signifies the creation of a startup with the goal of being sold, and it is a key element in the text's discussion of the importance of having a clear and focused vision for a startup.",
+      "score": 1.0,
+      "prefill_s": 4.959416561760008,
+      "decode_s": 3.0633561769500375
+    },
+    {
+      "task": "niah_single_3",
+      "index": 48,
+      "prompt_tokens": 32038,
+      "answers": [
+        "6701eeed-921c-410a-8013-df00bcab698e"
+      ],
+      "pred": ": **6701eeed-921c-410a-8013-df00bcab698e**.",
+      "score": 1.0,
+      "prefill_s": 5.13625408615917,
+      "decode_s": 0.9159568725153804
+    },
+    {
+      "task": "niah_single_3",
+      "index": 49,
+      "prompt_tokens": 32038,
+      "answers": [
+        "930356d2-f842-47bb-b9bb-d6f486e0b36f"
+      ],
+      "pred": ": **930356d2-f842-47bb-b9bb-d6f486e0b36f**.",
+      "score": 1.0,
+      "prefill_s": 4.851665721274912,
+      "decode_s": 0.9044474558904767
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 0,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5469475"
+      ],
+      "pred": " **5469475**.",
+      "score": 1.0,
+      "prefill_s": 5.069195611402392,
+      "decode_s": 0.2627140823751688
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 1,
+      "prompt_tokens": 32632,
+      "answers": [
+        "9676435"
+      ],
+      "pred": " **9676435**.",
+      "score": 1.0,
+      "prefill_s": 4.892461861483753,
+      "decode_s": 0.2660178430378437
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 2,
+      "prompt_tokens": 32635,
+      "answers": [
+        "6707406"
+      ],
+      "pred": " **6707406**.",
+      "score": 1.0,
+      "prefill_s": 4.946738814935088,
+      "decode_s": 0.26319906301796436
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 3,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5782171"
+      ],
+      "pred": ": **5782171**.",
+      "score": 1.0,
+      "prefill_s": 4.945929893292487,
+      "decode_s": 0.28986475244164467
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 4,
+      "prompt_tokens": 32637,
+      "answers": [
+        "8236804"
+      ],
+      "pred": " **8236804**.",
+      "score": 1.0,
+      "prefill_s": 4.949025562033057,
+      "decode_s": 0.2626682547852397
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 5,
+      "prompt_tokens": 32636,
+      "answers": [
+        "4859491"
+      ],
+      "pred": " **4859491**.",
+      "score": 1.0,
+      "prefill_s": 4.976941670291126,
+      "decode_s": 0.26190584152936935
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 6,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1232339"
+      ],
+      "pred": " **1232339**.",
+      "score": 1.0,
+      "prefill_s": 4.951633493416011,
+      "decode_s": 0.2667102748528123
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 7,
+      "prompt_tokens": 32639,
+      "answers": [
+        "2404966"
+      ],
+      "pred": " **2404966**.",
+      "score": 1.0,
+      "prefill_s": 5.096550788730383,
+      "decode_s": 0.2655231123790145
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 8,
+      "prompt_tokens": 32635,
+      "answers": [
+        "2542078"
+      ],
+      "pred": " **2542078**.",
+      "score": 1.0,
+      "prefill_s": 4.958927603438497,
+      "decode_s": 0.26263564359396696
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 9,
+      "prompt_tokens": 32638,
+      "answers": [
+        "5575102"
+      ],
+      "pred": " **5575102**.",
+      "score": 1.0,
+      "prefill_s": 4.956358272582293,
+      "decode_s": 0.2626758897677064
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 10,
+      "prompt_tokens": 32638,
+      "answers": [
+        "7933414"
+      ],
+      "pred": ": **7933414**.",
+      "score": 1.0,
+      "prefill_s": 4.95008787419647,
+      "decode_s": 0.28998542856425047
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 11,
+      "prompt_tokens": 32636,
+      "answers": [
+        "7625469"
+      ],
+      "pred": " **7625469**.",
+      "score": 1.0,
+      "prefill_s": 4.950678643770516,
+      "decode_s": 0.26268434524536133
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 12,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8822269"
+      ],
+      "pred": " **8822269**.",
+      "score": 1.0,
+      "prefill_s": 4.88267741817981,
+      "decode_s": 0.26233377680182457
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 13,
+      "prompt_tokens": 32044,
+      "answers": [
+        "1177205"
+      ],
+      "pred": " **1177205**.",
+      "score": 1.0,
+      "prefill_s": 4.861178613267839,
+      "decode_s": 0.25957801565527916
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 14,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5682634"
+      ],
+      "pred": " **5682634**.",
+      "score": 1.0,
+      "prefill_s": 4.872314696200192,
+      "decode_s": 0.2626964272931218
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 15,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6557882"
+      ],
+      "pred": " **6557882**.",
+      "score": 1.0,
+      "prefill_s": 4.955825375393033,
+      "decode_s": 0.26306558307260275
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 16,
+      "prompt_tokens": 32039,
+      "answers": [
+        "7217581"
+      ],
+      "pred": " **7217581**.",
+      "score": 1.0,
+      "prefill_s": 4.842866906896234,
+      "decode_s": 0.25941599160432816
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 17,
+      "prompt_tokens": 32635,
+      "answers": [
+        "8179235"
+      ],
+      "pred": " **8179235**.",
+      "score": 1.0,
+      "prefill_s": 4.954545868560672,
+      "decode_s": 0.26935640908777714
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 18,
+      "prompt_tokens": 32636,
+      "answers": [
+        "1717179"
+      ],
+      "pred": " **1717179**.",
+      "score": 1.0,
+      "prefill_s": 4.948168599978089,
+      "decode_s": 0.2655576169490814
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 19,
+      "prompt_tokens": 32637,
+      "answers": [
+        "5495057"
+      ],
+      "pred": " **5495057**.",
+      "score": 1.0,
+      "prefill_s": 4.956866379827261,
+      "decode_s": 0.2641914589330554
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 20,
+      "prompt_tokens": 32639,
+      "answers": [
+        "7343784"
+      ],
+      "pred": " **7343784**.",
+      "score": 1.0,
+      "prefill_s": 5.148662033490837,
+      "decode_s": 0.270122729241848
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 21,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2941180"
+      ],
+      "pred": " **2941180**.",
+      "score": 1.0,
+      "prefill_s": 4.881241372786462,
+      "decode_s": 0.2632059855386615
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 22,
+      "prompt_tokens": 32635,
+      "answers": [
+        "3470606"
+      ],
+      "pred": " **3470606**.",
+      "score": 1.0,
+      "prefill_s": 4.953661624342203,
+      "decode_s": 0.2633818155154586
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 23,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5714290"
+      ],
+      "pred": " **5714290**.",
+      "score": 1.0,
+      "prefill_s": 4.951120536774397,
+      "decode_s": 0.2635774137452245
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 24,
+      "prompt_tokens": 32635,
+      "answers": [
+        "6429333"
+      ],
+      "pred": " **6429333**.",
+      "score": 1.0,
+      "prefill_s": 5.060634148307145,
+      "decode_s": 0.2667947616428137
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 25,
+      "prompt_tokens": 32638,
+      "answers": [
+        "8997414"
+      ],
+      "pred": " **8997414**.",
+      "score": 1.0,
+      "prefill_s": 4.952723237685859,
+      "decode_s": 0.26388491224497557
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 26,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3540804"
+      ],
+      "pred": " **3540804**.",
+      "score": 1.0,
+      "prefill_s": 5.000104487873614,
+      "decode_s": 0.26196995191276073
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 27,
+      "prompt_tokens": 32634,
+      "answers": [
+        "9299999"
+      ],
+      "pred": " **9299999**.",
+      "score": 1.0,
+      "prefill_s": 4.946559178642929,
+      "decode_s": 0.2639764444902539
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 28,
+      "prompt_tokens": 32633,
+      "answers": [
+        "7397133"
+      ],
+      "pred": " **7397133**.",
+      "score": 1.0,
+      "prefill_s": 4.947133597917855,
+      "decode_s": 0.2631813492625952
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 29,
+      "prompt_tokens": 32636,
+      "answers": [
+        "1991770"
+      ],
+      "pred": " **1991770**.",
+      "score": 1.0,
+      "prefill_s": 4.9425119096413255,
+      "decode_s": 0.2630750285461545
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 30,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6527651"
+      ],
+      "pred": " **6527651**.",
+      "score": 1.0,
+      "prefill_s": 4.944129299372435,
+      "decode_s": 0.263743145391345
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 31,
+      "prompt_tokens": 32039,
+      "answers": [
+        "9916223"
+      ],
+      "pred": " **9916223**.",
+      "score": 1.0,
+      "prefill_s": 4.835718219168484,
+      "decode_s": 0.2597189201042056
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 32,
+      "prompt_tokens": 32633,
+      "answers": [
+        "4644818"
+      ],
+      "pred": " **4644818**.",
+      "score": 1.0,
+      "prefill_s": 5.0136125879362226,
+      "decode_s": 0.26123669371008873
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 33,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9047756"
+      ],
+      "pred": " **9047756**.",
+      "score": 1.0,
+      "prefill_s": 4.94292579498142,
+      "decode_s": 0.2631252743303776
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 34,
+      "prompt_tokens": 32638,
+      "answers": [
+        "3512758"
+      ],
+      "pred": " **3512758**.",
+      "score": 1.0,
+      "prefill_s": 5.037841885350645,
+      "decode_s": 0.26286124624311924
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 35,
+      "prompt_tokens": 32640,
+      "answers": [
+        "3081380"
+      ],
+      "pred": " **3081380**.",
+      "score": 1.0,
+      "prefill_s": 4.871425831690431,
+      "decode_s": 0.2679080553352833
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 36,
+      "prompt_tokens": 32638,
+      "answers": [
+        "7407179"
+      ],
+      "pred": " **7407179**.",
+      "score": 1.0,
+      "prefill_s": 4.940925862640142,
+      "decode_s": 0.269024102948606
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1845941"
+      ],
+      "pred": " **1845941**.",
+      "score": 1.0,
+      "prefill_s": 4.868464425206184,
+      "decode_s": 0.2645243927836418
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 38,
+      "prompt_tokens": 32635,
+      "answers": [
+        "3509650"
+      ],
+      "pred": " **3509650**.",
+      "score": 1.0,
+      "prefill_s": 4.944351461715996,
+      "decode_s": 0.2632339680567384
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 39,
+      "prompt_tokens": 32632,
+      "answers": [
+        "9489662"
+      ],
+      "pred": " **9489662**.",
+      "score": 1.0,
+      "prefill_s": 4.891754034906626,
+      "decode_s": 0.2634230926632881
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 40,
+      "prompt_tokens": 32636,
+      "answers": [
+        "6528650"
+      ],
+      "pred": " **6528650**.",
+      "score": 1.0,
+      "prefill_s": 4.9481852082535625,
+      "decode_s": 0.26338020246475935
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 41,
+      "prompt_tokens": 32044,
+      "answers": [
+        "4774086"
+      ],
+      "pred": " **4774086**.",
+      "score": 1.0,
+      "prefill_s": 4.834657520055771,
+      "decode_s": 0.2742269327864051
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 42,
+      "prompt_tokens": 32639,
+      "answers": [
+        "6292072"
+      ],
+      "pred": " **6292072**.",
+      "score": 1.0,
+      "prefill_s": 4.943682070821524,
+      "decode_s": 0.26246046368032694
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 43,
+      "prompt_tokens": 32639,
+      "answers": [
+        "3387367"
+      ],
+      "pred": " **3387367**.",
+      "score": 1.0,
+      "prefill_s": 4.945175197906792,
+      "decode_s": 0.26269710902124643
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 44,
+      "prompt_tokens": 32041,
+      "answers": [
+        "6809941"
+      ],
+      "pred": " **9971213**.",
+      "score": 0.0,
+      "prefill_s": 4.836108255200088,
+      "decode_s": 0.25974429678171873
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 45,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2609505"
+      ],
+      "pred": " **2609505**.",
+      "score": 1.0,
+      "prefill_s": 4.9462579526007175,
+      "decode_s": 0.2630580263212323
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 46,
+      "prompt_tokens": 32635,
+      "answers": [
+        "7249468"
+      ],
+      "pred": " **7249468**.",
+      "score": 1.0,
+      "prefill_s": 4.9490685956552625,
+      "decode_s": 0.2630084026604891
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 47,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5291735"
+      ],
+      "pred": " **5291735**.",
+      "score": 1.0,
+      "prefill_s": 4.9650098429992795,
+      "decode_s": 0.26277339085936546
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 48,
+      "prompt_tokens": 32041,
+      "answers": [
+        "1793871"
+      ],
+      "pred": " **1793871**.",
+      "score": 1.0,
+      "prefill_s": 4.842468709684908,
+      "decode_s": 0.2601704578846693
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 49,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8149182"
+      ],
+      "pred": " **8149182**.",
+      "score": 1.0,
+      "prefill_s": 4.877920243889093,
+      "decode_s": 0.2629486806690693
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 0,
+      "prompt_tokens": 32112,
+      "answers": [
+        "8033522"
+      ],
+      "pred": ":\n\n**8033522.**",
+      "score": 1.0,
+      "prefill_s": 4.778118758462369,
+      "decode_s": 0.2850977685302496
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 1,
+      "prompt_tokens": 32099,
+      "answers": [
+        "6739421"
+      ],
+      "pred": ":\n\n**6739421**\n\nThis number is explicitly listed in the text as one of the special magic numbers for the \"toothsome-hubcap\" entry.",
+      "score": 1.0,
+      "prefill_s": 4.8375104973092675,
+      "decode_s": 0.9659184580668807
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 2,
+      "prompt_tokens": 32562,
+      "answers": [
+        "5780206"
+      ],
+      "pred": ":\n\n**5780206**\n\nThis number is listed in the text as one of the special magic numbers for various contexts, and it corresponds to \"skillful-grip.\"",
+      "score": 1.0,
+      "prefill_s": 4.9505880093201995,
+      "decode_s": 0.9920240323990583
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 3,
+      "prompt_tokens": 32567,
+      "answers": [
+        "3723300"
+      ],
+      "pred": ":\n\n**3723300**.",
+      "score": 1.0,
+      "prefill_s": 4.949676503427327,
+      "decode_s": 0.2874356145039201
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 4,
+      "prompt_tokens": 32110,
+      "answers": [
+        "2120473"
+      ],
+      "pred": ":\n\n**7204733**\n\nThis number is listed in the provided list of special magic numbers for various themed entities.",
+      "score": 0.0,
+      "prefill_s": 4.84791592694819,
+      "decode_s": 0.699413251131773
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 5,
+      "prompt_tokens": 32617,
+      "answers": [
+        "2546236"
+      ],
+      "pred": ":\n\n**2546236**.",
+      "score": 1.0,
+      "prefill_s": 4.9670544527471066,
+      "decode_s": 0.28915978502482176
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 6,
+      "prompt_tokens": 32553,
+      "answers": [
+        "8026423"
+      ],
+      "pred": ":\n\n**8026423**.",
+      "score": 1.0,
+      "prefill_s": 4.96224604267627,
+      "decode_s": 0.28822648990899324
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 7,
+      "prompt_tokens": 32575,
+      "answers": [
+        "9950691"
+      ],
+      "pred": ":\n\n**9950691**.",
+      "score": 1.0,
+      "prefill_s": 4.94780287053436,
+      "decode_s": 0.2884219279512763
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 8,
+      "prompt_tokens": 32119,
+      "answers": [
+        "5475827"
+      ],
+      "pred": ":\n\n**5475827**\n\nThis number is listed as one of the special magic numbers for \"tricky-electronics\" in the given list.",
+      "score": 1.0,
+      "prefill_s": 4.848323941230774,
+      "decode_s": 0.8544669337570667
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 9,
+      "prompt_tokens": 32606,
+      "answers": [
+        "4446951"
+      ],
+      "pred": ":\n\n**6801993**.",
+      "score": 0.0,
+      "prefill_s": 5.066656358540058,
+      "decode_s": 0.28784528374671936
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 10,
+      "prompt_tokens": 32626,
+      "answers": [
+        "2987028"
+      ],
+      "pred": ":\n\n**5802216**.",
+      "score": 0.0,
+      "prefill_s": 4.969618610106409,
+      "decode_s": 0.2884083716198802
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 11,
+      "prompt_tokens": 32512,
+      "answers": [
+        "5121530"
+      ],
+      "pred": ":\n\n**9229959**\n\nThis number is listed in the text as one of the special magic numbers for the \"abusive-anteater\" entry.",
+      "score": 0.0,
+      "prefill_s": 4.864518193528056,
+      "decode_s": 0.9122881190851331
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 12,
+      "prompt_tokens": 32609,
+      "answers": [
+        "1680448"
+      ],
+      "pred": ":\n\n**1680448**\n\nThis number is listed in the text as one of the special magic numbers for lazy-booklet.",
+      "score": 1.0,
+      "prefill_s": 4.974336417391896,
+      "decode_s": 0.7586688930168748
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 13,
+      "prompt_tokens": 32619,
+      "answers": [
+        "4449716"
+      ],
+      "pred": ":\n\n**3447750**\n\nThis number is listed in the text as one of the special magic numbers for \"arrogant-universe.\"",
+      "score": 0.0,
+      "prefill_s": 5.194866206496954,
+      "decode_s": 0.8438108302652836
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 14,
+      "prompt_tokens": 32620,
+      "answers": [
+        "6681785"
+      ],
+      "pred": ":\n\n**6681785**.",
+      "score": 1.0,
+      "prefill_s": 4.972199257463217,
+      "decode_s": 0.28936256654560566
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 15,
+      "prompt_tokens": 32560,
+      "answers": [
+        "2216514"
+      ],
+      "pred": ":\n\n**2216514**\n\nThis number is listed in the text as one of the special magic numbers for the \"imperfect-sensibility\" category.",
+      "score": 1.0,
+      "prefill_s": 4.911513055674732,
+      "decode_s": 0.9226600173860788
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 16,
+      "prompt_tokens": 32122,
+      "answers": [
+        "6453605"
+      ],
+      "pred": ":\n\n**6453605**.",
+      "score": 1.0,
+      "prefill_s": 4.938033662736416,
+      "decode_s": 0.2894709184765816
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 17,
+      "prompt_tokens": 32145,
+      "answers": [
+        "3932770"
+      ],
+      "pred": ":\n\n**3932770**.",
+      "score": 1.0,
+      "prefill_s": 4.875198619440198,
+      "decode_s": 0.28600424248725176
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 18,
+      "prompt_tokens": 32604,
+      "answers": [
+        "7928495"
+      ],
+      "pred": ":\n\n**7928495**.",
+      "score": 1.0,
+      "prefill_s": 4.973324512131512,
+      "decode_s": 0.28987472876906395
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 19,
+      "prompt_tokens": 32103,
+      "answers": [
+        "6878998"
+      ],
+      "pred": ":\n\n**6878998**.",
+      "score": 1.0,
+      "prefill_s": 4.868291833437979,
+      "decode_s": 0.2854672335088253
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 20,
+      "prompt_tokens": 32585,
+      "answers": [
+        "6776797"
+      ],
+      "pred": ":\n\n**6776797**\n\nThis number is listed in the text as one of the special magic numbers for various contexts, and it corresponds to the \"thankful-garment\" entry.",
+      "score": 1.0,
+      "prefill_s": 4.9804440550506115,
+      "decode_s": 1.0989605002105236
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 21,
+      "prompt_tokens": 32558,
+      "answers": [
+        "9675278"
+      ],
+      "pred": ":\n\n**9675278**.",
+      "score": 1.0,
+      "prefill_s": 4.976855278946459,
+      "decode_s": 0.288046782836318
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 22,
+      "prompt_tokens": 32629,
+      "answers": [
+        "1853144"
+      ],
+      "pred": ":\n\n**8848315**.",
+      "score": 0.0,
+      "prefill_s": 4.978354928083718,
+      "decode_s": 0.2898677960038185
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 23,
+      "prompt_tokens": 32578,
+      "answers": [
+        "1586206"
+      ],
+      "pred": ":\n\n**1586206**\n\nThis number is listed in the text as one of the special magic numbers for \"confused-quartz.\"",
+      "score": 1.0,
+      "prefill_s": 4.981197291053832,
+      "decode_s": 0.810771849937737
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 24,
+      "prompt_tokens": 32555,
+      "answers": [
+        "1556306"
+      ],
+      "pred": ":\n\n**1556306**.",
+      "score": 1.0,
+      "prefill_s": 4.978849637322128,
+      "decode_s": 0.28859695605933666
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 25,
+      "prompt_tokens": 32120,
+      "answers": [
+        "6140910"
+      ],
+      "pred": ":\n\n**6140910**\n\nThis number is listed in the text as one of the special magic numbers for various items or concepts.",
+      "score": 1.0,
+      "prefill_s": 4.8029463002458215,
+      "decode_s": 0.7772069917991757
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 26,
+      "prompt_tokens": 32582,
+      "answers": [
+        "2719702"
+      ],
+      "pred": ":\n\n**6619702**\n\nThis number is listed in the text as one of the special magic numbers for \"precious-winery.\"",
+      "score": 0.0,
+      "prefill_s": 4.983262482099235,
+      "decode_s": 0.8108945302665234
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 27,
+      "prompt_tokens": 32524,
+      "answers": [
+        "6102685"
+      ],
+      "pred": ":\n\n**6102685**.",
+      "score": 1.0,
+      "prefill_s": 4.973872929811478,
+      "decode_s": 0.28836086206138134
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 28,
+      "prompt_tokens": 32561,
+      "answers": [
+        "1788951"
+      ],
+      "pred": ":\n\n**1788951**\n\nThis number is explicitly listed in the text as one of the special magic numbers for splendid-networking.",
+      "score": 1.0,
+      "prefill_s": 4.970360336825252,
+      "decode_s": 0.7886198274791241
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 29,
+      "prompt_tokens": 32633,
+      "answers": [
+        "6977290"
+      ],
+      "pred": ":\n\n**6977290**.",
+      "score": 1.0,
+      "prefill_s": 4.9626696379855275,
+      "decode_s": 0.28875433187931776
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 30,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5494133"
+      ],
+      "pred": ":\n\n**5494133**.",
+      "score": 1.0,
+      "prefill_s": 4.962889482267201,
+      "decode_s": 0.2889295006170869
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 31,
+      "prompt_tokens": 32096,
+      "answers": [
+        "6701456"
+      ],
+      "pred": ":\n\n**6701456**\n\nThis number is explicitly listed in the text as one of the special magic numbers for \"utter-timpani.\"",
+      "score": 1.0,
+      "prefill_s": 4.793327195569873,
+      "decode_s": 0.8361050924286246
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 32,
+      "prompt_tokens": 32609,
+      "answers": [
+        "1483082"
+      ],
+      "pred": ":\n\n**1483082**\n\nThis number is listed in the text as one of the special magic numbers for the \"steep-ton\" entry.",
+      "score": 1.0,
+      "prefill_s": 4.974526897072792,
+      "decode_s": 0.8661536406725645
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 33,
+      "prompt_tokens": 32607,
+      "answers": [
+        "3036588"
+      ],
+      "pred": ":\n\n**3036588**.",
+      "score": 1.0,
+      "prefill_s": 4.982988874427974,
+      "decode_s": 0.2887399550527334
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 34,
+      "prompt_tokens": 32557,
+      "answers": [
+        "8976699"
+      ],
+      "pred": ":\n\n**8068024.**",
+      "score": 0.0,
+      "prefill_s": 4.980037034489214,
+      "decode_s": 0.2891705557703972
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 35,
+      "prompt_tokens": 32601,
+      "answers": [
+        "9248634"
+      ],
+      "pred": ":\n\n**9248634**\n\nThis number is listed in the text as one of the special magic numbers for ripe-sympathy, ambiguous-gyro, jagged-train, and other similar categories.",
+      "score": 1.0,
+      "prefill_s": 4.9890443263575435,
+      "decode_s": 1.1818817500025034
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 36,
+      "prompt_tokens": 32555,
+      "answers": [
+        "3503443"
+      ],
+      "pred": ":\n\n**6885018**.",
+      "score": 0.0,
+      "prefill_s": 5.017442671582103,
+      "decode_s": 0.28875486366450787
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 37,
+      "prompt_tokens": 32547,
+      "answers": [
+        "7580502"
+      ],
+      "pred": ":\n\n**7580502**\n\nThis number is listed in the text as one of the special magic numbers for various contexts, and it corresponds to the entry:\n\n> One of the special magic numbers for raspy-tune-up is: 7580502.",
+      "score": 1.0,
+      "prefill_s": 4.986851955763996,
+      "decode_s": 1.5469733560457826
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 38,
+      "prompt_tokens": 32626,
+      "answers": [
+        "7505552"
+      ],
+      "pred": ":\n\n**7505552**.",
+      "score": 1.0,
+      "prefill_s": 4.985484343953431,
+      "decode_s": 0.2941615469753742
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 39,
+      "prompt_tokens": 32606,
+      "answers": [
+        "9680914"
+      ],
+      "pred": ":\n\n**9680914**.",
+      "score": 1.0,
+      "prefill_s": 4.991316778585315,
+      "decode_s": 0.28926244657486677
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 40,
+      "prompt_tokens": 32584,
+      "answers": [
+        "3328360"
+      ],
+      "pred": ":\n\n**6770073**\n\nThis number is listed in the text as one of the special magic numbers for various contexts, including \"absent-impact.\"",
+      "score": 0.0,
+      "prefill_s": 4.930217178538442,
+      "decode_s": 0.9191459184512496
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 41,
+      "prompt_tokens": 32533,
+      "answers": [
+        "3846377"
+      ],
+      "pred": ":\n\n**3846377**\n\nThis number is listed as one of the special magic numbers for \"ad hoc-motorcar\" in the given text.",
+      "score": 1.0,
+      "prefill_s": 4.987550678662956,
+      "decode_s": 0.8916291799396276
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 42,
+      "prompt_tokens": 32608,
+      "answers": [
+        "4213230"
+      ],
+      "pred": ":\n\n**6230596**.",
+      "score": 0.0,
+      "prefill_s": 4.914199116639793,
+      "decode_s": 0.28968555200845003
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 43,
+      "prompt_tokens": 32106,
+      "answers": [
+        "4854069"
+      ],
+      "pred": ":\n\n**9854069**\n\nThis number is listed in the text as one of the special magic numbers for \"accessible-whip.\"",
+      "score": 0.0,
+      "prefill_s": 5.009007533080876,
+      "decode_s": 0.7813757676631212
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 44,
+      "prompt_tokens": 32097,
+      "answers": [
+        "8786009"
+      ],
+      "pred": ":\n\n**8786009.**",
+      "score": 1.0,
+      "prefill_s": 4.874745997600257,
+      "decode_s": 0.2867223620414734
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 45,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9850769"
+      ],
+      "pred": ":\n\n**9850769**\n\nThis number is listed in the text as one of the special magic numbers for various alleged-complicity, adhesive-immortal, adaptable-coupon, and other related terms.",
+      "score": 1.0,
+      "prefill_s": 5.060308280400932,
+      "decode_s": 1.138015266507864
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 46,
+      "prompt_tokens": 32626,
+      "answers": [
+        "8538219"
+      ],
+      "pred": ":\n\n**8538219**.",
+      "score": 1.0,
+      "prefill_s": 4.983312708325684,
+      "decode_s": 0.2932538306340575
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 47,
+      "prompt_tokens": 32598,
+      "answers": [
+        "8626118"
+      ],
+      "pred": ":\n\n**6626118**\n\nThis number is listed in the text as one of the special magic numbers for blue-eyed-cinema, and it corresponds to the phrase \"shallow-curry.\"",
+      "score": 0.0,
+      "prefill_s": 4.978691280819476,
+      "decode_s": 1.108995171263814
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 48,
+      "prompt_tokens": 32629,
+      "answers": [
+        "2742498"
+      ],
+      "pred": " **2742498**.",
+      "score": 1.0,
+      "prefill_s": 4.977970044128597,
+      "decode_s": 0.2634872030466795
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 49,
+      "prompt_tokens": 32624,
+      "answers": [
+        "7093046"
+      ],
+      "pred": ":\n\n**7093046.**",
+      "score": 1.0,
+      "prefill_s": 4.941754553467035,
+      "decode_s": 0.2884005168452859
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 0,
+      "prompt_tokens": 32575,
+      "answers": [
+        "8e5949be-db18-408e-9941-1e21cd858c73"
+      ],
+      "pred": ":\n\n**14224807-8e59-4c72-a53b-c531fcb5c281.**\n\nThis is the UUID that corresponds to the specific special magic uuid mentioned in the text.",
+      "score": 0.0,
+      "prefill_s": 4.948080103844404,
+      "decode_s": 1.4168962053954601
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 1,
+      "prompt_tokens": 32620,
+      "answers": [
+        "d64847fe-22db-4741-ab6f-a94ee871ef90"
+      ],
+      "pred": ":\n\n**549a499a-6964-494c-b84a-fee7d5d9c055.**",
+      "score": 0.0,
+      "prefill_s": 4.997278080321848,
+      "decode_s": 0.9692673496901989
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 2,
+      "prompt_tokens": 32551,
+      "answers": [
+        "7ac67d92-af26-4f40-93cf-fc3025f57be1"
+      ],
+      "pred": ":\n\n**7ac67d92-af26-4f40-93cf-21c0a498c982.**",
+      "score": 0.0,
+      "prefill_s": 4.964518916793168,
+      "decode_s": 0.9671288095414639
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 3,
+      "prompt_tokens": 30742,
+      "answers": [
+        "e112ba9b-2037-4ae2-b946-5613dd7e712e"
+      ],
+      "pred": ":\n\n**e112ba9b-2037-4ae2-b946-5613dd7e712e**.",
+      "score": 1.0,
+      "prefill_s": 4.491347142495215,
+      "decode_s": 0.9085943419486284
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 4,
+      "prompt_tokens": 32579,
+      "answers": [
+        "0620b97e-0d91-465e-b355-0bc15889cf11"
+      ],
+      "pred": ":\n\n**0620b97e-0d91-465e-b355-0bc15889cf11.**",
+      "score": 1.0,
+      "prefill_s": 4.967839900404215,
+      "decode_s": 0.9690102757886052
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 5,
+      "prompt_tokens": 32629,
+      "answers": [
+        "a0408300-c0a9-460f-b8cd-fd9eeaac7f78"
+      ],
+      "pred": ":\n\n**a0408300-c0a9-460f-b8cd-fd9eeaac7f78.**\n\nThis is the UUID that is specifically mentioned in the text as one of the special magic UUIDs for the given identifier.",
+      "score": 1.0,
+      "prefill_s": 4.965990632772446,
+      "decode_s": 1.4964883485808969
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 6,
+      "prompt_tokens": 32600,
+      "answers": [
+        "641e6f53-4092-4e98-8a99-e7e977dabd02"
+      ],
+      "pred": ":\n\n**76e2d7b6-d058-415f-a1b2-3ec903b405b4**\n\nThis is the UUID that is specifically mentioned in the text as one of the special magic UUIDs for a particular entry.",
+      "score": 0.0,
+      "prefill_s": 4.9137302888557315,
+      "decode_s": 1.570013977587223
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 7,
+      "prompt_tokens": 30754,
+      "answers": [
+        "28d5026b-b4fd-4986-9701-275e809cfbc4"
+      ],
+      "pred": ":\n\n**66b6c950-f8b4-4535-acfa-0c8cf170cd2e.**",
+      "score": 0.0,
+      "prefill_s": 4.497146263718605,
+      "decode_s": 0.8673097137361765
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 8,
+      "prompt_tokens": 30743,
+      "answers": [
+        "e20fe49e-5010-4523-80b5-fba68612a474"
+      ],
+      "pred": ":\n\n**2f7af8fd-030a-46fc-afc4-754f36619aca**.",
+      "score": 0.0,
+      "prefill_s": 4.501266969367862,
+      "decode_s": 0.8484280481934547
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 9,
+      "prompt_tokens": 30753,
+      "answers": [
+        "6028c9a3-ac6a-4e6e-82ac-6e1617e54b20"
+      ],
+      "pred": ":\n\n**7fb0d12f-bbb2-4f94-b3ad-e3780951df3f**.",
+      "score": 0.0,
+      "prefill_s": 4.496393187902868,
+      "decode_s": 0.8447800101712346
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 10,
+      "prompt_tokens": 30781,
+      "answers": [
+        "97e4bb01-2aee-4b3d-9ad7-1d3135ffa2ec"
+      ],
+      "pred": ":\n\n**97e4bb01-2aee-4b3d-9ad7-1d3135ffa2ec.**",
+      "score": 1.0,
+      "prefill_s": 4.490701328031719,
+      "decode_s": 0.866235913708806
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 11,
+      "prompt_tokens": 30862,
+      "answers": [
+        "5029bddf-6d31-4a9e-a7ab-a6962322edf1"
+      ],
+      "pred": ":\n\n**5029bddf-6d31-4b27-ab92-9b59ff5fa91d.**",
+      "score": 0.0,
+      "prefill_s": 4.515098742209375,
+      "decode_s": 0.8973237033933401
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 12,
+      "prompt_tokens": 30768,
+      "answers": [
+        "c5afde7f-58c1-4b3d-8499-720a0307c520"
+      ],
+      "pred": ":\n\n**e20f93fb-1263-4fa7-bd5d-b2e5af0601a9**.",
+      "score": 0.0,
+      "prefill_s": 4.452573521994054,
+      "decode_s": 0.901682797819376
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 13,
+      "prompt_tokens": 32621,
+      "answers": [
+        "107036a3-5f2d-4a9d-be44-3e0cca7236ad"
+      ],
+      "pred": ":\n\n**107036a3-5f2d-4a9d-be44-3e0cca7236ad.**",
+      "score": 1.0,
+      "prefill_s": 4.972177100367844,
+      "decode_s": 0.9194093523547053
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 14,
+      "prompt_tokens": 32534,
+      "answers": [
+        "45e682ab-98e6-448b-b2aa-9f01539e33a3"
+      ],
+      "pred": ":\n\n**45e682ab-98e6-448b-b2aa-9f01539e33a3.**",
+      "score": 1.0,
+      "prefill_s": 4.965531055815518,
+      "decode_s": 0.9753368692472577
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 15,
+      "prompt_tokens": 32615,
+      "answers": [
+        "1d1271f7-6b3e-48b4-8611-265a682fa54c"
+      ],
+      "pred": ":\n\n**1d1271f7-6b3e-48b4-8611-265a682fa54c**.",
+      "score": 1.0,
+      "prefill_s": 5.263863612897694,
+      "decode_s": 1.0284194583073258
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 16,
+      "prompt_tokens": 30757,
+      "answers": [
+        "d71b3adb-24e8-4cbd-acf4-1897d9008fdc"
+      ],
+      "pred": ":\n\n**55544d36-0777-4fcf-bce6-a68125e16313**.",
+      "score": 0.0,
+      "prefill_s": 4.502922611311078,
+      "decode_s": 0.911815706640482
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 17,
+      "prompt_tokens": 30786,
+      "answers": [
+        "6b9902fb-3d8b-4110-83de-1469686aa35d"
+      ],
+      "pred": ":\n\n**6b9902fb-3d8b-4110-83de-1469686aa35d.**",
+      "score": 1.0,
+      "prefill_s": 4.504885079339147,
+      "decode_s": 0.9512672517448664
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 18,
+      "prompt_tokens": 32527,
+      "answers": [
+        "02304ddc-f981-4fe0-80c0-c656fec4452c"
+      ],
+      "pred": ":\n\n**b7631fb5-d4ec-4355-8c9d-2548f4b7066d.**",
+      "score": 0.0,
+      "prefill_s": 4.973481761291623,
+      "decode_s": 0.9793667551130056
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 19,
+      "prompt_tokens": 32621,
+      "answers": [
+        "45aa8084-84d5-42ef-9897-e685313df317"
+      ],
+      "pred": ":\n\n**2dd423b3-a9b6-4f50-8adb-c1d8841e7162**.",
+      "score": 0.0,
+      "prefill_s": 5.181818007491529,
+      "decode_s": 0.9152460051700473
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 20,
+      "prompt_tokens": 30754,
+      "answers": [
+        "6ce4238d-0236-4166-90d0-593e93e0fb2d"
+      ],
+      "pred": ":\n\n**6ce4238d-0236-4166-90d0-593e93e0fb2d.**",
+      "score": 1.0,
+      "prefill_s": 4.494726842269301,
+      "decode_s": 0.9595114700496197
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 21,
+      "prompt_tokens": 32607,
+      "answers": [
+        "d793d65c-1bc8-42dd-93c8-8a75acec23df"
+      ],
+      "pred": ":\n\n**d793d65c-1bc8-42dd-93c8-8a75acec23df.**",
+      "score": 1.0,
+      "prefill_s": 4.971331248991191,
+      "decode_s": 0.9173277886584401
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 22,
+      "prompt_tokens": 30761,
+      "answers": [
+        "cda84507-08df-40d8-baa3-832d30da73a0"
+      ],
+      "pred": ":\n\n**7df17f04-0331-43dd-bad2-8f6e416f7f69**\n\nThis is the UUID that is explicitly listed in the text as one of the special magic uuids for the given identifier.",
+      "score": 0.0,
+      "prefill_s": 4.497633867897093,
+      "decode_s": 1.490025958046317
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 23,
+      "prompt_tokens": 30733,
+      "answers": [
+        "465d1ce7-651c-4b64-9660-34489c58cc01"
+      ],
+      "pred": ":\n\n**465d1ce7-651c-4b64-9660-34489c58cc01.**",
+      "score": 1.0,
+      "prefill_s": 4.497533868998289,
+      "decode_s": 0.9733028551563621
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 24,
+      "prompt_tokens": 32535,
+      "answers": [
+        "798f5d58-90ae-4f8f-910d-a139645a9286"
+      ],
+      "pred": ":\n\n**4235f75f-ae68-4371-91b1-ac15485d3905.**",
+      "score": 0.0,
+      "prefill_s": 5.123801072128117,
+      "decode_s": 0.9646082911640406
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 25,
+      "prompt_tokens": 32608,
+      "answers": [
+        "68bf98e6-11e6-4889-9e92-58c4ae75a6d4"
+      ],
+      "pred": ":\n\n**68bf950c-8f09-43f3-bc98-0ef2ac625a07.**\n\nThis is the uuid that corresponds to the specific entry in the list provided.",
+      "score": 0.0,
+      "prefill_s": 4.893482308834791,
+      "decode_s": 1.335056315176189
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 26,
+      "prompt_tokens": 32630,
+      "answers": [
+        "19408beb-74be-4a62-ba51-6c1e021a97b2"
+      ],
+      "pred": ":\n\n**19408beb-74be-4a62-ba51-6c1e021a97b2.**",
+      "score": 1.0,
+      "prefill_s": 4.967642933130264,
+      "decode_s": 0.9422144824638963
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 27,
+      "prompt_tokens": 32621,
+      "answers": [
+        "800d2302-b09a-4eef-9976-c6eb0c351b37"
+      ],
+      "pred": ":\n\n**800d2302-b09a-4eef-9976-c6eb0c351b37**.",
+      "score": 1.0,
+      "prefill_s": 4.970657990314066,
+      "decode_s": 0.9419647846370935
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 28,
+      "prompt_tokens": 32575,
+      "answers": [
+        "864c0812-01ce-4c04-bff9-0a347b1a2aef"
+      ],
+      "pred": ":\n\n**864c0812-01ce-4901-82b4-dc014d8adad0**\n\nThis is the uuid that is specifically mentioned in the text as one of the special magic uuids for the given identifier.",
+      "score": 0.0,
+      "prefill_s": 4.963343050330877,
+      "decode_s": 1.5425483845174313
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 29,
+      "prompt_tokens": 30734,
+      "answers": [
+        "6a5e5304-25d7-4794-9a14-6cb3847d14d0"
+      ],
+      "pred": ":\n\n**1e11b255-7e55-40fb-8840-31d92db5297d**.",
+      "score": 0.0,
+      "prefill_s": 4.500208155252039,
+      "decode_s": 0.959532137028873
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 30,
+      "prompt_tokens": 32601,
+      "answers": [
+        "d1f9d369-2e4c-44c0-b7dc-16ffec716585"
+      ],
+      "pred": ":\n\n**fd33f196-98ea-45f1-9bbe-7b21b9c3483d**.",
+      "score": 0.0,
+      "prefill_s": 4.9696466801688075,
+      "decode_s": 0.942895052023232
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 31,
+      "prompt_tokens": 32577,
+      "answers": [
+        "8b88aab9-292a-474b-b20e-f9326eff9529"
+      ],
+      "pred": ":\n\n**7f37b3f3-c6b1-4e38-a64e-083fce8680df**.",
+      "score": 0.0,
+      "prefill_s": 4.972621971741319,
+      "decode_s": 0.9188228594139218
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 32,
+      "prompt_tokens": 30770,
+      "answers": [
+        "c804e02c-5aa6-4e0d-8c06-355bb801f124"
+      ],
+      "pred": ":\n\n**c804e02c-5aa6-4e0d-8c06-355bb801f124.**",
+      "score": 1.0,
+      "prefill_s": 4.495856985449791,
+      "decode_s": 0.9602216528728604
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 33,
+      "prompt_tokens": 32568,
+      "answers": [
+        "7cab4310-71d7-42d8-bb75-5da150429349"
+      ],
+      "pred": ":\n\n**b9762f4c-ba4d-4488-958a-f44091ea8456**.",
+      "score": 0.0,
+      "prefill_s": 4.9022627249360085,
+      "decode_s": 0.9688430810347199
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 34,
+      "prompt_tokens": 32587,
+      "answers": [
+        "28a5800f-5d0c-4407-b959-3fa4fcd354e4"
+      ],
+      "pred": ":\n\n**28a5800f-5d0c-4407-b959-3fa4fcd354e4.**",
+      "score": 1.0,
+      "prefill_s": 4.973473641090095,
+      "decode_s": 0.9686685400083661
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 35,
+      "prompt_tokens": 30841,
+      "answers": [
+        "dcfc4948-bc60-4d23-8ee2-23d01f84d424"
+      ],
+      "pred": ":\n\n**d4d5af5c-ed08-4a6d-918f-92fc7658e470.**",
+      "score": 0.0,
+      "prefill_s": 4.494536057114601,
+      "decode_s": 0.9165540533140302
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 36,
+      "prompt_tokens": 30762,
+      "answers": [
+        "6124f953-b27d-41a2-ae61-9daaa80493ac"
+      ],
+      "pred": ":\n\n**6124f953-b27d-41a2-ae61-9daaa80493ac**.",
+      "score": 1.0,
+      "prefill_s": 4.498384244740009,
+      "decode_s": 0.887414894066751
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 37,
+      "prompt_tokens": 30770,
+      "answers": [
+        "aaa8cc35-feb5-41a3-b1bc-3f80b473986b"
+      ],
+      "pred": ":\n\n**aaa8cc35-feb5-41a3-b1bc-3f80b473986b**.",
+      "score": 1.0,
+      "prefill_s": 4.497654225677252,
+      "decode_s": 0.8331797113642097
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 38,
+      "prompt_tokens": 30756,
+      "answers": [
+        "8407ef7c-f4a1-4a3c-9c5f-c0acba0f3409"
+      ],
+      "pred": ":\n\n**8407ef7c-f4a1-4a3c-9c5f-c0acba0f3409**\n\nThis is the specific UUID that was highlighted in the text as one of the special magic UUIDs for the given identifier.",
+      "score": 1.0,
+      "prefill_s": 4.497497947886586,
+      "decode_s": 1.4649101980030537
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 39,
+      "prompt_tokens": 30760,
+      "answers": [
+        "af535118-8a5d-4a31-9a82-5e3de0a7112c"
+      ],
+      "pred": ":\n\n**af535118-8a5d-4a31-9a82-5e3de0a7112c**.",
+      "score": 1.0,
+      "prefill_s": 4.454635312780738,
+      "decode_s": 0.9595826659351587
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 40,
+      "prompt_tokens": 32552,
+      "answers": [
+        "f10e3eb3-ad73-4935-bcb0-268eb33b1e48"
+      ],
+      "pred": ":\n\n**e10e3eb3-ad73-4935-bcb0-268eb33b1e48**\n\nThis is the UUID that is specifically mentioned in the text as one of the special magic UUIDs for the given identifier.",
+      "score": 0.0,
+      "prefill_s": 4.922072641551495,
+      "decode_s": 1.488527463749051
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 41,
+      "prompt_tokens": 32632,
+      "answers": [
+        "2c3553a3-32dc-4e15-aa63-9436944d4610"
+      ],
+      "pred": ":\n\n**2c3553a3-32dc-4e15-aa63-9436944d4610.**",
+      "score": 1.0,
+      "prefill_s": 4.960842741653323,
+      "decode_s": 0.9969629114493728
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 42,
+      "prompt_tokens": 32610,
+      "answers": [
+        "7ad03249-e9f5-490a-8f95-7e98086bcfde"
+      ],
+      "pred": ":\n\n**7ad03249-e9f5-490a-8f95-7e98086bcfde**.",
+      "score": 1.0,
+      "prefill_s": 4.970127661712468,
+      "decode_s": 0.9442229745909572
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 43,
+      "prompt_tokens": 32611,
+      "answers": [
+        "4dfff29d-704c-4c32-8097-12da98ac4777"
+      ],
+      "pred": ":\n\n**7c44e3b9-0338-42a9-8478-8381d40f0696.**",
+      "score": 0.0,
+      "prefill_s": 4.972349856048822,
+      "decode_s": 1.0494913635775447
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 44,
+      "prompt_tokens": 32497,
+      "answers": [
+        "8d99ed90-88a1-47c1-b50f-998b4cb21ec2"
+      ],
+      "pred": ":\n\n**63144a68-7f68-43fd-a8b6-4461497a7039.**",
+      "score": 0.0,
+      "prefill_s": 4.9490989884361625,
+      "decode_s": 0.9915019003674388
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 45,
+      "prompt_tokens": 30739,
+      "answers": [
+        "74e7f516-89f7-4903-99cd-4671e8ee5bc4"
+      ],
+      "pred": ":\n\n**fdd27c63-2cd3-4601-aec7-baaaf02fcfec.**",
+      "score": 0.0,
+      "prefill_s": 4.4947686195373535,
+      "decode_s": 0.7579647153615952
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 46,
+      "prompt_tokens": 30771,
+      "answers": [
+        "2b55aee4-10e3-45ee-8a57-2ee391cbde15"
+      ],
+      "pred": ":\n\n**2b55aee4-10e3-45ee-8a57-2ee391c24fa2.**",
+      "score": 0.0,
+      "prefill_s": 4.499509785324335,
+      "decode_s": 0.9145517935976386
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 47,
+      "prompt_tokens": 32633,
+      "answers": [
+        "0a4c0ffb-b4da-4947-811d-b3659d422292"
+      ],
+      "pred": ":\n\n**0a4c0ffb-b4da-4947-811d-b3659d422292.**\n\nThis is the UUID that corresponds to the specific magic uuid mentioned in the text.",
+      "score": 1.0,
+      "prefill_s": 4.9538026405498385,
+      "decode_s": 1.3358246320858598
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 48,
+      "prompt_tokens": 32639,
+      "answers": [
+        "4dc2af39-7bf3-4c96-82cc-dae8e0a9ffa7"
+      ],
+      "pred": ":\n\n**4dc2af39-7bf3-4c96-82cc-dae8e0a9ffa7.**",
+      "score": 1.0,
+      "prefill_s": 4.959927104413509,
+      "decode_s": 0.8413390209898353
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 49,
+      "prompt_tokens": 32596,
+      "answers": [
+        "b18e93e3-39fa-4736-840c-e4284c6d7abc"
+      ],
+      "pred": ":\n\n**240dcf03-f2fd-4421-942c-34f1fc385e4d.**",
+      "score": 0.0,
+      "prefill_s": 4.970777023583651,
+      "decode_s": 0.9481334313750267
+    }
+  ]
+}
