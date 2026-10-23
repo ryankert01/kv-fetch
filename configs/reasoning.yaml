@@ -33,3 +33,16 @@ sweep:
       level: 5
       instruction: "\nPlease reason step by step, and put your final answer within \\boxed{}."
       n: 16
+
+# scripts/compare_methods.py: every method replayed on the same traces at equal GPU budget.
+compare:
+  budgets_tokens: [512, 1024, 2048, 4096]   # total resident KV per KV head incl. sink + recent window
+  evict_methods: [streaming, h2o, tova, snapkv, raas, lazy, rkv, oracle]
+  prefetch_methods: [on_demand, stale_q, q_trend, oasis_ub]
+  lookahead_steps: [1, 4]        # prefetch decided L steps early (transfer latency, in decode steps)
+  gpu_capacity_mult: 2.0         # GPU working set = Tier 1 (attended budget) + Tier 2 standby
+  snapkv_window: 32
+  important_mult: 1.0            # "important" = attention above the uniform share (RaaS, LazyEviction)
+  rkv_lambda: 0.5                # R-KV: weight of importance vs (1 - lambda) redundancy
+  q_slope_steps: 4               # ours: query slope from q[t] - q[t-4]
+  blas_threads: 4                # per analysis worker
