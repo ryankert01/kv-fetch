@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 traces/
 .pytest_cache/
+results/**/*.claim
+results/**/logs/
+results/**/*.log
