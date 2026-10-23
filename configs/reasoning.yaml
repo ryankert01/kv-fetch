@@ -8,7 +8,7 @@ trace:
   head_reduce: kv_mean           # store per-KV-group mass (1/4 the size); queries stay per head
 
 sweep:
-  max_context: 16896             # prompts are short; the context is the self-generated chain
+  max_context: 17408             # prompt room = max_context - max_new_tokens (AIME25 prompts reach 853 tokens)
   max_new_tokens: 16384
   context_margin: 256
   shard_size: 2                  # long samples: finer jobs balance the GPUs better
