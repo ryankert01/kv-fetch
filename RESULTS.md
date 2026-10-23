@@ -1,7 +1,8 @@
 # RESULTS — Phase 0 (definitions and infrastructure)
 
 **Visual, plain-language version: [`report.html`](report.html)** (open in a browser; regenerate with
-`python scripts/make_report.py configs/report.yaml`).
+`python scripts/make_report.py configs/report.yaml`). Published as a private artifact:
+https://claude.ai/artifact/XiS93psCJ1vP6fAPbUC55u (republish with `--artifact <path>` and the Artifact tool).
 
 Branch `phase0`. Environment: `.venv` (torch 2.8.0+cu128, transformers 4.57.1, Python 3.11),
 RTX A6000 / RTX 6000 Ada (48 GB), shared machine — after the first hour of the gate, limited to devices 1, 2, 3 (+6 later).

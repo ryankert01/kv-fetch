@@ -20,7 +20,8 @@ from kvfetch.provenance import GIT_AT_START
 from kvfetch.trace_size import human_bytes, resolve_model_dims
 
 W = 720  # svg viewBox width
-FONT = 'font-family="system-ui,-apple-system,Segoe UI,sans-serif"'
+FONT = 'font-family="system-ui,-apple-system,Segoe UI,sans-serif"'  # fallback; CSS sets var(--font-ui)
+FONTS = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
 
 
 def wrap(svg: str) -> str:
@@ -269,6 +270,8 @@ def lead_illustration() -> str:
 
 # ---------------------------------------------------------------- page
 CSS = """
+/* Layout: one reading column; each section = question eyebrow, answer as headline, chart, "what this means". */
+:root{--font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
 :root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
 --grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;
 --s5:#e87ba4;--tier3:#c3c2b7;--good:#0ca30c;--goodtext:#006300;--bad:#d03b3b;--dpos:#2a78d6;--dposw:#b7d3f6;
@@ -282,24 +285,25 @@ CSS = """
 --s5:#d55181;--tier3:#52514e;--goodtext:#0ca30c;--dpos:#3987e5;--dposw:#184f95;--dnegw:#7a2f2f;--dneg:#e66767;
 --onstrong:#0b0b0b;--onweak:#f0efec;--wash:rgba(57,135,229,.16)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--page);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:900px;margin:0 auto;padding:24px 16px 64px}
-h1{font-size:26px;line-height:1.25;margin:8px 0 4px}h2{font-size:19px;margin:0 0 4px}h3{font-size:15px;margin:16px 0 4px}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.6 var(--font-ui)}
+main{max-width:900px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:28px;line-height:1.2;font-weight:600;margin:8px 0 6px;text-wrap:balance}h2{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;text-wrap:balance}h3{font-size:15px;margin:16px 0 4px}
 p{margin:6px 0}.sub{color:var(--ink2)}.muted{color:var(--muted);font-size:13px}
 header .meta{color:var(--muted);font-size:13px;margin-top:6px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin:18px 0}
+.card{padding-block:28px;border-top:1px solid var(--grid)}
 .q{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-.answer{border-left:3px solid var(--s1);padding:4px 0 4px 12px;margin:12px 0 4px;color:var(--ink)}
+.answer{margin:14px 0 4px;color:var(--ink);max-width:70ch}
 .callout{border:1px solid var(--border);background:var(--wash);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:14px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
 .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
 .tlabel{font-size:13px;color:var(--ink2)}.tvalue{font-size:clamp(17px,2.3vw,21px);line-height:1.25;font-weight:600;margin:4px 0}.tnote{font-size:12px;color:var(--muted)}
-svg{width:100%;height:auto;display:block;overflow:visible}.chartwrap{overflow-x:auto;margin:4px 0}.chartwrap>svg{min-width:600px}
+svg{width:100%;height:auto;display:block;overflow:visible;font-family:var(--font-ui)}.chartwrap{overflow-x:auto;margin:4px 0}.chartwrap>svg{min-width:600px}
 .grid{stroke:var(--grid);stroke-width:1}.axis{stroke:var(--axis);stroke-width:1}
 .tick{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.axislabel{fill:var(--muted);font-size:12px}
 .rowlabel{fill:var(--ink2);font-size:12px}.val{fill:var(--ink2);font-size:11px;font-variant-numeric:tabular-nums}
 .ref{stroke:var(--ink2);stroke-width:1.5}.cutoff{stroke:var(--muted);stroke-width:1.5}
 .reflabel{fill:var(--ink2);font-size:11px}.endlabel{fill:var(--ink2);font-size:12px}
+.val,.reflabel,.endlabel{paint-order:stroke;stroke:var(--page);stroke-width:4px;stroke-linejoin:round}
 .s1{fill:var(--s1)}.s2{fill:var(--s2)}.s3{fill:var(--s3)}.s4{fill:var(--s4)}.s5{fill:var(--s5)}.tier3{fill:var(--tier3)}
 .line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .line.s1,.keyline.s1{stroke:var(--s1)}.line.s2,.keyline.s2{stroke:var(--s2)}.line.s3,.keyline.s3{stroke:var(--s3)}
@@ -328,7 +332,7 @@ table.heat th{white-space:normal;vertical-align:bottom}table.heat td,table.heat 
 .decision .num{display:inline-block;min-width:22px;height:22px;border-radius:11px;background:var(--s1);color:#fff;
 text-align:center;font-size:13px;font-weight:600;line-height:22px;margin-right:8px}
 .rec{margin-top:6px;padding:6px 10px;border-radius:8px;background:var(--wash);font-size:14px}
-code{font-size:13px;background:var(--page);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+code{font-family:var(--font-mono);font-size:12.5px;background:var(--page);border:1px solid var(--border);border-radius:4px;padding:0 4px}
 #tip{position:fixed;z-index:10;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);
 border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-width:300px}
 #tip strong{font-size:13px}#tip span{color:var(--ink2)}#tip .k{display:inline-block;width:12px;height:0;border-top:2.5px solid;margin-right:6px;vertical-align:middle}
@@ -362,10 +366,11 @@ document.querySelectorAll('[data-line]').forEach(hit=>{const d=JSON.parse(hit.da
  hit.addEventListener('blur',()=>{ch.setAttribute('visibility','hidden');hide();});
  hit.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const r=hit.getBoundingClientRect();
   at(idx+(e.key==='ArrowRight'?1:-1),r.right,r.top);}});});
-const btn=document.getElementById('theme');const modes=['auto','light','dark'];let m='auto';
+const btn=document.getElementById('theme');
+if(btn){const modes=['auto','light','dark'];let m='auto';
 try{m=localStorage.getItem('kvf-theme')||'auto';}catch(e){}
 function apply(){if(m==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=m;btn.textContent='Theme: '+m;}
-btn.addEventListener('click',()=>{m=modes[(modes.indexOf(m)+1)%3];try{localStorage.setItem('kvf-theme',m);}catch(e){}apply();});apply();
+btn.addEventListener('click',()=>{m=modes[(modes.indexOf(m)+1)%3];try{localStorage.setItem('kvf-theme',m);}catch(e){}apply();});apply();}
 })();
 """
 
@@ -377,6 +382,7 @@ def load(p):
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     add_config_args(ap)
+    ap.add_argument("--artifact", metavar="PATH", help="also write a Claude Artifact variant (no document skeleton, no theme toggle: the viewer sets the theme)")
     args = ap.parse_args()
     cfg = config_from_args(args)
     rc = cfg["report"]
@@ -400,7 +406,7 @@ def main() -> None:
     worst_bound = max(max(r["fp32"]["isolation_decode"]["max_diff_over_bound"], r["fp32"]["isolation_obs"]["max_diff_over_bound"])
                       for r in smoke["reports"])
     rec = rc["recommendation"]
-    A(f'''<header><button class="themebtn" id="theme" type="button">Theme: auto</button>
+    A(f'''<header>__THEMEBTN__
 <div class="q">kv-fetch · Phase 0 report</div>
 <h1>Tiered KV cache with importance-trend prefetch: the measuring tools are built and checked</h1>
 <p class="sub">Phase 0 builds and validates the instruments; it does not test the idea yet. That happens in
@@ -697,13 +703,21 @@ every result file records the model, context length, page size, window and git c
 <code>python scripts/make_report.py configs/report.yaml</code></p>
 <p class="muted">Full details and every definition I chose on your behalf: <code>RESULTS.md</code>.</p></section>''')
 
+    body = "".join(parts).replace('<p class="answer">', '<p class="answer"><strong>What this means.</strong> ')
+    head = f'<title>kv-fetch Phase 0</title><link rel="stylesheet" href="{FONTS}"><style>{CSS}</style>'
+    tail = f'<div id="tip" hidden></div><script>{JS}</script>'
+    btn = '<button class="themebtn" id="theme" type="button">Theme: auto</button>'
     page = (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
-            f'<meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>kv-fetch Phase 0</title><style>{CSS}</style></head>'
-            f'<body><main>{"".join(parts)}</main><div id="tip" hidden></div><script>{JS}</script></body></html>')
-    out = Path(rc["out"])
-    out.write_text(page)
-    print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KB)")
+            f'<meta name="viewport" content="width=device-width, initial-scale=1">{head}</head>'
+            f'<body><main>{body.replace("__THEMEBTN__", btn)}</main>{tail}</body></html>')
+    targets = [(Path(rc["out"]), page)]
+    if args.artifact:  # the artifact host supplies doctype/head/body and the theme
+        targets.append((Path(args.artifact), f'<meta name="claude:viewport-fit-sides" content="cover">{head}'
+                                             f'<main>{body.replace("__THEMEBTN__", "")}</main>{tail}'))
+    for out, text in targets:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text)
+        print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KB)")
 
 
 if __name__ == "__main__":
