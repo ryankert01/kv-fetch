@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 10,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 15855,
+  "n_steps": 67,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 66,
+      "end": 67
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "Grad F explained that he was focusing on writing his proposal for his qualification exams, which was on the 25th of July. He had to write a paper and pass it around before that date."
+    ]
+  ],
+  "turn_texts": [
+    "Grad F mentioned that he was working on writing his proposal and had finished a section discussing intermediate categories he wanted to classify as a middle step. He hoped to have a full rough draft done by Monday to give to Morgan. He also mentioned that he would present his proposal, followed by a short presentation and then everyone would ask questions."
+  ],
+  "extra": {
+    "_id": "8a2a85eefebeb2986e417fd8388c3be0b68e33911dcc98ca"
+  },
+  "prefill_s": 1.9486141670495272,
+  "decode_s": 2.0211074398830533,
+  "wall_s": 4.034175971522927,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

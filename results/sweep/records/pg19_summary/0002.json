@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 2,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 1070,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1069,
+      "end": 1070
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"Travels in Morocco\" by James Richardson (Volume II)**\n\n**Introduction and Early Chapters:**\n\nThe second volume of *Travels in Morocco* by James Richardson continues the narrative of the author's journey through North Africa, focusing on the political, social, and cultural aspects of Morocco. The text is a detailed account of the author's observations and experiences, written in the 19th century, and provides a comprehensive overview of the country's history, geography, and people.\n\n**Chapter I: The Mogador Jewesses and the Shereefian Monarchs**\n\nThe chapter begins with a discussion of the Jewish community in Mogador, highlighting their social status and the tensions between Jews and Moors. The author notes the complex relationship between the Jewish and Muslim populations, including the historical treatment of Jews in Morocco, their religious practices, and the social dynamics that have shaped their lives. The chapter also touches on the polygamous practices among some Jewish families and the cultural and religious differences that exist between the Jewish and Muslim communities.\n\nThe chapter then shifts to the Shereefian dynasty of Morocco, discussing the historical lineage of the ruling family, the political and religious significance of the Shereefs, and the challenges they faced in maintaining their authority. The author also addresses the historical accusations of human sacrifice against the Moorish princes, refuting these claims and emphasizing the religious and cultural context in which they arose.\n\n**Chapter II: The Maroquine Dynasties and Diplomatic Relations**\n\nThis chapter provides a detailed genealogy of the Shereefian dynasty, tracing its lineage back to the early Islamic period. The author discusses the various dynasties that have ruled Morocco, including the Edristees, Fatamites, Zuheirites, and Almohades, and their eventual replacement by the Shereefs. The chapter also explores the political and diplomatic relations between Morocco and European powers, particularly France and England, and the impact of these relationships on the country's sovereignty and trade.\n\nThe author describes the reign of Muley Abd Errahman, the 19th-century emperor of Morocco, and his efforts to maintain stability and order in the empire. The chapter also discusses the historical tensions between Morocco and European powers, including the French and British, and the role of diplomacy in shaping the country's relations with the outside world.\n\n**Chapter III: The Strength and Resources of the Empire of Morocco**\n\nThis chapter provides a comprehensive overview of the geographical, historical, and economic aspects of Morocco. The author discusses the natural resources of the country, including its fertile lands, mineral deposits, and agricultural products. The chapter also explores the diverse populations of Morocco, including the Berbers, Arabs, Moors, Jews, and other ethnic groups, and the cultural and religious diversity that characterizes the"
+  ],
+  "extra": {
+    "book_index": 2,
+    "title": "Travels in Morocco Volume 2 by James Richardson"
+  },
+  "prefill_s": 5.309481770731509,
+  "decode_s": 33.47031607106328,
+  "wall_s": 39.23476153705269,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

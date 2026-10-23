@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 8,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 1505,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1504,
+      "end": 1505
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "The text provided is a detailed academic study by Harvey Waterman Thayer on the reception and influence of Laurence Sterne's works in Germany during the eighteenth century, particularly focusing on the publication and reception of *The Sentimental Journey* (1768). The work is structured into eight chapters, with a comprehensive introduction, a detailed bibliography, and an index. Here is a thorough summary of the text, covering each section in order:\n\n---\n\n### **Chapter I: Introduction**\n\nThe chapter sets the stage for the study by discussing the broader context of German literary relations with England in the eighteenth century. It highlights the significant influence of English literature on German culture, especially during the late 1700s. The author notes that while English ideals were admired, they were not always directly imitated, but rather adapted to fit German sensibilities. The chapter also outlines the general trajectory of the German literary world, which was deeply engaged with English literary developments. It mentions the role of German periodicals in disseminating information about English literature and the eventual rise of Sterne as a key figure in this literary exchange.\n\n---\n\n### **Chapter II: Sterne in Germany Before the Publication of The Sentimental Journey**\n\nThis chapter explores the early reception of Sterne's works in Germany before the publication of *The Sentimental Journey*. It notes that Sterne's earlier works, such as his sermons and *Tristram Shandy*, were known in Germany, but not in a way that would lead to widespread popularity. The chapter discusses the initial translations of *Tristram Shandy* by Johann Friedrich Z\u00fcckert, which were met with mixed reactions. It also touches on the limited awareness of Sterne in Germany and the slow pace of his reception, which was not accelerated until the publication of *The Sentimental Journey*.\n\n---\n\n### **Chapter III: The Publication of The Sentimental Journey**\n\nThis chapter is the core of the study, detailing the publication and reception of *The Sentimental Journey* in Germany. It begins with the publication of the book in London in 1768, just before Sterne's death. The chapter then discusses how the book was quickly adopted in Germany, where it gained immediate popularity. It highlights the factors that contributed to its success, including the existing interest in English literature, the appeal of Sterne's sentimental style, and the cultural climate in Germany that was receptive to such works.\n\nThe chapter also discusses the early translations of *The Sentimental Journey* by Johann Joachim Christoph Bode and others, and the role of Bode in popularizing the book in Germany. It notes the critical reception of these translations and the way in which Bode's preface helped to establish Sterne's reputation in German literary circles.\n\n---\n\n### **Chapter IV: Sterne in Germany after the Publication of The Sentimental Journey**\n\nThis chapter continues the discussion of Stern"
+  ],
+  "extra": {
+    "book_index": 12,
+    "title": "Laurence Sterne in Germany by Harvey Waterman Thayer"
+  },
+  "prefill_s": 6.580382980406284,
+  "decode_s": 60.77147908229381,
+  "wall_s": 68.33447733148932,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

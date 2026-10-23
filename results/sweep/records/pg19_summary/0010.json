@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 10,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 626,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 625,
+      "end": 626
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"The Life of Gordon\" by Demetrius C. Boulger, Volume II**\n\n**Chapter VIII: Governor-General of the Soudan**\n\nGeneral Gordon's return to Egypt in December 1876 was marked by a desire to avoid returning to the Soudan, but the Khedive Ismail's strong support and the need for a strong leader in the region led to Gordon's appointment as Governor-General of the Soudan. The Khedive's letter to Gordon, expressing his commitment to the position, was pivotal in convincing Gordon to accept the role. Gordon was given significant autonomy, including the title of Muchir or Marshal, and a substantial salary. The Khedive also provided him with a uniform and the Grand Cordon of the Medjidieh Order, symbolizing his high regard for Gordon.\n\nGordon's mission in the Soudan was multifaceted, including the suppression of the slave trade, the improvement of communication, and the administration of the region. He faced challenges from the Bashi-Bazouks, a group of irregulars, and from the Abyssinian conflict. Gordon's approach was characterized by his determination, his ability to navigate complex political situations, and his commitment to reform.\n\n**Chapter IX: Minor Missions\u2014India and China**\n\nAfter his tenure in the Soudan, Gordon returned to England in January 1880, seeking rest. However, he was soon drawn back into public service. He was offered the position of Private Secretary to Lord Ripon, the new Governor-General of India. Despite his initial acceptance, Gordon quickly realized the incompatibility between his views and the official British stance in India. He resigned shortly after arriving in Bombay, citing the need to avoid being involved in the political intrigues of the region.\n\nGordon's time in India was marked by his frustration with the entrenched interests and the resistance to his reformist ideas. He was particularly critical of the excessive pay of European officials in Asia. His resignation was a significant moment, reflecting his belief that he was not suited for the role and that his presence would hinder the reforms he wished to implement.\n\nGordon's later years were also marked by his involvement in the Eastern Question, particularly the Russo-Turkish War and the subsequent treaties. He wrote a detailed memorandum on the Treaties of San Stefano and Berlin, outlining his views on the future of the Balkans and the need for a strong, stable Turkey. His analysis was prescient, highlighting the potential for Russian expansion and the need for European intervention to prevent the collapse of the Ottoman Empire.\n\nGordon's career was characterized by his unwavering commitment to his principles, his ability to navigate complex political landscapes, and his dedication to the improvement of the regions he served. His work in the Soudan, India, and the Eastern Question left a lasting impact, and his legacy as a reformer and administrator is remembered with admiration. Despite the challenges he faced, Gordon's determination and vision continue to"
+  ],
+  "extra": {
+    "book_index": 14,
+    "title": "The Life of Gordon Volume II by Demetrius Charles Boulger"
+  },
+  "prefill_s": 5.9322380265221,
+  "decode_s": 25.107660438865423,
+  "wall_s": 31.331540356390178,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

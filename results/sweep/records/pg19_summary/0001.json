@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 1,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 1071,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1070,
+      "end": 1071
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"Dragon's Blood\" by Henry Milner Rideout**\n\n**Introduction and Prologue:**\nThe book begins with a prologue written by Henry Milner Rideout, a British author, to Charles Townsend Copeland. The prologue reflects on the journey of Rudolph Hackh, a German agent, and his encounter with a lady named Miss Forrester, who is later revealed to be Mrs. Forrester, a British woman traveling to Hongkong. The prologue sets the tone for the narrative, highlighting the themes of adventure, cultural clash, and personal transformation.\n\n**Chapter I: A Lady and a Griffin**\nRudolph Hackh, a young German agent, is on a ship traveling from Port Said to Hongkong. He meets Miss Forrester, an Englishwoman traveling second-class. Their initial interactions are awkward, but they develop a connection. Rudolph is captivated by her, and she, in turn, is intrigued by his presence. The two share a brief but meaningful moment on the ship, which marks the beginning of their relationship.\n\n**Chapter II: The Pied Piper**\nRudolph arrives in Stinks, a small town in China, where he is assigned to work for Fliegelman and Sons. He meets Heywood, a Britishman, who becomes his host. The town is plagued by a plague, and Rudolph is introduced to the local community, including Dr. Chantel, a French doctor, and other residents. The plague is a central theme, and Rudolph becomes involved in the community's efforts to combat it. The town's atmosphere is tense, and the plague adds a layer of mystery and danger to the narrative.\n\n**Chapter III: Under Fire**\nRudolph is assigned to the office of Fliegelman and Sons in Stinks. He is overwhelmed by the challenges of the job and the environment. The town is under threat from the plague, and Rudolph is forced to navigate the complexities of the local culture and the dangers of the disease. He forms a bond with Heywood, who becomes a close friend. The plague is a constant presence, and Rudolph is haunted by the fear of death and the uncertainty of the future.\n\n**Chapter IV: The Sword-Pen**\nRudolph meets Fang, a local man known as the \"Sword-Pen,\" who is a dangerous figure in the town. Fang is a former revolutionary and is involved in the town's political and social dynamics. Rudolph becomes aware of the tensions in the town and the role of Fang in the community. The relationship between Rudolph and Fang is complex, and Rudolph is drawn into the local conflicts.\n\n**Chapter V: In Town**\nRudolph becomes more involved in the life of the town, attending a church service and meeting the local community. He is introduced to Dr. Earle, a French missionary, and learns about the town's religious and social dynamics. Rudolph is struck by the contrast between the town's appearance and its underlying tensions. He begins to understand the complexities of the local culture and the challenges of living in a foreign land.\n\n**Chapter VI: The Pagoda**\nRudolph and Mrs. Forrester visit the pagoda, a significant cultural and religious site in the town. The pagoda"
+  ],
+  "extra": {
+    "book_index": 1,
+    "title": "Dragon's blood by Henry Milner Rideout"
+  },
+  "prefill_s": 5.009722292423248,
+  "decode_s": 33.103185125626624,
+  "wall_s": 38.57695877086371,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

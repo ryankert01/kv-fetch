@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 0,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29792,
+  "n_steps": 1303,
+  "n_fed": 743,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 143,
+      "end": 144
+    },
+    {
+      "start": 293,
+      "natural_stop": 319,
+      "end": 320
+    },
+    {
+      "start": 487,
+      "natural_stop": 527,
+      "end": 528
+    },
+    {
+      "start": 756,
+      "natural_stop": 1016,
+      "end": 1017
+    },
+    {
+      "start": 1216,
+      "natural_stop": 1302,
+      "end": 1303
+    }
+  ],
+  "score": 1.0,
+  "answers": [
+    [
+      "def _can_omit_closing_paren(line: Line, *, last: Leaf, line_length: int) -> bool:"
+    ],
+    [
+      "def fstring_contains_expr(s: str) -> bool:"
+    ],
+    [
+      "def supports_feature(target_versions: Set[TargetVersion], feature: Feature) -> bool:"
+    ],
+    [
+      "def _remove_backslash_line_continuation_chars("
+    ],
+    [
+      "def _get_illegal_split_indices(self, string: str) -> Set[Index]:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef _can_omit_closing_paren(line: Line, *, last: Leaf, line_length: int) -> bool:\n    \"\"\"See `can_omit_invisible_parens`.\"\"\"\n    length = 4 * line.depth\n    seen_other_brackets = False\n    for _index, leaf, leaf_length in line.enumerate_with_length():\n        length += leaf_length\n        if leaf is last.opening_bracket:\n            if seen_other_brackets or length <= line_length:\n                return True\n\n        elif leaf.type in OPENING_BRACKETS:\n            # There are brackets we can further split on.\n            seen_other_brackets = True\n\n    return False\n```",
+    "```python\ndef fstring_contains_expr(s: str) -> bool:\n    return any(iter_fexpr_spans(s))\n```",
+    "```python\ndef supports_feature(target_versions: Set[TargetVersion], feature: Feature) -> bool:\n    return all(feature in VERSION_TO_FEATURES[version] for version in target_versions)\n```",
+    "```python\ndef _remove_backslash_line_continuation_chars(\n    line: Line, string_indices: List[int]\n) -> TResult[Line]:\n    \"\"\"\n    Merge strings that were split across multiple lines using\n    line-continuation backslashes.\n\n    Returns:\n        Ok(new_line), if @line contains backslash line-continuation\n        characters.\n            OR\n        Err(CannotTransform), otherwise.\n    \"\"\"\n    LL = line.leaves\n\n    indices_to_transform = []\n    for string_idx in string_indices:\n        string_leaf = LL[string_idx]\n        if (\n            string_leaf.type == token.STRING\n            and \"\\\\\\n\" in string_leaf.value\n            and not has_triple_quotes(string_leaf.value)\n        ):\n            indices_to_transform.append(string_idx)\n\n    if not indices_to_transform:\n        return TErr(\n            \"Found no string leaves that contain backslash line continuation\"\n            \" characters.\"\n        )\n\n    new_line = line.clone()\n    new_line.comments = line.comments.copy()\n    append_leaves(new_line, line, LL)\n\n    for string_idx in indices_to_transform:\n        new_string_leaf = new_line.leaves[string_idx]\n        new_string_leaf.value = new_string_leaf.value.replace(\"\\\\\\n\", \"\")\n\n    return Ok(new_line)\n```",
+    "```python\ndef _get_illegal_split_indices(self, string: str) -> Set[Index]:\n    illegal_indices: Set[Index] = set()\n    iterators = [\n        self._iter_fexpr_slices(string),\n        self._iter_nameescape_slices(string),\n    ]\n    for it in iterators:\n        for begin, end in it:\n            illegal_indices.update(range(begin, end + 1))\n    return illegal_indices\n```"
+  ],
+  "extra": {
+    "repo": "psf/black",
+    "lang": "python"
+  },
+  "prefill_s": 4.828460622578859,
+  "decode_s": 45.20381851494312,
+  "wall_s": 50.526991149410605,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

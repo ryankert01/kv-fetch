@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 5,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29760,
+  "n_steps": 1656,
+  "n_fed": 774,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 103,
+      "end": 104
+    },
+    {
+      "start": 251,
+      "natural_stop": 303,
+      "end": 304
+    },
+    {
+      "start": 516,
+      "natural_stop": 770,
+      "end": 771
+    },
+    {
+      "start": 965,
+      "natural_stop": 1300,
+      "end": 1301
+    },
+    {
+      "start": 1522,
+      "natural_stop": 1655,
+      "end": 1656
+    }
+  ],
+  "score": 0.6,
+  "answers": [
+    [
+      "def failures_csv(self, csv_writer: CSVWriter) -> None:"
+    ],
+    [
+      "def set_static_modern_ui(self):"
+    ],
+    [
+      "def tag(*tags: str) -> Callable[[TaskT], TaskT]:"
+    ],
+    [
+      "def execute_next_task(self):"
+    ],
+    [
+      "def request_stats_csv() -> Response:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef failures_csv(self, csv_writer: CSVWriter) -> None:\n    csv_writer.writerow(self.failures_columns)\n    self._failures_data_rows(csv_writer)\n\ndef _failures_data_rows(self, csv_writer: CSVWriter) -> None:\n    for stats_error in sort_stats(self.environment.stats.errors):\n        csv_writer.writerow(\n            [\n                stats_error.method,\n                stats_error.name,\n                StatsError.parse_error(stats_error.error),\n                stats_error.occurrences,\n            ]\n        )\n```",
+    "```python\ndef set_static_modern_ui(self):\n    self.app.template_folder = self.webui_build_path\n    self.app.static_folder = os.path.join(self.webui_build_path, \"assets\")\n    self.app.static_url_path = \"/assets/\"\n```",
+    "```python\ndef tag(*tags: str) -> Callable[[TaskT], TaskT]:\n    \"\"\"\n    Decorator for tagging tasks and TaskSets with the given tag name. You can\n    then limit the test to only execute tasks that are tagged with any of the\n    tags provided by the :code:`--tags` command-line argument. Example::\n\n        class ForumPage(TaskSet):\n            @tag('thread')\n            @task(100)\n            def read_thread(self):\n                pass\n\n            @tag('thread')\n            @tag('post')\n            @task(7)\n            def create_thread(self):\n                pass\n\n            @tag('post')\n            @task(11)\n            def comment(self):\n                pass\n    \"\"\"\n\n    def decorator_func(decorated):\n        if hasattr(decorated, \"tasks\"):\n            decorated.tasks = list(map(tag(*tags), decorated.tasks))\n        else:\n            if \"locust_tag_set\" not in decorated.__dict__\":\n                decorated.locust_tag_set = set()\n            decorated.locust_tag_set |= set(tags)\n        return decorated\n\n    if len(tags) == 0 or callable(tags[0]):\n        raise ValueError(\"No tag name was supplied\")\n\n    return decorator_func\n```",
+    "```python\ndef run(self):\n    try:\n        self.on_start()\n    except InterruptTaskSet as e:\n        if e.reschedule:\n            raise RescheduleTaskImmediately(e.reschedule).with_traceback(e.__traceback__)\n        else:\n            raise RescheduleTask(e.reschedule).with_traceback(e.__traceback__)\n\n    while True:\n        try:\n            if not self._task_queue:\n                self.schedule_task(self.get_next_task())\n\n            try:\n                if self.user._state == LOCUST_STATE_STOPPING:\n                    raise StopUser()\n                self.execute_next_task()\n            except RescheduleTaskImmediately:\n                pass\n            except RescheduleTask:\n                self.wait()\n            else:\n                self.wait()\n        except InterruptTaskSet as e:\n            try:\n                self.on_stop()\n            except (StopUser, GreenletExit):\n                raise\n            except Exception:\n                logging.error(\"Uncaught exception in on_stop: \\n%s\", traceback.format_exc())\n            if e.reschedule:\n                raise RescheduleTaskImmediately(e.reschedule) from e\n            else:\n                raise RescheduleTask(e.reschedule) from e\n        except (StopUser, GreenletExit):\n            try:\n                self.on_stop()\n            except Exception:\n                logging.error(\"Uncaught exception in on_stop: \\n%s\", traceback.format_exc())\n            raise\n        except Exception as e:\n            self.user.environment.events.user_error.fire(user_instance=self, exception=e, tb=e.__traceback__)\n            if self.user.environment.catch_exceptions:\n                logger.error(\"%s\\n%s\", e, traceback.format_exc())\n                self.wait()\n            else:\n                raise\n```",
+    "```python\ndef request_stats_full_history_csv(self) -> Response:\n    options = self.environment.parsed_options\n    if options and options.stats_history_enabled and isinstance(self.stats_csv_writer, StatsCSVFileWriter):\n        return send_file(\n            os.path.abspath(self.stats_csv_writer.stats_history_file_name()),\n            mimetype=\"text/csv\",\n            as_attachment=True,\n            download_name=_download_csv_suggest_file_name(\"requests_full_history\"),\n            etag=True,\n            max_age=0,\n            conditional=True,\n            last_modified=None,\n        )\n\n    return make_response(\"Error: Server was not started with option to generate full history.\", 404)\n```"
+  ],
+  "extra": {
+    "repo": "locustio/locust",
+    "lang": "python"
+  },
+  "prefill_s": 5.910890279337764,
+  "decode_s": 66.43376925680786,
+  "wall_s": 73.12369253020734,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 10,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29715,
+  "n_steps": 1716,
+  "n_fed": 821,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 313,
+      "end": 314
+    },
+    {
+      "start": 504,
+      "natural_stop": 626,
+      "end": 627
+    },
+    {
+      "start": 887,
+      "natural_stop": 1183,
+      "end": 1184
+    },
+    {
+      "start": 1339,
+      "natural_stop": 1385,
+      "end": 1386
+    },
+    {
+      "start": 1602,
+      "natural_stop": 1715,
+      "end": 1716
+    }
+  ],
+  "score": 0.6,
+  "answers": [
+    [
+      "async def async_iter_latest_block("
+    ],
+    [
+      "async def send_transaction(self, transaction: TxParams) -> HexBytes:"
+    ],
+    [
+      "def _apply_response_formatters("
+    ],
+    [
+      "def _repr_if_not_hashable(self, value: TKey) -> TKey:"
+    ],
+    [
+      "def codec(self) -> ABICodec:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\nasync def async_iter_latest_block(\n    w3: \"AsyncWeb3\", to_block: Optional[Union[BlockNumber, LatestBlockParam]] = None\n) -> AsyncIterable[BlockNumber]:\n    \"\"\"Returns a generator that dispenses the latest block, if\n    any new blocks have been mined since last iteration.\n\n    If there are no new blocks or the latest block is greater than\n    the ``to_block`` None is returned.\n\n    >>> new_blocks = iter_latest_block(w3, 0, 10)\n    >>> next(new_blocks)  # Latest block = 0\n    0\n    >>> next(new_blocks)  # No new blocks\n    >>> next(new_blocks)  # Latest block = 1\n    1\n    >>> next(new_blocks)  # Latest block = 10\n    10\n    >>> next(new_blocks)  # latest block > to block\n    \"\"\"\n    _last = None\n\n    is_bounded_range = to_block is not None and to_block != \"latest\"\n\n    while True:\n        latest_block = await w3.eth.block_number\n        # type ignored b/c is_bounded_range prevents unsupported comparison\n        if is_bounded_range and latest_block > cast(int, to_block):\n            yield None\n        #  No new blocks since last iteration.\n        if _last is not None and _last == latest_block:\n            yield None\n        else:\n            yield latest_block\n        _last = latest_block\n```",
+    "```python\nasync def async_send_transaction(\n    self, transaction: TxParams\n) -> HexBytes:\n    \"\"\"\n    Asynchronously sends a transaction to the Ethereum network.\n\n    :param transaction: A dictionary of transaction parameters.\n    :return: A HexBytes object representing the transaction hash.\n    \"\"\"\n    # Validate the transaction parameters\n    assert_valid_transaction_params(transaction)\n\n    # Prepare the transaction for sending\n    signed_transaction = await self._sign_transaction(transaction)\n\n    # Send the transaction to the network\n    transaction_hash = await self._send_transaction(signed_transaction)\n\n    return transaction_hash\n```",
+    "```python\n@curry\ndef _apply_response_formatters(\n    method: RPCEndpoint,\n    result_formatters: Formatters,\n    error_formatters: Formatters,\n    response: RPCResponse,\n) -> RPCResponse:\n    def _format_response(\n        response_type: Literal[\"result\", \"error\", \"params\"],\n        method_response_formatter: Callable[..., Any],\n    ) -> RPCResponse:\n        appropriate_response = response[response_type]\n\n        if response_type == \"params\":\n            appropriate_response = cast(EthSubscriptionParams, response[response_type])\n            return assoc(\n                response,\n                response_type,\n                assoc(\n                    response[\"params\"],\n                    \"result\",\n                    method_response_formatter(appropriate_response[\"result\"]),\n                ),\n            )\n        else:\n            return assoc(\n                response, response_type, method_response_formatter(appropriate_response)\n            )\n\n    if response.get(\"result\") is not None and method in result_formatters:\n        return _format_response(\"result\", result_formatters[method])\n    elif (\n        # eth_subscription responses\n        response.get(\"params\") is not None\n        and response[\"params\"].get(\"result\") is not None\n        and method in result_formatters\n    ):\n        return _format_response(\"params\", result_formatters[method])\n    elif \"error\" in response and method in error_formatters:\n        return _format_response(\"error\", error_formatters[method])\n    else:\n        return response\n```",
+    "```python\ndef _repr_if_not_hashable(self, value: TKey) -> TKey:\n    try:\n        value.__hash__()\n    except TypeError:\n        value = cast(TKey, repr(value))\n    return value\n```",
+    "```python\ndef request_blocking(\n    self,\n    method: Union[RPCEndpoint, Callable[..., RPCEndpoint]],\n    params: Any,\n    error_formatters: Optional[Callable[..., Any]] = None,\n    null_result_formatters: Optional[Callable[..., Any]] = None,\n) -> Any:\n    \"\"\"\n    Make a synchronous request using the provider\n    \"\"\"\n    response = self._make_request(method, params)\n    return self.formatted_response(\n        response, params, error_formatters, null_result_formatters\n    )\n```"
+  ],
+  "extra": {
+    "repo": "ethereum/web3.py",
+    "lang": "python"
+  },
+  "prefill_s": 6.088104446418583,
+  "decode_s": 68.62385831214488,
+  "wall_s": 75.35058506578207,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

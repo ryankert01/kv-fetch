@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 4,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 15596,
+  "n_steps": 113,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 112,
+      "end": 113
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "The final english SmartKom demo will be presented to the whole institute once the system is de-bugged and stabilised."
+    ]
+  ],
+  "turn_texts": [
+    "The system would be involved in demos related to the SmartKom project, including a demo where users can interact with the system by speaking into it, which then responds in English using a German synthesis module. Additionally, there is a plan to create an internal demo to showcase the system's capabilities, allowing users to interact with it and hear it respond, as well as a potential demo for an institute-wide presentation. The system is also expected to be part of future demonstrations that focus on the formalization of linguistic concepts and the development of a belief-net for the project."
+  ],
+  "extra": {
+    "_id": "23625b932c93b52caf7504ee1a134d53a4096dc59744d759"
+  },
+  "prefill_s": 1.9573909658938646,
+  "decode_s": 3.38219590857625,
+  "wall_s": 5.41420669388026,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

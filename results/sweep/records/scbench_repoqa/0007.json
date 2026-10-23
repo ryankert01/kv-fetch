@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 7,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29622,
+  "n_steps": 1689,
+  "n_fed": 912,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 91,
+      "end": 92
+    },
+    {
+      "start": 322,
+      "natural_stop": 683,
+      "end": 684
+    },
+    {
+      "start": 885,
+      "natural_stop": 1021,
+      "end": 1022
+    },
+    {
+      "start": 1183,
+      "natural_stop": 1203,
+      "end": 1204
+    },
+    {
+      "start": 1524,
+      "natural_stop": 1688,
+      "end": 1689
+    }
+  ],
+  "score": 1.0,
+  "answers": [
+    [
+      "def uniform(size: int, value: Any):"
+    ],
+    [
+      "def postprocess_sub_("
+    ],
+    [
+      "def is_torch_sparse_tensor(src: Any) -> bool:"
+    ],
+    [
+      "def learning_rate(self):"
+    ],
+    [
+      "def to_dense_batch("
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef uniform(size: int, value: Any):\n    if isinstance(value, Tensor):\n        bound = 1.0 / math.sqrt(size)\n        value.data.uniform_(-bound, bound)\n    else:\n        for v in value.parameters() if hasattr(value, 'parameters') else []:\n            uniform(size, v)\n        for v in value.buffers() if hasattr(value, 'buffers') else []:\n            uniform(size, v)\n```",
+    "```python\ndef postprocess_sub_(\n    input: EdgeIndex,\n    other: Union[int, Tensor],\n    out: Tensor,\n    alpha: int = 1,\n) -> Union[EdgeIndex, Tensor]:\n    if out.dtype not in SUPPORTED_DTYPES:\n        return out\n    if out.dim() != 2 or out.size(0) != 2:\n        return out\n\n    output: EdgeIndex = out.as_subclass(EdgeIndex)\n\n    if isinstance(other, int):\n        size = maybe_sub(input._sparse_size, other, alpha)\n        assert len(size) == 2\n        output._sparse_size = size\n        output._sort_order = input._sort_order\n        output._is_undirected = input.is_undirected\n        output._T_perm = input._T_perm\n\n    elif isinstance(other, Tensor) and other.numel() <= 1:\n        size = maybe_sub(input._sparse_size, int(other), alpha)\n        assert len(size) == 2\n        output._sparse_size = size\n        output._sort_order = input._sort_order\n        output._is_undirected = input.is_undirected\n        output._T_perm = input._T_perm\n\n    elif isinstance(other, Tensor) and other.size() == (2, 1):\n        size = maybe_sub(input._sparse_size, other.view(-1).tolist(), alpha)\n        assert len(size) == 2\n        output._sparse_size = size\n        output._sort_order = input._sort_order\n        output._T_perm = input._T_perm\n        if torch.equal(other[0], other[1]):\n            output._is_undirected = input.is_undirected\n\n    return output\n```",
+    "```python\ndef is_torch_sparse_tensor(src: Any) -> bool:\n    r\"\"\"Returns :obj:`True` if the input :obj:`src` is a\n    :class:`torch.sparse.Tensor` (in any sparse layout).\n\n    Args:\n        src (Any): The input object to be checked.\n    \"\"\"\n    if isinstance(src, Tensor):\n        if src.layout == torch.sparse_coo:\n            return True\n        if src.layout == torch.sparse_csr:\n            return True\n        if (torch_geometric.typing.WITH_PT112\n                and src.layout == torch.sparse_csc):\n            return True\n    return False\n```",
+    "```python\n@property\ndef learning_rate(self):\n    return self.softplus(self._lr)\n```",
+    "```python\ndef to_dense_batch(\n    self,\n    x: Tensor,\n    index: Optional[Tensor] = None,\n    ptr: Optional[Tensor] = None,\n    dim_size: Optional[int] = None,\n    dim: int = -2,\n    fill_value: float = 0.0,\n    max_num_elements: Optional[int] = None,\n) -> Tuple[Tensor, Tensor]:\n    # TODO Currently, `to_dense_batch` can only operate on `index`:\n    self.assert_index_present(index)\n    self.assert_sorted_index(index)\n    self.assert_two_dimensional_input(x, dim)\n\n    return to_dense_batch(\n        x,\n        index,\n        batch_size=dim_size,\n        fill_value=fill_value,\n        max_num_nodes=max_num_elements,\n    )\n```"
+  ],
+  "extra": {
+    "repo": "pyg-team/pytorch_geometric",
+    "lang": "python"
+  },
+  "prefill_s": 5.880138355307281,
+  "decode_s": 67.28159882221371,
+  "wall_s": 73.77644302975386,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 13,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29640,
+  "n_steps": 2048,
+  "n_fed": 899,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 231,
+      "end": 232
+    },
+    {
+      "start": 521,
+      "natural_stop": null,
+      "end": 921
+    },
+    {
+      "start": 1148,
+      "natural_stop": 1373,
+      "end": 1374
+    },
+    {
+      "start": 1564,
+      "natural_stop": 1627,
+      "end": 1628
+    },
+    {
+      "start": 1821,
+      "natural_stop": null,
+      "end": 2048
+    }
+  ],
+  "score": 0.4,
+  "answers": [
+    [
+      "QuotedMessagePatternConverter(logchar quote)"
+    ],
+    [
+      "AsyncAppenderPriv() :"
+    ],
+    [
+      "SMTPSession(const LogString& smtpHost,"
+    ],
+    [
+      "AndFilterPrivate() : FilterPrivate(),"
+    ],
+    [
+      "DatePatternConverterPrivate( const LogString& name, const LogString& style, DateFormatPtr _df ):"
+    ]
+  ],
+  "turn_texts": [
+    "```cpp\nclass QuotedMessagePatternConverter : public LoggingEventPatternConverter\n{\n\tlogchar m_quote;\n\tpublic:\n\t\tQuotedMessagePatternConverter(logchar quote)\n\t\t\t: LoggingEventPatternConverter(LOG4CXX_STR(\"Message\"), LOG4CXX_STR(\"quoted\"))\n\t\t\t, m_quote(quote)\n\t\t\t{}\n\n\t\tusing LoggingEventPatternConverter::format;\n\n\t\t// Duplicate any quote character in the event message\n\t\tvoid format\n\t\t\t( const spi::LoggingEventPtr& event\n\t\t\t, LogString&                  toAppendTo\n\t\t\t, helpers::Pool&              p\n\t\t\t) const override\n\t\t{\n\t\t\tauto& input = event->getRenderedMessage();\n\t\t\tsize_t endIndex, startIndex = 0;\n\t\t\twhile ((endIndex = input.find(m_quote, startIndex)) != input.npos)\n\t\t\t{\n\t\t\t\ttoAppendTo.append(input.substr(startIndex, endIndex - startIndex + 1));\n\t\t\t\ttoAppendTo += m_quote;\n\t\t\t\tstartIndex = endIndex + 1;\n\t\t\t}\n\t\t\ttoAppendTo.append(input.substr(startIndex));\n\t\t}\n};\n```",
+    "```cpp\nvoid AsyncAppender::append(const spi::LoggingEventPtr& event, Pool& p)\n{\n\tif (priv->bufferSize <= 0)\n\t{\n\t\tpriv->appenders.appendLoopOnAppenders(event, p);\n\t}\n\n\t// Set the NDC and MDC for the calling thread as these\n\t// LoggingEvent fields were not set at event creation time.\n\tLogString ndcVal;\n\tevent->getNDC(ndcVal);\n\t// Get a copy of this thread's MDC.\n\tevent->getMDCCopy();\n\n\tif (!priv->dispatcher.joinable())\n\t{\n\t\tstd::unique_lock<std::mutex> lock(priv->bufferMutex);\n\t\tif (!priv->dispatcher.joinable())\n\t\t\tpriv->dispatcher = ThreadUtility::instance()->createThread( LOG4CXX_STR(\"AsyncAppender\"), &AsyncAppender::dispatch, this );\n\t}\n\twhile (true)\n\t{\n\t\tauto pendingCount = priv->eventCount - priv->dispatchedCount;\n\t\tif (0 <= pendingCount && pendingCount < priv->bufferSize)\n\t\t{\n\t\t\t// Claim a slot in the ring buffer\n\t\t\tauto oldEventCount = priv->eventCount++;\n\t\t\tauto index = oldEventCount % priv->buffer.size();\n\t\t\t// Wait for a free slot\n\t\t\twhile (priv->bufferSize <= oldEventCount - priv->dispatchedCount)\n\t\t\t\t;\n\t\t\t// Write to the ring buffer\n\t\t\tpriv->buffer[index] = event;\n\t\t\t// Notify the dispatch thread that an event has been added\n\t\t\tauto savedEventCount = oldEventCount;\n\t\t\twhile (!priv->commitCount.compare_exchange_weak(oldEventCount, oldEventCount + 1, std::memory_order_release))\n\t\t\t{\n\t\t\t\t oldEventCount = savedEventCount;\n\t\t\t}\n\t\t\tpriv->bufferNotEmpty.notify_all();\n\t\t\tbreak;\n\t\t}\n\t\t//\n\t\t//   Following code is only reachable if buffer",
+    "```cpp\nSMTPSession::SMTPSession(const LogString& smtpHost,\n\t\tint smtpPort,\n\t\tconst LogString& smtpUsername,\n\t\tconst LogString& smtpPassword,\n\t\tPool& p) : session(0), authctx(0),\n\t\tuser(toAscii(smtpUsername, p)),\n\t\tpwd(toAscii(smtpPassword, p))\n\t{\n\t\tauth_client_init();\n\t\tsession = smtp_create_session();\n\n\t\tif (session == 0)\n\t\t{\n\t\t\tthrow Exception(\"Could not initialize session.\");\n\t\t}\n\n\t\tstd::string host(toAscii(smtpHost, p));\n\t\thost.append(1, ':');\n\t\thost.append(p.itoa(smtpPort));\n\t\tsmtp_set_server(session, host.c_str());\n\n\t\tauthctx = auth_create_context();\n\t\tauth_set_mechanism_flags(authctx, AUTH_PLUGIN_PLAIN, 0);\n\t\tauth_set_interact_cb(authctx, authinteract, (void*) this);\n\n\t\tif (*user || *pwd)\n\t\t{\n\t\t\tsmtp_auth_set_context(session, authctx);\n\t\t}\n\t}\n```",
+    "```cpp\nvoid AndFilter::addFilter(const FilterPtr& filter)\n{\n\tif (priv->headFilter == NULL)\n\t{\n\t\tpriv->headFilter = filter;\n\t\tpriv->tailFilter = filter;\n\t}\n\telse\n\t{\n\t\tpriv->tailFilter->setNext(filter);\n\t}\n}\n```",
+    "```cpp\nDateFormatPtr DatePatternConverter::getDateFormat(const OptionsList& options)\n{\n\tDateFormatPtr df;\n\tint maximumCacheValidity = 1000000;\n\n\tif (options.size() == 0)\n\t{\n\t\tdf = std::make_shared<ISO8601DateFormat>();\n\t}\n\telse\n\t{\n\t\tLogString dateFormatStr(options[0]);\n\n\t\tif (dateFormatStr.empty() ||\n\t\t\tStringHelper::equalsIgnoreCase(dateFormatStr,\n\t\t\t\tLOG4CXX_STR(\"ISO8601\"), LOG4CXX_STR(\"iso8601\")))\n\t\t{\n\t\t\tdf = std::make_shared<ISO8601DateFormat>();\n\t\t}\n\t\telse if (StringHelper::equalsIgnoreCase(dateFormatStr,\n\t\t\t\tLOG4CXX_STR(\"ABSOLUTE\"), LOG4CXX_STR(\"absolute\")))\n\t\t{\n\t\t\tdf = std::make_shared<AbsoluteTimeDateFormat>();\n\t\t}\n\t\telse if (StringHelper::equalsIgnoreCase(dateFormatStr,\n\t\t\t\tLOG4CXX_STR(\"DATE\"), LOG4CXX_STR(\"date\")))\n\t\t{\n\t\t\tdf = std::make"
+  ],
+  "extra": {
+    "repo": "apache/logging-log4cxx",
+    "lang": "cpp"
+  },
+  "prefill_s": 5.838269172236323,
+  "decode_s": 82.06590817216784,
+  "wall_s": 88.66010632552207,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

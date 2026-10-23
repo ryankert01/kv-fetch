@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 11,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30475,
+  "n_steps": 1017,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1016,
+      "end": 1017
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"In Her Own Right\" by John Reed Scott**\n\n**Chapter I: Broken**\n\nThe chapter opens with a conversation between Macloud and Hungerford, discussing the bankruptcy of Royster & Axtell. Macloud reveals that Croyden, a former friend, has also suffered losses due to the failure. Croyden, feeling betrayed by the financial system, decides to leave Northumberland and seek a new life. He plans to go to Hampton, a small town on the Eastern Shore, to start over. The chapter ends with Croyden departing for Hampton, having made a decision to leave behind his past.\n\n**Chapter II: Good-Bye**\n\nCroyden arrives in Hampton and is greeted by Elaine Cavendish, a wealthy woman he had been in love with. Their meeting is bittersweet, as Croyden is leaving for good and Elaine is preparing for a visit. The chapter describes Croyden's arrival in Hampton and his first impressions of the town. He is introduced to the local community and begins to adjust to his new life.\n\n**Chapter III: Clarendon**\n\nCroyden is introduced to Clarendon, a historic house that was once owned by Colonel Duval. He is given the keys to the house by the agent, Mr. Dick, and is shown around by Moses, the caretaker. The house is described as a blend of old-world charm and practicality. Croyden is impressed by the house's history and the care taken to preserve its original features. He is also introduced to Josephine, the cook, and begins to settle into his new life.\n\n**Chapter IV: Parmenter's Bequest**\n\nCroyden discovers a secret drawer in the desk of Colonel Duval, which contains a letter from Robert Parmenter, a pirate who had left a bequest to Colonel Duval. The letter describes the location of a treasure buried on Greenberry Point, a place on the Severn River. The treasure is said to be worth a significant amount, and Croyden is intrigued by the possibility of finding it. He decides to investigate the location of the treasure, hoping to find the treasure and use it to improve his life.\n\n**Chapter V: Miss Carrington**\n\nCroyden meets Miss Carrington, the granddaughter of Captain Carrington, and is struck by her beauty and intelligence. She is a member of a prominent family and is described as a \"Symphony in Blue,\" a term that suggests her elegance and grace. Croyden is drawn to her and begins to develop feelings for her. The chapter also introduces other characters in the town, including Miss Erskine, a self-important woman who is critical of Croyden's lack of knowledge about art and history.\n\n**Chapter VI: Confidence and Scruples**\n\nCroyden confides in Macloud about the letter he found and the possibility of finding the treasure. Macloud is skeptical but intrigued. They discuss the potential risks of searching for the treasure and the importance of verifying the authenticity of the letter. Croyden is determined to find the treasure, but he is also aware of the dangers involved. The chapter ends with Croyden and Macloud planning to travel to Annapolis to investigate the location of the tre"
+  ],
+  "extra": {
+    "book_index": 16,
+    "title": "In Her Own Right by John Reed Scott"
+  },
+  "prefill_s": 5.980471600778401,
+  "decode_s": 40.92625818029046,
+  "wall_s": 47.31657513603568,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

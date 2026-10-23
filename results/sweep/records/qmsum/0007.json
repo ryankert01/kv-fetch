@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 7,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 18429,
+  "n_steps": 105,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 104,
+      "end": 105
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "The professor generally liked MSG because of its different temporal properties. Nonetheless, he recognized that it might not be practical to explore it further due to time constraints. At this point, he thought that there were no clear solutions to the challenges they were facing, but there was still plenty to do."
+    ]
+  ],
+  "turn_texts": [
+    "The professor thought that MSG had some issues, particularly in the case of Italian data, where it did not perform as well as PLP. However, the professor acknowledged that MSG could be useful in other scenarios and was not entirely dismissive of its potential. The professor also noted that MSG was supposed to have on-line normalization, and there might be a simple issue related to this that could be causing the problems. Overall, the professor believed that MSG was a promising approach but needed further investigation to understand and resolve the issues."
+  ],
+  "extra": {
+    "_id": "38ad273bc386eca003c3e3998e17a1afb56794f452852d6c"
+  },
+  "prefill_s": 2.8828281313180923,
+  "decode_s": 3.1998602552339435,
+  "wall_s": 6.164313672110438,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 8,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29482,
+  "n_steps": 2048,
+  "n_fed": 1052,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 259,
+      "end": 260
+    },
+    {
+      "start": 547,
+      "natural_stop": 859,
+      "end": 860
+    },
+    {
+      "start": 1080,
+      "natural_stop": 1172,
+      "end": 1173
+    },
+    {
+      "start": 1405,
+      "natural_stop": 1596,
+      "end": 1597
+    },
+    {
+      "start": 1910,
+      "natural_stop": null,
+      "end": 2048
+    }
+  ],
+  "score": 0.6,
+  "answers": [
+    [
+      "def _make_causal_mask(input_ids_shape, dtype, src_len):"
+    ],
+    [
+      "def create_decoding_func("
+    ],
+    [
+      "def convert_param_bkwd(self, torch_pname: str, torch_param):"
+    ],
+    [
+      "def create_embed_func("
+    ],
+    [
+      "def fetch_torch_param(torch_param):"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef _make_causal_mask(input_ids_shape, dtype, src_len):\n    from tvm.relax.op import broadcast_to\n\n    bsz, tgt_len = input_ids_shape\n\n    def min_max_triu_te():\n        return te.compute(\n            (tgt_len, tgt_len),\n            lambda i, j: tvm.tir.Select(j > i, tvm.tir.min_value(dtype), tvm.tir.max_value(dtype)),\n            name=\"make_diag_mask_te\",\n        )\n\n    mask = nn.emit_te(min_max_triu_te)\n    diag_mask = nn.emit(broadcast_to(mask, (bsz, 1, tgt_len, tgt_len)))\n    if src_len == tgt_len:\n        return diag_mask\n\n    def extend_te(x, tgt_len, src_len):\n        return te.compute(\n            (bsz, 1, tgt_len, src_len),\n            lambda b, _, i, j: te.if_then_else(\n                j < src_len - tgt_len,\n                tvm.tir.max_value(dtype),\n                x[b, _, i, j - (src_len - tgt_len)],\n            ),\n            name=\"concat_te\",\n        )\n\n    return nn.emit_te(extend_te, diag_mask, tgt_len, src_len)\n```",
+    "```python\ndef create_decoding_func_for_single_seq(\n    bb: relax.BlockBuilder,\n    param_manager: ParamManager,\n    config: LlamaConfig,\n    quant_scheme: QuantizationScheme,\n) -> None:\n    func_name = \"decode\"\n\n    bsz = 1\n    all_seq_len = tvm.tir.SizeVar(\"num_tokens_including_cache\", \"int64\")\n\n    with bb.function(func_name):\n        model = LlamaForCausalLM(config, tvm.tir.SizeVar(\"vocab_size\", \"int64\"))\n        param_manager.register_params(model, func_name, quant_scheme, get_param_quant_kind)\n\n        input_ids = nn.Placeholder((bsz, 1), dtype=\"int32\", name=\"input_ids\")\n        all_seq_len_shape = relax.Var(\"all_seq_len\", relax.ShapeStructInfo((all_seq_len,)))\n        past_key_values = relax.Var(\n            \"kv_cache\",\n            relax.TupleStructInfo(\n                [relax.ObjectStructInfo() for _ in range(config.num_hidden_layers * 2)]\n            ),\n        )\n        with bb.dataflow():\n            logits, key_value_cache = model(\n                input_ids, all_seq_len_shape, past_key_values=past_key_values\n            )\n            params = [\n                input_ids,\n                all_seq_len_shape,\n                past_key_values,\n            ] + model.parameters()\n            gv = bb.emit_output((logits, relax.Tuple(key_value_cache)))\n        bb.emit_func_output(gv, params)\n```",
+    "```python\n    def convert_param_bkwd(self, torch_pname: str, torch_param):\n        target_dtype = (\n            self.dtype if \"_proj.\" not in torch_pname or \"scales\" in torch_pname else \"uint32\"\n        )\n\n        # For Llama\n        if \"query_key_value_proj\" in torch_pname:\n            return None\n        return [(torch_pname, torch_param.astype(target_dtype))]\n```",
+    "```python\ndef create_embed_func(\n    bb: relax.BlockBuilder,\n    param_manager: ParamManager,\n    config: LlamaConfig,\n    quant_scheme: QuantizationScheme,\n) -> None:\n    func_name = \"embed\"\n\n    seq_len = tvm.tir.SizeVar(\"num_tokens_excluding_cache\", \"int64\")\n    with bb.function(func_name):\n        model = LlamaEmbedTokensWrapper(config, tvm.tir.SizeVar(\"vocab_size\", \"int64\"))\n        param_manager.register_params(model, func_name, quant_scheme, get_param_quant_kind)\n\n        input_ids = nn.Placeholder((1, seq_len), dtype=\"int32\", name=\"input_ids\")\n        with bb.dataflow():\n            inputs_embeds = model(input_ids)\n            params = [input_ids] + model.parameters()\n            gv = bb.emit_output(inputs_embeds)\n        bb.emit_func_output(gv, params)\n```",
+    "```python\n    def get_quantized_params(self, func_name: str) -> List[relax.Var]:\n        quantized_params: List[relax.Var] = []\n\n        bb = relax.BlockBuilder()\n        with bb.function(\"main\", []):\n            self.param2qrange = dict()\n\n            for name in self.param_names:\n                param = self.params[name]\n                param_info = None\n                if func_name in param.param_info_dict:\n                    param_info = param.param_info_dict[func_name]\n                else:\n                    param_info = relax.TensorStructInfo(\n                        tvm.ir.load_json(tvm.ir.save_json(param.param_info.shape)),\n                        param.param_info.dtype,\n"
+  ],
+  "extra": {
+    "repo": "mlc-ai/mlc-llm",
+    "lang": "python"
+  },
+  "prefill_s": 6.006149373948574,
+  "decode_s": 81.93385751079768,
+  "wall_s": 88.83786882273853,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

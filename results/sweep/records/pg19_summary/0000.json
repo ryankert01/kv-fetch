@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 0,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30477,
+  "n_steps": 552,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 551,
+      "end": 552
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "The text is a collection of reminiscences and historical accounts of early St. Paul, Minnesota, focusing on the development of the city, its newspapers, and the challenges faced by its residents during the 19th century. The narrative is divided into several sections, each highlighting different aspects of St. Paul's pioneering days, including the struggles of the early newspaper industry, the impact of the Civil War, and the city's growth through the establishment of fire departments, hotels, and amusement halls.\n\nThe text begins with an introduction to the early days of St. Paul's newspapers, detailing the challenges faced by the first newspapers in the city, such as the Pioneer, Minnesotian, and Times. It describes the technological limitations of the time, the competition between newspapers, and the importance of the telegraph in the evolution of news delivery. The text also touches on the political and social events of the time, including the \"Five Million Loan Election\" and the Sioux uprising in 1862.\n\nThe next section focuses on the early days of steamboat travel in St. Paul, describing the importance of the river and the various steamboat lines that connected the city to other parts of the country. It also discusses the celebration of the successful laying of the first Atlantic cable in 1858, which was a significant event in the city's history.\n\nThe text then moves on to discuss the rise of the St. Paul fire department, the establishment of the Pioneer Hook and Ladder Company, the Hope Engine Company, and the Minnehaha Engine Company. It describes the challenges faced by the fire department in the early days, including the lack of water supply and the need for volunteer firefighters.\n\nThe section on hotel fires details some of the most significant fires that occurred in St. Paul during the 19th century, including the destruction of the Daniels house, the Sintominie hotel, and the International hotel. These fires are described in detail, highlighting the dangers faced by the residents and the efforts of the fire department to save lives and property.\n\nThe final section of the text focuses on the early amusement halls in St. Paul, including Irvine Hall, Dan Emmet's minstrel company, and the Hutchinson family's performances. It describes the cultural significance of these venues and the impact they had on the city's social life.\n\nThroughout the text, the author provides a vivid picture of life in St. Paul during the 19th century, highlighting the challenges faced by the city's residents and the progress made in various fields such as journalism, transportation, and public safety. The text is a valuable historical document that provides insight into the development of St. Paul and its role in the broader context of American history."
+  ],
+  "extra": {
+    "book_index": 0,
+    "title": "Reminiscences of Pioneer Days in St. Paul by Frank Moore"
+  },
+  "prefill_s": 4.980710515752435,
+  "decode_s": 17.524616980925202,
+  "wall_s": 23.97477058786899,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

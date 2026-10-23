@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 4,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30475,
+  "n_steps": 823,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 822,
+      "end": 823
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"The S. W. F. Club\" by Caroline E. Jacobs**\n\n**Chapter I: Pauline's Flag**\n\nThe story begins with Pauline Shaw, a young girl who is concerned about her sister Hilary's health. Hilary has been ill for some time and has been unable to attend school. Pauline, feeling the pressure of the situation, decides to write a letter to her uncle, Paul Almy Shaw, hoping he will help them find a solution. Pauline is determined to do something for Hilary, even though she is worried about her father's reaction. She writes the letter, hoping that Uncle Paul will respond favorably. However, she is not sure if her father will approve of her actions. The letter is eventually sent, and Pauline is anxious to hear from her uncle.\n\n**Chapter II: The Maples**\n\nAfter receiving a letter from her uncle, Pauline and Hilary go to The Maples, a farm where Hilary is staying. There, they meet Shirley Dayre, a young woman from New York who is staying at the farm. Shirley is friendly and helpful, and she becomes a close friend to Hilary. Pauline and Hilary also meet Mr. and Mrs. Boyd, the owners of The Maples. The visit is a pleasant one, and Hilary is happy to be away from home. However, Pauline is still worried about her uncle's response to her letter.\n\n**Chapter III: Uncle Paul's Answer**\n\nPauline receives a letter from her uncle, Paul Almy Shaw, which is not what she hoped for. Uncle Paul does not approve of Hilary leaving home, and he suggests that they stay in Winton and use the money he sends them each month for simple and healthful diversions. Pauline is disappointed, but she decides to follow Uncle Paul's advice. She and her family begin to plan for a summer filled with activities that will help Hilary recover. They decide to start a club called the \"S. W. F. Club,\" which stands for \"Seeing Winton First Club.\" The club is meant to help Hilary see Winton in a new light and to make the most of their time together.\n\n**Chapter IV: Beginnings**\n\nThe \"S. W. F. Club\" is formed, and its members include Pauline, Hilary, Patience, Shirley, and others. The club's goal is to make the most of their time in Winton and to help Hilary recover from her illness. The club organizes various activities, including picnics, trips to the manor, and other outings. The club is a source of joy and excitement for the members, and they all look forward to the adventures that lie ahead.\n\n**Chapter V: Bedelia**\n\nDuring one of their outings, Pauline and Hilary meet a horse named Bedelia, who is sent by Uncle Paul. Bedelia is a gentle and intelligent horse, and she becomes a favorite among the club members. The horse is a symbol of the club's efforts to make the most of their time in Winton and to find joy in the simple things in life.\n\n**Chapter VI: Personally Conducted**\n\nThe club organizes a trip to various places in Winton, including the doctor's office, the Vermont House, and the village green. The trip is a success, and the members of the club enjoy the experience. The trip is a reminde"
+  ],
+  "extra": {
+    "book_index": 5,
+    "title": "The S. W. F. Club by Caroline E. Jacobs"
+  },
+  "prefill_s": 6.63288239762187,
+  "decode_s": 33.1786043625325,
+  "wall_s": 40.5102099776268,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

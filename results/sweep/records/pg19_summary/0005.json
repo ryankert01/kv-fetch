@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 5,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 1066,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1065,
+      "end": 1066
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"Frank Merriwell Down South\" by Burt L. Standish**\n\n**Introduction:**\nThe book \"Frank Merriwell Down South\" is a continuation of the adventures of Frank Merriwell, a young boy known for his bravery and intelligence. The story follows Frank and his companions as they travel to Mexico, where they encounter a series of thrilling and dangerous events.\n\n**Chapter I: A Wonderful Story**\nThe story begins with Frank and his friends, Professor Scotch and Hans, encountering a dying man who claims to have seen the mythical Silver Palace in the Sierra Madre range. The man, Jack Burk, tells them about his journey to the palace, which he reached using a balloon. However, he is later found dead, and his partner, Al Bushnell, is also missing.\n\n**Chapter II: Gone**\nThe group investigates the disappearance of Jack Burk and discovers that he was killed by bandits. They learn that the bandits, led by Pacheco, are after the treasure from the Silver Palace. The group decides to follow the trail of the bandits and find out more about the Silver Palace.\n\n**Chapter III: Held for Ransom**\nThe group is captured by Pacheco's bandits, and Professor Scotch is held for ransom. Frank and Hans are able to escape, but they are forced to leave the professor behind. They learn that the professor is being held in a cave and that the bandits are demanding a ransom of five hundred dollars.\n\n**Chapter IV: Unmasked**\nFrank and Hans discover that the man who claimed to be Jack Burk is actually Carlos Merriwell, Frank's villainous cousin. Carlos is a former criminal who has been trying to steal Frank's inheritance. The group is attacked by the bandits, and Carlos is revealed to be the leader of the bandits.\n\n**Chapter V: Kidnapped**\nThe group is captured by the bandits, and Professor Scotch is taken to a cave. Frank and Hans are forced to leave the professor behind. They learn that the professor is being held for ransom and that the bandits are demanding a large sum of money.\n\n**Chapter VI: Carried into the Mountains**\nThe group sets out to find the professor and the Silver Palace. They travel through the mountains and encounter a guide named Pedro, who is actually Pacheco's lieutenant. The group is attacked by the bandits, and they are forced to flee.\n\n**Chapter VII: The Camp in the Desert**\nThe group sets up camp in the desert and meets Alwin Bushnell, who is also on the trail of the Silver Palace. Bushnell reveals that he was once a partner of Jack Burk and that he has been searching for the treasure. The group learns that the Silver Palace is located in the mountains and that they must find it before the bandits do.\n\n**Chapter VIII: The Treasure Seeker**\nThe group continues their journey and meets Rodeo, the brother of Pacheco. Rodeo reveals that Pacheco has been killed, and a new leader has taken his place. The group learns that the Silver Palace is guarded by the natives, who believe it to be sacred.\n\n**Chapter IX: The Professor's Escape**\nThe professor is rescued from "
+  ],
+  "extra": {
+    "book_index": 6,
+    "title": "Frank Merriwell Down South by Burt L. Standish"
+  },
+  "prefill_s": 6.125444550067186,
+  "decode_s": 43.07643693778664,
+  "wall_s": 49.628186219371855,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

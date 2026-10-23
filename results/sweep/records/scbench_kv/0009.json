@@ -1,0 +1,71 @@
+{
+  "task": "scbench_kv",
+  "index": 9,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30280,
+  "n_steps": 606,
+  "n_fed": 224,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 77,
+      "end": 78
+    },
+    {
+      "start": 135,
+      "natural_stop": 212,
+      "end": 213
+    },
+    {
+      "start": 267,
+      "natural_stop": 337,
+      "end": 338
+    },
+    {
+      "start": 393,
+      "natural_stop": 467,
+      "end": 468
+    },
+    {
+      "start": 526,
+      "natural_stop": 605,
+      "end": 606
+    }
+  ],
+  "score": 1.0,
+  "answers": [
+    [
+      "569164d8-9419-43b5-8428-e5652d8d2f45"
+    ],
+    [
+      "c609b77f-d265-47b4-a0d7-1be29a189a7a"
+    ],
+    [
+      "afac8694-3e88-489b-ac45-2fd9e5ace4a1"
+    ],
+    [
+      "56844371-6763-4497-9ba9-e9d62cc0ac7b"
+    ],
+    [
+      "f41a651f-351e-48aa-a6b5-34c19c2a5880"
+    ]
+  ],
+  "turn_texts": [
+    "The value associated with the key `\"e7ff77d8-decd-4974-9152-cdee02274934\"` is:\n\n`\"569164d8-9419-43b5-8428-e5652d8d2f45\"`",
+    "The value associated with the key `\"50eda566-c3e4-4544-9e5a-0bdbb931c649\"` is:\n\n`\"c609b77f-d265-47b4-a0d7-1be29a189a7a\"`",
+    "The value associated with the key `\"7cac3cbc-d4d8-42f3-993b-2386af9bcd7b\"` is:\n\n`\"afac8694-3e88-489b-ac45-2fd9e5ace4a1\"`",
+    "The value associated with the key `\"9eb7fa39-7d08-4a69-ad18-08b8adeba9f3\"` is:\n\n`\"56844371-6763-4497-9ba9-e9d62cc0ac7b\"`",
+    "The value associated with the key `\"dc9c508b-e09d-4e83-b9a7-7b8eb0a0847f\"` is:\n\n`\"f41a651f-351e-48aa-a6b5-34c19c2a5880\"`"
+  ],
+  "extra": {
+    "n_pairs": 445
+  },
+  "prefill_s": 5.847946691326797,
+  "decode_s": 24.179329904727638,
+  "wall_s": 30.318027958273888,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

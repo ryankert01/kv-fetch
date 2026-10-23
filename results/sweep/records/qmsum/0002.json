@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 2,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 16885,
+  "n_steps": 100,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 99,
+      "end": 100
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "The group discussed recognition results generated for 20 minutes of close-talking microphone data. Recognition performance was very good, indicating promising results for forced alignment procedures and the ability to analyze other important signal information, e.g. prosody and overlapping speech. It was decided that close-talking data should be downsampled and fed to the SRI recognizer to compare recognition performance, and that data from the far-field microphones should be tested on the recognizer as soon as possible. The group also discussed recording setup and equipment issues. "
+    ]
+  ],
+  "turn_texts": [
+    "The general discussion in the meeting centered around the setup and use of microphones for recording meetings, the recognition of speech using a recognizer trained on Switchboard data, the challenges and issues encountered with the current setup, the need for adjustments in microphone placement and usage, the process of transcribing and formatting data, and the planning for future meetings and discussions. There were also discussions about the technical aspects of audio processing, the importance of accurate transcription, and the need for further improvements in the recognition system."
+  ],
+  "extra": {
+    "_id": "fb7891826fb3f47e3750d45365e8c0c97e23613752335cc0"
+  },
+  "prefill_s": 2.1889540115371346,
+  "decode_s": 2.889142890460789,
+  "wall_s": 5.157444523647428,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

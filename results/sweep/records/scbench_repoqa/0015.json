@@ -1,0 +1,66 @@
+{
+  "task": "scbench_repoqa",
+  "index": 15,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29815,
+  "n_steps": 2048,
+  "n_fed": 504,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": null,
+      "end": 400
+    },
+    {
+      "start": 550,
+      "natural_stop": null,
+      "end": 950
+    },
+    {
+      "start": 1125,
+      "natural_stop": null,
+      "end": 1525
+    },
+    {
+      "start": 1704,
+      "natural_stop": null,
+      "end": 2048
+    }
+  ],
+  "score": 0.0,
+  "answers": [
+    [
+      "constexpr inline StringViewImpl<TChar> MakeStringView(const TChar (&str)[size]) {"
+    ],
+    [
+      "size_t ComputeTotalSize(const Container & strings, size_t begin = 0, size_t len = -1) {"
+    ],
+    [
+      "inline void AppendTuple([[maybe_unused]] T value) {"
+    ],
+    [
+      "void WriteUnaligned(void* buf, const T& value) {"
+    ],
+    [
+      "std::unique_ptr<SocketFactory> GetSocketFactory(const ClientOptions& opts) {"
+    ]
+  ],
+  "turn_texts": [
+    "```cpp\n#pragma once\n\n#include \"../base/string_view.h\"\n#include \"types.h\"\n\n#include <list>\n#include <stack>\n#include <string>\n\nnamespace clickhouse {\n\nstruct TypeAst {\n    enum Meta {\n        Array,\n        Assign,\n        Null,\n        Nullable,\n        Number,\n        String,\n        Terminal,\n        Tuple,\n        Enum,\n        LowCardinality,\n        SimpleAggregateFunction,\n        Map\n    };\n\n    /// Type's category.\n    Meta meta;\n    Type::Code code;\n    /// Type's name.\n    /// Need to cache TypeAst, so can't use StringView for name.\n    std::string name;\n    /// Value associated with the node,\n    /// used for fixed-width types and enum values.\n    int64_t value = 0;\n    std::string value_string;\n    /// Subelements of the type.\n    /// Used to store enum's names and values as well.\n    std::vector<TypeAst> elements;\n\n    bool operator==(const TypeAst & other) const;\n    inline bool operator!=(const TypeAst & other) const {\n        return !(*this == other);\n    }\n};\n\n\nclass TypeParser {\n\n    struct Token {\n        enum Type {\n            Invalid = 0,\n            Assign,\n            Name,\n            Number,\n            String,\n            LPar,\n            RPar,\n            Comma,\n            QuotedString, // string with quotation marks included\n            EOS,\n        };\n\n        Type type;\n        StringView value;\n    };\n\npublic:\n    explicit TypeParser(const StringView& name);\n    ~TypeParser();\n\n    bool Parse(TypeAst* type);\n\nprivate:\n    Token NextToken();\n\nprivate:\n    const char* cur_;\n    const char* end_;\n\n    TypeAst* type_;\n    std::stack<TypeAst*> open_elements_;\n};\n\n\nconst TypeAst* ParseTypeName(const std::string& type_name);\n\n}\n#include \"type_parser.h\"\n\n#include \"clickhouse/exceptions.h\"\n#include \"clickhouse/base/platform.h",
+    "```cpp\n#include \"string.h\"\n#include \"utils.h\"\n\n#include \"../exceptions.h\"\n#include \"utils.h\"\n\nnamespace {\n\nusing namespace clickhouse;\n\nTypeRef GetMapType(const Type& data_type) {\n    auto array = data_type.As<ArrayType>();\n    if (!array) {\n        throw ValidationError(\"Wrong type  \" + data_type.GetName() + \" of data for map\");\n    }\n    auto tuple = array->GetItemType()->As<TupleType>();\n    if (!tuple) {\n        throw ValidationError(\"Wrong type  \" + data_type.GetName() + \" of data for map\");\n    }\n    auto types = tuple->GetTupleType();\n    if (types.size() != 2) {\n        throw ValidationError(\"Wrong type  \" + data_type.GetName() + \" of data for map\");\n    }\n    return Type::CreateMap(types[0], types[1]);\n}\n\n}  // namespace\n\nnamespace clickhouse {\n\nColumnMap::ColumnMap(ColumnRef data)\n    : Column(GetMapType(data->GetType())), data_(data->As<ColumnArray>()) {\n}\n\nvoid ColumnMap::Reserve(size_t new_cap) {\n    data_->Reserve(new_cap);\n}\n\nvoid ColumnMap::Clear() {\n    data_->Clear();\n}\n\nvoid ColumnMap::Append(ColumnRef column) {\n    if (auto col = column->As<ColumnMap>()) {\n        data_->Append(col->data_);\n    }\n}\n\nbool ColumnMap::LoadPrefix(InputStream* input, size_t rows) {\n    return data_->LoadPrefix(input, rows);\n}\n\nbool ColumnMap::LoadBody(InputStream* input, size_t rows) {\n    return data_->LoadBody(input, rows);\n}\n\nvoid ColumnMap::SavePrefix(OutputStream* output) {\n    data_->SavePrefix(output);\n}\n\nvoid ColumnMap::SaveBody(OutputStream* output) {\n    data_->SaveBody(output);\n}\n\nsize_t ColumnMap::Size() const {\n    return data_->Size();\n}\n\nColumnRef ColumnMap::",
+    "```cpp\ntemplate <typename... Columns>\nclass ColumnTupleT : public ColumnTuple {\npublic:\n    using TupleOfColumns = std::tuple<std::shared_ptr<Columns>...>;\n\n    using ValueType = std::tuple<std::decay_t<decltype(std::declval<Columns>().At(0))>...>;\n\n    ColumnTupleT(std::tuple<std::shared_ptr<Columns>...> columns)\n        : ColumnTuple(TupleToVector(columns)), typed_columns_(std::move(columns)) {}\n\n    ColumnTupleT(std::vector<ColumnRef> columns)\n        : ColumnTuple(columns), typed_columns_(VectorToTuple(std::move(columns))) {}\n\n    ColumnTupleT(const std::initializer_list<ColumnRef> columns)\n        : ColumnTuple(columns), typed_columns_(VectorToTuple(std::move(columns))) {}\n\n    inline ValueType At(size_t index) const { return GetTupleOfValues(index); }\n\n    inline ValueType operator[](size_t index) const { return GetTupleOfValues(index); }\n\n    using ColumnTuple::Append;\n\n    template <typename... T>\n    inline void Append(std::tuple<T...> value) {\n        AppendTuple(std::move(value));\n    }\n\n    /** Create a ColumnTupleT from a ColumnTuple, without copying data and offsets, but by\n     * 'stealing' those from `col`.\n     *\n     *  Ownership of column internals is transferred to returned object, original (argument) object\n     *  MUST NOT BE USED IN ANY WAY, it is only safe to dispose it.\n     *\n     *  Throws an exception if `col` is of wrong type, it is safe to use original col in this case.\n     *  This is a static method to make such conversion verbose.\n     */\n    static auto Wrap(ColumnTuple&& col) {\n        if (col.TupleSize() != std::tuple_size_v<TupleOfColumns>) {\n            throw ValidationError(\"Can't wrap from \" + col.GetType().GetName());\n       ",
+    "```cpp\nnamespace clickhouse {\n\nclass ZeroCopyOutput : public OutputStream {\npublic:\n    inline size_t Next(void** data, size_t size) {\n        return DoNext(data, size);\n    }\n\nprotected:\n    virtual size_t DoNext(void** data, size_t len) = 0;\n\n    size_t DoWrite(const void* data, size_t len) override;\n};\n\n\n/**\n * A ZeroCopyOutput stream backed by an in-memory array of bytes.\n */\nclass ArrayOutput : public ZeroCopyOutput {\npublic:\n     ArrayOutput(void* buf, size_t len);\n    ~ArrayOutput() override;\n\n    /// Number of bytes available in the stream.\n    inline size_t Avail() const noexcept {\n        return end_ - buf_;\n    }\n\n    /// Current write position in the memory block used by this stream.\n    inline const uint8_t* Data() const noexcept {\n        return buf_;\n    }\n\n    /// Whether there is more space in the stream.\n    inline bool Exhausted() const noexcept {\n        return !Avail();\n    }\n\n    /// Initializes this stream with a new memory block.\n    inline void Reset(void* buf, size_t len) noexcept {\n        buf_ = static_cast<uint8_t*>(buf);\n        end_ = buf_ + len;\n        buffer_size_ = len;\n    }\n\n    /// Number of bytes written to the buffer.\n    inline size_t Size() const noexcept {\n        return buffer_size_ - Avail();\n    }\n\nprotected:\n    size_t DoNext(const void** ptr, size_t len) override;\n\nprivate:\n    uint8_t* buf_;\n    uint8_t* end_;\n    size_t buffer_size_;\n};\n\n\n/**\n * A ZeroCopy"
+  ],
+  "extra": {
+    "repo": "ClickHouse/clickhouse-cpp",
+    "lang": "cpp"
+  },
+  "prefill_s": 5.875297125428915,
+  "decode_s": 82.03282496053725,
+  "wall_s": 88.653025502339,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

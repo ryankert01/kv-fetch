@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 4,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29724,
+  "n_steps": 1503,
+  "n_fed": 812,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 137,
+      "end": 138
+    },
+    {
+      "start": 348,
+      "natural_stop": 411,
+      "end": 412
+    },
+    {
+      "start": 594,
+      "natural_stop": 627,
+      "end": 628
+    },
+    {
+      "start": 805,
+      "natural_stop": 937,
+      "end": 938
+    },
+    {
+      "start": 1181,
+      "natural_stop": 1502,
+      "end": 1503
+    }
+  ],
+  "score": 0.8,
+  "answers": [
+    [
+      "def run_user(user):"
+    ],
+    [
+      "def decode(obj):"
+    ],
+    [
+      "def proper_round(val, digits=0):"
+    ],
+    [
+      "def reset(self):"
+    ],
+    [
+      "def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef run(self):\n    self._state = LOCUST_STATE_RUNNING\n    self._taskset_instance = DefaultTaskSet(self)\n    try:\n        # run the TaskSet on_start method, if it has one\n        try:\n            self.on_start()\n        except Exception as e:\n            # unhandled exceptions inside tasks are logged in TaskSet.run, but since we're not yet there...\n            logger.error(\"%s\\n%s\", e, traceback.format_exc())\n            raise\n\n        self._taskset_instance.run()\n    except (GreenletExit, StopUser):\n        # run the on_stop method, if it has one\n        self.on_stop()\n```",
+    "```python\ndef decode(obj):\n    if \"__datetime__\" in obj:\n        obj = datetime.datetime.strptime(obj[\"as_str\"], \"%Y%m%dT%H:%M:%S.%f\")\n    elif \"__ObjectId__\" in obj:\n        obj = ObjectId(obj[\"as_str\"])\n    return obj\n```",
+    "```python\ndef proper_round(val, digits=0):\n    return round(val + 10 ** (-len(str(val)) - 1), digits)\n```",
+    "```python\ndef reset(self):\n    self.start_time = time.time()\n    self.num_requests = 0\n    self.num_none_requests = 0\n    self.num_failures = 0\n    self.total_response_time = 0\n    self.min_response_time = None\n    self.max_response_time = 0\n    self.last_request_timestamp = None\n    self.num_reqs_per_sec = defaultdict(int)\n    self.num_fail_per_sec = defaultdict(int)\n    self.total_content_length = 0\n    if self.use_response_times_cache:\n        self.response_times_cache = OrderedDict()\n        self._cache_response_times(int(time.time()))\n```",
+    "```python\ndef find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:\n    \"\"\"\n    Returns a list of relative file paths for the Locustfile Picker. If is_directory is True,\n    locustfiles is expected to have a single index which is a directory that will be searched for\n    locustfiles.\n\n    Ignores files that start with _\n    \"\"\"\n    file_paths = []\n\n    if is_directory:\n        locustdir = locustfiles[0]\n\n        if len(locustfiles) != 1:\n            sys.stderr.write(f\"Multiple values passed in for directory: {locustfiles}\\n\")\n            sys.exit(1)\n\n        if not os.path.exists(locustdir):\n            sys.stderr.write(f\"Could not find directory '{locustdir}'\\n\")\n            sys.exit(1)\n\n        if not os.path.isdir(locustdir):\n            sys.stderr.write(f\"'{locustdir} is not a directory\\n\")\n            sys.exit(1)\n\n        for root, dirs, files in os.walk(locustdir):\n            for file in files:\n                if not file.startswith(\"_\") and file.endswith(\".py\"):\n                    file_path = os.path.join(root, file)\n                    file_paths.append(file_path)\n    else:\n        for file_path in locustfiles:\n            if not file_path.endswith(\".py\"):\n                sys.stderr.write(f\"Invalid file '{file_path}'. File should have '.py' extension\\n\")\n                sys.exit(1)\n\n            file_paths.append(file_path)\n\n    return file_paths\n```"
+  ],
+  "extra": {
+    "repo": "locustio/locust",
+    "lang": "python"
+  },
+  "prefill_s": 5.960239760577679,
+  "decode_s": 61.477571396157146,
+  "wall_s": 68.23461802303791,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

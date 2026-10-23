@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 12,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 1403,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1402,
+      "end": 1403
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"Turn About Eleanor\" by Ethel M. Kelley**\n\n**Chapter I: Enter Eleanor**  \nThe story begins with a young girl, Eleanor Hamlin, traveling from Cape Cod to New York City with her uncle, David Bolling. Eleanor is ten years old, living with her grandparents, who are financially struggling after the death of their son, Uncle Amos. David, who is also Eleanor's uncle, is tasked with delivering her to her new adoptive family in New York. During the journey, David learns about Eleanor's difficult life on Cape Cod, including her work to support her family and the emotional toll of her grandparents' declining health. Eleanor is described as a sensitive and intelligent child, but she is also unaccustomed to the urban environment of New York.\n\n**Chapter II: The Cooperative Parents**  \nEleanor is introduced to her new \"cooperative parents\"\u2014Beulah, Gertrude, Margaret, Jimmie, Peter, and David. These six young women and one man have decided to adopt Eleanor as part of a social experiment to raise her in a modern, progressive way. They are not traditional adoptive parents but rather a group of friends who have come together to take responsibility for Eleanor's upbringing. The group is determined to provide her with a proper education, moral guidance, and a stable home life. However, they are also aware that this is a unique and unconventional arrangement, and they are not entirely sure how to handle the challenges of raising a child in this way.\n\n**Chapter III: The Experiment Begins**  \nEleanor arrives in New York and is placed in a new home with her adoptive family. She is initially overwhelmed by the unfamiliar environment and the strict routines of her new life. Beulah, one of the adoptive parents, begins to teach Eleanor the basics of life in New York, including how to manage her daily tasks and how to interact with others. However, Eleanor is not immediately able to adapt to the new environment. She is homesick, feels isolated, and is not sure how to fit in with her new family. Beulah tries to help Eleanor adjust, but she is also struggling with the challenges of raising a child in this unconventional way.\n\n**Chapter IV: Peter Elucidates**  \nPeter, one of the adoptive parents, helps Eleanor understand her feelings and her place in the family. He explains that Eleanor is sensitive and that she needs to be understood and accepted for who she is. He also helps her see that she is not alone in her feelings and that she is not the only one who feels this way. Peter is able to connect with Eleanor on a personal level, and he helps her feel more at home in her new environment. He also helps her understand the importance of self-expression and the value of emotional honesty.\n\n**Chapter V: Eleanor Enjoys Herself in Her Own Way**  \nEleanor begins to adjust to her new life in New York. She starts to enjoy the new environment and the opportunities it presents. She writes letters to her old friend Albertina, sharing her experiences and feelings about her new "
+  ],
+  "extra": {
+    "book_index": 17,
+    "title": "Turn About Eleanor by Ethel M. Kelley"
+  },
+  "prefill_s": 5.883112442679703,
+  "decode_s": 43.92272858787328,
+  "wall_s": 50.365990879014134,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

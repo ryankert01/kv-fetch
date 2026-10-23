@@ -1,0 +1,36 @@
+{
+  "task": "longbench_v2",
+  "index": 15,
+  "split": "confirm",
+  "think": true,
+  "prompt_tokens": 15647,
+  "n_steps": 799,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 798,
+      "end": 799
+    }
+  ],
+  "score": 1.0,
+  "answers": [
+    [
+      "B"
+    ]
+  ],
+  "turn_texts": [
+    "<think>\nOkay, let's tackle this question. The user is asking which statement best reflects the complexities and tensions when applying the three sociocultural perspectives (literacy as social practice, multiliteracies, and critical literacy) to literacy education and practice. The options are A, B, C, D.\n\nFirst, I need to recall the key points from the text. The article discusses each of these three perspectives. \n\nLiteracy as social practice emphasizes that literacy is a social practice, connected to contexts, power, and identity. It contrasts with the autonomous model, focusing on how literacy is used in real-world contexts and how it's shaped by social institutions and power structures. The text mentions that it's about practices, not just skills, and that it's tied to identity and power.\n\nMultiliteracies, as per the New London Group, expands beyond print to include multimodal forms of communication. It emphasizes cultural and linguistic diversity and multiple communication channels. The text notes that multiliteracies critiques the overemphasis on print and advocates for a broader view of semiotic systems. However, it's also mentioned that this can sometimes lead to a superficial understanding if not critically engaged with.\n\nCritical literacy, on the other hand, is about power and empowerment. It's not just about literacy as a skill but about how literacy practices are tied to social justice, equity, and the ways in which power structures influence access to literacy. The text references Freire and others who argue that literacy is about consciousness and challenging power dynamics.\n\nNow, looking at the options:\n\nOption A says that literacy as social practice assumes a homogeneous culture, which is not correct. The text actually says that literacy as social practice does consider diverse contexts and power dynamics. Multiliteracies is criticized for adding tech without questioning structures, but the text says that multiliteracies does address social structures. So A might be incorrect.\n\nOption B states that critical literacy is about social justice, and literacy as social practice is about identity through social interactions. Multiliteracies creates tensions by prioritizing tech over critical engagement. The text does mention that multiliteracies can sometimes focus on technology without critically engaging with power structures, which could marginalize non-dominant voices. This seems plausible.\n\nOption C claims all three converge on a universal skill set, which contradicts the text. The text clearly states that each perspective emphasizes the social, cultural, and power aspects, so C is incorrect.\n\nOption D says multiliteracies critiques traditional definitions but may overshadow critical literacy. The text does mention that multiliteracies expands beyond print, but it also says that critical literacy is important for examining power. However, the text doesn't explicitly say that multiliteracies overshadows critical literacy. It's more ab"
+  ],
+  "extra": {
+    "_id": "6704a83dbb02136c067cde1b",
+    "domain": "Single-Document QA"
+  },
+  "prefill_s": 2.94894892629236,
+  "decode_s": 28.348775384947658,
+  "wall_s": 31.571042806841433,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

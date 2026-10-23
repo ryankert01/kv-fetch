@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 13,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30475,
+  "n_steps": 1055,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1054,
+      "end": 1055
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"Jennie Gerhardt\" by Theodore Dreiser**\n\n**Chapter I: The Beginning of a New Life**\n\nThe story opens in Columbus, Ohio, in the fall of 1880, with a middle-aged woman, Mrs. Gerhardt, and her eighteen-year-old daughter, Jennie, seeking work at the Columbus Hotel. The Gerhardts are poor, with six children, and their lives are in constant struggle against poverty and hardship. The father, William Gerhardt, is a glass-blower who is sick, and the family is barely surviving on meager income. The mother, a strong and compassionate woman, is determined to find work to support her family. They are eventually hired to clean the hotel, and this marks the beginning of their new life.\n\n**Chapter II: The Spirit of Jennie**\n\nJennie is a kind, innocent, and deeply spiritual girl. She is drawn to the beauty and grandeur of the world around her, and she finds comfort in the simple things of life. Her spirit is pure and uncorrupted by the harsh realities of poverty. She is also deeply affected by the Senator, George Sylvester Brander, who is a prominent figure in Columbus. He is a man of integrity and compassion, and he is moved by the plight of the Gerhardts. He offers them a generous gift of ten dollars, which helps them to buy food and supplies for the holidays.\n\n**Chapter III: The Senator and the Gerhardts**\n\nThe Senator, Brander, is a man of great influence and wealth, but he is also a man of deep compassion. He is moved by the plight of the Gerhardts and offers them a generous gift of ten dollars. He is also deeply affected by Jennie, and he becomes a close friend to her. He is a man of great charm and kindness, and he is able to bring a sense of hope and comfort to the Gerhardts. He is also a man of great integrity, and he is not willing to compromise his values for the sake of personal gain.\n\n**Chapter IV: The Senator and Jennie**\n\nJennie and the Senator develop a close relationship. She is drawn to him, and he is drawn to her. They share a deep emotional connection, and he is moved by her innocence and purity. He is also moved by her beauty and her spirit. He is a man of great compassion and kindness, and he is willing to do anything to help her. He is also a man of great integrity, and he is not willing to compromise his values for the sake of personal gain.\n\n**Chapter V: The Senator and the Family**\n\nThe Senator is a man of great influence and wealth, but he is also a man of deep compassion. He is moved by the plight of the Gerhardts and offers them a generous gift of ten dollars. He is also deeply affected by Jennie, and he becomes a close friend to her. He is a man of great charm and kindness, and he is able to bring a sense of hope and comfort to the Gerhardts. He is also a man of great integrity, and he is not willing to compromise his values for the sake of personal gain.\n\n**Chapter VI: The Senator and the Family's Struggles**\n\nThe Senator is a man of great influence and wealth, but he is also a man of deep compassion. He is moved by the"
+  ],
+  "extra": {
+    "book_index": 18,
+    "title": "Jennie Gerhardt by Theodore Dreiser"
+  },
+  "prefill_s": 5.60848225094378,
+  "decode_s": 32.75545528810471,
+  "wall_s": 38.81907835975289,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

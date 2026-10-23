@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 2,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29867,
+  "n_steps": 1413,
+  "n_fed": 670,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": null,
+      "end": 400
+    },
+    {
+      "start": 591,
+      "natural_stop": 799,
+      "end": 800
+    },
+    {
+      "start": 983,
+      "natural_stop": 1042,
+      "end": 1043
+    },
+    {
+      "start": 1177,
+      "natural_stop": 1200,
+      "end": 1201
+    },
+    {
+      "start": 1363,
+      "natural_stop": 1412,
+      "end": 1413
+    }
+  ],
+  "score": 0.4,
+  "answers": [
+    [
+      "def _result(self) -> SolverResult:"
+    ],
+    [
+      "def _prepare_sdist(self, archive: Path, destination: Path | None = None) -> Path:"
+    ],
+    [
+      "def and_to_string("
+    ],
+    [
+      "def _get_installed(self) -> InstalledRepository:"
+    ],
+    [
+      "def _is_collapsible(self, incompatibility: Incompatibility) -> bool:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef _choose_package_version(self) -> str | None:\n    \"\"\"\n    Tries to select a version of a required package.\n\n    Returns the name of the package whose incompatibilities should be\n    propagated by _propagate(), or None indicating that version solving is\n    complete and a solution has been found.\n    \"\"\"\n    unsatisfied = self._solution.unsatisfied\n    if not unsatisfied:\n        return None\n\n    class Preference:\n        \"\"\"\n        Preference is one of the criteria for choosing which dependency to solve\n        first. A higher value means that there are \"more options\" to satisfy\n        a dependency. A lower value takes precedence.\n        \"\"\"\n\n        DIRECT_ORIGIN = 0\n        NO_CHOICE = 1\n        USE_LATEST = 2\n        LOCKED = 3\n        DEFAULT = 4\n\n    # The original algorithm proposes to prefer packages with as few remaining\n    # versions as possible, so that if a conflict is necessary it's forced quickly.\n    # https://github.com/dart-lang/pub/blob/master/doc/solver.md#decision-making\n    # However, this leads to the famous boto3 vs. urllib3 issue, so we prefer\n    # packages with more remaining versions (see\n    # https://github.com/python-poetry/poetry/pull/8255#issuecomment-1657198242\n    # for more details).\n    # In order to provide results that are as deterministic as possible\n    # and consistent between `poetry lock` and `poetry update`, the return value\n    # of two different dependencies should not be equal if possible.\n    def _get_min(dependency: Dependency) -> tuple[bool, int, int]:\n        # Direct origin dependencies must be handled first: we don't want to resolve\n        # a regular dependency for some package only to find later that we had a\n        #",
+    "```python\ndef _prepare_sdist(self, archive: Path, destination: Path | None = None) -> Path:\n    from poetry.core.packages.utils.link import Link\n\n    suffix = archive.suffix\n    zip = suffix == \".zip\"\n\n    with temporary_directory() as tmp_dir:\n        archive_dir = Path(tmp_dir)\n        extractall(source=archive, dest=archive_dir, zip=zip)\n\n        elements = list(archive_dir.glob(\"*\"))\n\n        if len(elements) == 1 and elements[0].is_dir():\n            sdist_dir = elements[0]\n        else:\n            sdist_dir = archive_dir / archive.name.rstrip(suffix)\n            if not sdist_dir.is_dir():\n                sdist_dir = archive_dir\n\n        if destination is None:\n            destination = self._artifact_cache.get_cache_directory_for_link(\n                Link(archive.as_uri())\n            )\n\n        destination.mkdir(parents=True, exist_ok=True)\n\n        return self._prepare(\n            sdist_dir,\n            destination,\n        )\n```",
+    "```python\ndef _join_terms(self, terms: list[str]) -> str:\n    if len(terms) == 0:\n        return \"\"\n    elif len(terms) == 1:\n        return terms[0]\n    else:\n        return \" and \".join(terms)\n```",
+    "```python\ndef _get_installed(self) -> InstalledRepository:\n    return InstalledRepository.load(self._env)\n```",
+    "```python\ndef _can_be_collapsed(self, element: Any) -> bool:\n    # This is a placeholder implementation. The actual logic would depend\n    # on the specific structure and requirements of the element.\n    return False\n```"
+  ],
+  "extra": {
+    "repo": "python-poetry/poetry",
+    "lang": "python"
+  },
+  "prefill_s": 6.254736229777336,
+  "decode_s": 45.93553579505533,
+  "wall_s": 52.75118788611144,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

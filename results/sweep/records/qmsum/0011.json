@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 11,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 10018,
+  "n_steps": 111,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 110,
+      "end": 111
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "Since the marketing and the user interface designer mentioned speech recognition in their previous presentations, the industrial designer suggested putting a simple speech recogniser on the digital signal processing chip and training the speech recogniser for particular users. However, the user interface designer concerned that it would be too complex. Then the industrial designer argued that even some simple mobile devices could have these voice dialers so it wouldn't be so sophisticated, and the marketing also said the product would be good to sell with the speech recogniser."
+    ]
+  ],
+  "turn_texts": [
+    "The group discussed the potential inclusion of speech recognition in the remote control design. They considered its feasibility, cost, and user-friendliness, with the Marketing expert suggesting it could be a valuable feature for younger users. The Industrial Designer mentioned that a simple speech recognition system could be implemented using a digital signal processing chip, and they agreed that it could be a useful addition to the remote control, especially for commands like volume control and channel selection. However, they also noted that more research would be needed to determine if it was necessary for the target audience."
+  ],
+  "extra": {
+    "_id": "ade5c4dcd4a442994f97e0ec271c936e2e00bc66516daeb3"
+  },
+  "prefill_s": 1.1001655384898186,
+  "decode_s": 3.231330298818648,
+  "wall_s": 4.379690255969763,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

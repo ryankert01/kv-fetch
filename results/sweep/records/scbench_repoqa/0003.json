@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 3,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29721,
+  "n_steps": 1714,
+  "n_fed": 815,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": null,
+      "end": 400
+    },
+    {
+      "start": 588,
+      "natural_stop": 778,
+      "end": 779
+    },
+    {
+      "start": 978,
+      "natural_stop": 1113,
+      "end": 1114
+    },
+    {
+      "start": 1336,
+      "natural_stop": 1433,
+      "end": 1434
+    },
+    {
+      "start": 1640,
+      "natural_stop": 1713,
+      "end": 1714
+    }
+  ],
+  "score": 0.6,
+  "answers": [
+    [
+      "def _stream_response(self, start: int, end: int) -> Response:"
+    ],
+    [
+      "def validate("
+    ],
+    [
+      "def secure(self) -> Iterator[TOMLDocument]:"
+    ],
+    [
+      "def config_source(self) -> ConfigSource:"
+    ],
+    [
+      "def set_lock_data(self, root: Package, packages: list[Package]) -> bool:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\nclass LazyFileOverHTTP(ReadOnlyIOWrapper):\n    \"\"\"File-like object representing a fixed-length file over HTTP.\n\n    This uses HTTP range requests to lazily fetch the file's content into a temporary\n    file. If such requests are not supported by the server, raises\n    ``HTTPRangeRequestUnsupported`` in the ``__enter__`` method.\"\"\"\n\n    def __init__(\n        self,\n        url: str,\n        session: Session | Authenticator,\n        delete_backing_file: bool = True,\n    ) -> None:\n        super().__init__(cast(BinaryIO, NamedTemporaryFile(delete=delete_backing_file)))\n\n        self._merge_intervals: MergeIntervals | None = None\n        self._length: int | None = None\n\n        self._request_count = 0\n        self._session = session\n        self._url = url\n\n    def __enter__(self: U) -> U:\n        super().__enter__()\n        self._setup_content()\n        return self\n\n    def __exit__(\n        self,\n        exc_type: type[BaseException] | None,\n        exc_value: BaseException | None,\n        traceback: TracebackType | None,\n    ) -> None:\n        self._reset_content()\n        super().__exit__(exc_type, exc_value, traceback)\n\n    def read(self, size: int = -1) -> bytes:\n        \"\"\"Read up to size bytes from the object and return them.\n\n        As a convenience, if size is unspecified or -1,\n        all bytes until EOF are returned.  Fewer than\n        size bytes may be returned if EOF is reached.\n\n        :raises ValueError: if __enter__ was not called beforehand.\n        \"\"\"\n        if self._length is None:\n            raise ValueError(\".__enter__() must be called to set up content length\")\n        cur = self.tell()\n        logger.debug(\"read size %d at %d from lazy file %s\", size,",
+    "```python\n    @classmethod\n    def validate(\n        cls, config: dict[str, Any], strict: bool = False\n    ) -> dict[str, list[str]]:\n        results = super().validate(config, strict)\n\n        results[\"errors\"].extend(validate_object(config))\n\n        # A project should not depend on itself.\n        dependencies = set(config.get(\"dependencies\", {}).keys())\n        dependencies.update(config.get(\"dev-dependencies\", {}).keys())\n        groups = config.get(\"group\", {}).values()\n        for group in groups:\n            dependencies.update(group.get(\"dependencies\", {}).keys())\n\n        dependencies = {canonicalize_name(d) for d in dependencies}\n\n        project_name = config.get(\"name\")\n        if project_name is not None and canonicalize_name(project_name) in dependencies:\n            results[\"errors\"].append(\n                f\"Project name ({project_name}) is same as one of its dependencies\"\n            )\n\n        return results\n```",
+    "```python\n    @contextmanager\n    def secure(self) -> Iterator[TOMLDocument]:\n        if self.file.exists():\n            initial_config = self.file.read()\n            config = self.file.read()\n        else:\n            initial_config = document()\n            config = document()\n\n        new_file = not self.file.exists()\n\n        yield config\n\n        try:\n            # Ensuring the file is only readable and writable\n            # by the current user\n            mode = 0o600\n\n            if new_file:\n                self.file.path.touch(mode=mode)\n\n            self.file.write(config)\n        except Exception:\n            self.file.write(initial_config)\n\n            raise\n```",
+    "```python\n    @classmethod\n    def validator(cls, policy: str) -> bool:\n        if boolean_validator(policy):\n            return True\n\n        names = policy.strip().split(\",\")\n\n        for name in names:\n            if (\n                not name\n                or (cls.is_reserved(name) and len(names) == 1)\n                or re.match(r\"^[a-zA-Z\\d_-]+$\", name)\n            ):\n                continue\n            return False\n\n        return True\n```",
+    "```python\n    def set_lock_data(self, root: Package, packages: list[Package]) -> bool:\n        \"\"\"Store lock data and eventually persist to the lock file\"\"\"\n        lock = self._compute_lock_data(root, packages)\n\n        if self._should_write(lock):\n            self._write_lock_data(lock)\n            return True\n\n        return False\n```"
+  ],
+  "extra": {
+    "repo": "python-poetry/poetry",
+    "lang": "python"
+  },
+  "prefill_s": 5.269986109808087,
+  "decode_s": 58.33378546964377,
+  "wall_s": 65.89197325985879,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

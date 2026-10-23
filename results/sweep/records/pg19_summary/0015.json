@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 15,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 823,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 822,
+      "end": 823
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"Carmen Ariza\" by Charles Francis Stocking**\n\n**Book 1: The Beginning of a Journey**\n\nThe novel \"Carmen Ariza\" by Charles Francis Stocking opens with a vivid depiction of the Caribbean coast of Cartagena, Colombia, under the rising sun. The scene is set in a small, dimly lit cell of a priest, Jose, who is in deep spiritual turmoil. The narrative introduces the setting and the character of Jose, a young man of twenty-five, who is a priest. His life is marked by inner conflict and a struggle with faith, as he grapples with doubts about the Church and its teachings.\n\nThe story then transitions to the broader historical and cultural context of Cartagena in the early 19th century, a city that is a hub of religious and political activity. The family of Rincon, a prominent and aristocratic family, is introduced, with Don Ignacio Jose Marquez de Rincon, a loyalist to the Spanish Crown, at the center. The family's wealth and influence are significant, and their traditions are deeply rooted in Catholicism.\n\nThe narrative then delves into the personal life of Jose, the son of Don Ignacio. Born into a family with a strong religious background, Jose is raised in an environment that emphasizes piety and obedience to the Church. However, his early life is marked by a deep sensitivity and a questioning nature, which sets the stage for his later spiritual struggles.\n\nThe story explores Jose's education and his early exposure to religious teachings. His father, Don Ignacio, is a devout Catholic, and Jose is expected to follow in his footsteps. However, Jose's curiosity and desire for knowledge lead him to question the Church's teachings. He is introduced to the works of Voltaire, which challenge the traditional religious beliefs he has been taught. This leads to a conflict with his family and the Church, as he begins to doubt the authenticity of the Church's teachings.\n\nThe narrative then moves to the political and religious landscape of Spain and the Catholic Church. The Archbishop of Seville, Rafael de Rincon, plays a significant role in Jose's life, as he is tasked with ensuring that Jose remains loyal to the Church. The Archbishop and his secretary, Padre Rafael, work together to secure Jose's future in the Church, ensuring that he will become a priest and serve the Church's interests.\n\nThe story continues with Jose's education in the seminary, where he is trained to become a priest. However, his inner doubts and questions about the Church's teachings persist. He is encouraged by his family and the Church to accept the teachings of the Church, but he is also influenced by the works of other thinkers and the broader intellectual climate of the time.\n\nThe narrative then explores Jose's growing disillusionment with the Church. He begins to question the authenticity of the Church's teachings and the role of the Church in society. He is influenced by the works of other thinkers and the broader intellectual climate of the time, which challenge the tradi"
+  ],
+  "extra": {
+    "book_index": 21,
+    "title": "Carmen Ariza by Charles Francis Stocking"
+  },
+  "prefill_s": 5.116063742898405,
+  "decode_s": 25.672115265391767,
+  "wall_s": 31.142816925421357,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

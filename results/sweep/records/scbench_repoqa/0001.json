@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 1,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29671,
+  "n_steps": 1789,
+  "n_fed": 862,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 67,
+      "end": 68
+    },
+    {
+      "start": 292,
+      "natural_stop": 653,
+      "end": 654
+    },
+    {
+      "start": 859,
+      "natural_stop": 1043,
+      "end": 1044
+    },
+    {
+      "start": 1284,
+      "natural_stop": 1512,
+      "end": 1513
+    },
+    {
+      "start": 1706,
+      "natural_stop": 1788,
+      "end": 1789
+    }
+  ],
+  "score": 0.6,
+  "answers": [
+    [
+      "def enumerate_reversed(sequence: Sequence[T]) -> Iterator[Tuple[Index, T]]:"
+    ],
+    [
+      "def more_splits_should_be_made() -> bool:"
+    ],
+    [
+      "def max_delimiter_priority_in_atom(node: LN) -> Priority:"
+    ],
+    [
+      "def _return_match(LL: List[Leaf]) -> Optional[int]:"
+    ],
+    [
+      "def _out(message: Optional[str] = None, nl: bool = True, **styles: Any) -> None:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef enumerate_reversed(sequence: Sequence[T]) -> Iterator[Tuple[Index, T]]:\n    \"\"\"Like `reversed(enumerate(sequence))` if that were possible.\"\"\"\n    index = len(sequence) - 1\n    for element in reversed(sequence):\n        yield (index, element)\n        index -= 1\n```",
+    "```python\ndef _prefer_paren_wrap_match(LL: List[Leaf]) -> Optional[int]:\n    \"\"\"\n    Returns:\n        string_idx such that @LL[string_idx] is equal to our target (i.e.\n        matched) string, if this line matches the \"prefer paren wrap\" statement\n        requirements listed in the 'Requirements' section of the StringParenWrapper\n        class's docstring.\n            OR\n        None, otherwise.\n    \"\"\"\n    # The line must start with a string.\n    if LL[0].type != token.STRING:\n        return None\n\n    matching_nodes = [\n        syms.listmaker,\n        syms.dictsetmaker,\n        syms.testlist_gexp,\n    ]\n    # If the string is an immediate child of a list/set/tuple literal...\n    if (\n        parent_type(LL[0]) in matching_nodes\n        or parent_type(LL[0].parent) in matching_nodes\n    ):\n        # And the string is surrounded by commas (or is the first/last child)...\n        prev_sibling = LL[0].prev_sibling\n        next_sibling = LL[0].next_sibling\n        if (\n            not prev_sibling\n            and not next_sibling\n            and parent_type(LL[0]) == syms.atom\n        ):\n            # If it's an atom string, we need to check the parent atom's siblings.\n            parent = LL[0].parent\n            assert parent is not None  # For type checkers.\n            prev_sibling = parent.prev_sibling\n            next_sibling = parent.next_sibling\n        if (not prev_sibling or prev_sibling.type == token.COMMA) and (\n            not next_sibling or next_sibling.type == token.COMMA\n        ):\n            return 0\n\n    return None\n```",
+    "```python\ndef max_delimiter_priority_in_atom(node: LN) -> Priority:\n    \"\"\"Return maximum delimiter priority inside `node`.\n\n    This is specific to atoms with contents contained in a pair of parentheses.\n    If `node` isn't an atom or there are no enclosing parentheses, returns 0.\n    \"\"\"\n    if node.type != syms.atom:\n        return 0\n\n    first = node.children[0]\n    last = node.children[-1]\n    if not (first.type == token.LPAR and last.type == token.RPAR):\n        return 0\n\n    bt = BracketTracker()\n    for c in node.children[1:-1]:\n        if isinstance(c, Leaf):\n            bt.mark(c)\n        else:\n            for leaf in c.leaves():\n                bt.mark(leaf)\n    try:\n        return bt.max_delimiter_priority()\n\n    except ValueError:\n        return 0\n```",
+    "```python\n@staticmethod\ndef _return_match(LL: List[Leaf]) -> Optional[int]:\n    \"\"\"\n    Returns:\n        string_idx such that @LL[string_idx] is equal to our target (i.e.\n        matched) string, if this line matches the return/yield statement\n        requirements listed in the 'Requirements' section of this classes'\n        docstring.\n            OR\n        None, otherwise.\n    \"\"\"\n    # If this line is a part of a return/yield statement and the first leaf\n    # contains either the \"return\" or \"yield\" keywords...\n    if parent_type(LL[0]) in [syms.return_stmt, syms.yield_expr] and LL[\n        0\n    ].value in [\"return\", \"yield\"]:\n        is_valid_index = is_valid_index_factory(LL)\n\n        idx = 2 if is_valid_index(1) and is_empty_par(LL[1]) else 1\n        # The next visible leaf MUST contain a string...\n        if is_valid_index(idx) and LL[idx].type == token.STRING:\n            return idx\n\n    return None\n```",
+    "```python\n@mypyc_attr(patchable=True)\ndef _err(message: Optional[str] = None, nl: bool = True, **styles: Any) -> None:\n    if message is not None:\n        if \"fg\" not in styles:\n            styles[\"fg\"] = \"red\"\n        message = style(message, **styles)\n    echo(message, nl=nl, err=True)\n```"
+  ],
+  "extra": {
+    "repo": "psf/black",
+    "lang": "python"
+  },
+  "prefill_s": 5.753152579069138,
+  "decode_s": 58.1170390965417,
+  "wall_s": 64.68721516616642,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 13,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 15303,
+  "n_steps": 52,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 51,
+      "end": 52
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "The User Interface thought it was reasonable to replace the titanium with titanium-coloured plastic. When discussing how to reduce the cost of the product, the user interface designer insisted that if they could only choose to save the titanium exterior or the LCD screen, it would be a better choice to save the LCD screen and dump the titanium cover but replacing it with hard plastics. The result was the major of the group including Marketing agreeed the suggestion."
+    ]
+  ],
+  "turn_texts": [
+    "The User Interface thought that using titanium was not cost-effective when discussing product cost and quotation, as they believed the titanium back of the device was too expensive and that the costs were too high, leading to the decision to replace titanium with plastic to reduce costs."
+  ],
+  "extra": {
+    "_id": "f0060bb96ccf80067f76b7a0f0012a19316d9ef9c381d9c1"
+  },
+  "prefill_s": 2.864529099315405,
+  "decode_s": 1.5391431981697679,
+  "wall_s": 4.4609552370384336,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

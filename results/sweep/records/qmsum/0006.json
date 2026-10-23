@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 6,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 18599,
+  "n_steps": 108,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 107,
+      "end": 108
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "C began by asking some questions about the recording procedure and wanted to know what excising utterances from the transcript would look like. C asked several questions to that end but clarified that the source of inquiry was curiosity and nothing more. Additionally, C wanted A to explain to the meeting participants what the experiment was for."
+    ]
+  ],
+  "turn_texts": [
+    "Grad A mentioned that the meeting was set up with various microphones, including table-top microphones, high-quality pressure zone mikes, and close-talking mikes, to ensure good audio quality for both the meeting and the research project. Professor C confirmed that the setup was appropriate and that the data collected would be useful for the project, even though the exact details of the recording equipment setup were not explicitly stated. The discussion indicated that the setup was designed to capture high-quality audio for different purposes, including speech recognition and discourse research."
+  ],
+  "extra": {
+    "_id": "975d4e997974135de214468ed968e79573563f68e352716a"
+  },
+  "prefill_s": 2.9681304804980755,
+  "decode_s": 3.2563693271949887,
+  "wall_s": 6.296216978691518,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

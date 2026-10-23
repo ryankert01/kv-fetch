@@ -1,0 +1,35 @@
+{
+  "task": "qmsum",
+  "index": 12,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 16274,
+  "n_steps": 55,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 54,
+      "end": 55
+    }
+  ],
+  "score": null,
+  "answers": [
+    [
+      "Huw Irranca-Davies mentioned two things that their teams learned from early implementer areas. The first one was how to deal with bureaucracy and the second was about communication with both parents and pilot authorities."
+    ]
+  ],
+  "turn_texts": [
+    "The two lessons learned from the early implementer areas were the administrative burden associated with the current approach, which involves significant bureaucracy and documentation requirements for parents, and the challenge of communication, where parents outside the pilot areas felt excluded and those within pilot areas had confusion about eligibility."
+  ],
+  "extra": {
+    "_id": "10c03d597a3478f601be3286b2671d5f1c27f944488b74be"
+  },
+  "prefill_s": 3.030487368814647,
+  "decode_s": 1.6797298472374678,
+  "wall_s": 4.765048296190798,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

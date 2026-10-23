@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 6,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 697,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 696,
+      "end": 697
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"A Treasure of the Redwoods\" by Bret Harte**\n\n**Part I: The Discovery of the Gold**\n\nThe story begins with Mr. Jack Fleming, a young prospector, who finds himself lost in the dense redwood forest. He had deviated from his path while daydreaming and ended up in a remote, primeval area. After a long and arduous journey, he discovers a spring and a quartz outcrop, which he believes might be rich in gold. He decides to test his luck by washing the soil in the spring with a pan he borrows from a girl named Tinka, who lives in a cabin at the edge of the forest.\n\nTinka, a young woman with a large sunbonnet and an unusual appearance, is initially suspicious of Fleming's intentions. However, she lends him the pan, and he uses it to wash the soil. Although he finds only a few tiny flecks of gold, he is disappointed. He returns to the cabin, where Tinka reveals that she had not actually found the gold. Instead, she had \"salted\" the pan with gold, a term she uses to describe the practice of adding gold to a pan to make it appear as if it was naturally rich. Tinka admits that she had done this to help Fleming, hoping to show him that there was gold in the area.\n\n**Part II: The Aftermath and the Revelation**\n\nFleming, though initially disappointed, is grateful for Tinka's kindness. He decides to return to the spring to test his luck again, this time with his own tools. However, when he returns, he finds that Tinka has left. He is surprised to find that she has gone, and he is left with only the small amount of gold he had found earlier.\n\nFleming returns to the mining town and shares his experience with his partners. They are skeptical of his claims and believe that he had borrowed the pan from a traveling tinker. However, Fleming is not convinced. He decides to return to the spring to test his luck again, this time with his own tools. He finds that the gold he had found before was not a fluke, but rather a result of Tinka's actions.\n\nAs he is about to leave, he is confronted by Tinka, who has returned to the area. She is now dressed differently and appears more mature. She reveals that she had not actually found the gold, but had added it to the pan to help Fleming. She admits that she had done this to show him that there was gold in the area, and that she had hoped to help him find it.\n\nFleming is deeply moved by Tinka's honesty and kindness. He decides to stay in the area and work with her, hoping to find more gold. He puts up a notice of claim and begins to work the area, hoping to find more gold. Tinka helps him, and together they work to find the treasure.\n\n**Conclusion: The Treasure and the Relationship**\n\nThe story ends with Fleming and Tinka working together to find the treasure. They are both determined to succeed, and their relationship grows stronger as they work side by side. Tinka's honesty and kindness are key to their success, and Fleming is grateful for her help. The story highlights the themes of friendship, honesty, and the pursu"
+  ],
+  "extra": {
+    "book_index": 8,
+    "title": "From Sand Hill to Pine by Bret Harte"
+  },
+  "prefill_s": 6.634717304259539,
+  "decode_s": 28.059216160327196,
+  "wall_s": 35.007859509438276,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

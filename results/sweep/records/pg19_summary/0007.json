@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 7,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 535,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 534,
+      "end": 535
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "The text provided is a detailed and extensive exploration of English authors who have written on gardening, with a focus on their lives, works, and the historical context of their contributions to the field. The text is divided into two main sections: a preface and a series of portraits of English authors on gardening. The preface sets the stage by discussing the importance of preserving the memories of these writers, drawing parallels between their works and the portraits of historical figures. It also touches on the broader cultural and historical significance of gardening in both England and France, highlighting the influence of these authors on the development of horticultural knowledge and practice.\n\nThe main body of the text is a comprehensive list of English authors who have written on gardening, with detailed descriptions of each individual. The authors are listed in chronological order, and each entry includes information about their works, their contributions to the field, and their personal lives. The text also includes references to French authors who have written on gardening, as well as to other notable figures in the history of horticulture.\n\nThe text is rich in historical and literary references, drawing on a wide range of sources, including historical texts, biographies, and literary works. It provides a detailed account of the evolution of gardening in England, from the early medieval period to the 18th century, and highlights the role of key figures in the development of horticultural knowledge and practice. The text also discusses the cultural and social significance of gardening, emphasizing its role in the lives of the English elite and its importance in the broader context of English society.\n\nThe text is written in a scholarly and informative style, with a focus on the historical and literary significance of the authors and their works. It is organized in a way that allows the reader to follow the development of horticultural knowledge and practice in England, from the early days of gardening to the more sophisticated and elaborate gardens of the 18th century. The text also includes a variety of quotes and references to literary works, which serve to illustrate the cultural and literary significance of gardening in English history.\n\nIn summary, the text is a detailed and comprehensive exploration of English authors who have written on gardening, with a focus on their lives, works, and the historical context of their contributions to the field. It provides a rich and detailed account of the evolution of horticultural knowledge and practice in England, highlighting the role of key figures in the development of the field and the cultural and social significance of gardening in English history. The text is an important resource for anyone interested in the history of horticulture, the development of gardening in England, and the literary and cultural significance of the subject."
+  ],
+  "extra": {
+    "book_index": 10,
+    "title": "On the Portraits of English Authors on Gardening by Samuel Felton"
+  },
+  "prefill_s": 6.425076112151146,
+  "decode_s": 21.470025836490095,
+  "wall_s": 28.149520149454474,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

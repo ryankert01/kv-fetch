@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 11,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29598,
+  "n_steps": 2005,
+  "n_fed": 938,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": null,
+      "end": 400
+    },
+    {
+      "start": 714,
+      "natural_stop": 1087,
+      "end": 1088
+    },
+    {
+      "start": 1283,
+      "natural_stop": 1396,
+      "end": 1397
+    },
+    {
+      "start": 1623,
+      "natural_stop": 1664,
+      "end": 1665
+    },
+    {
+      "start": 1868,
+      "natural_stop": 2004,
+      "end": 2005
+    }
+  ],
+  "score": 0.4,
+  "answers": [
+    [
+      "async def accounts(self) -> Tuple[ChecksumAddress]:"
+    ],
+    [
+      "def construct_event_topic_set("
+    ],
+    [
+      "def request_blocking("
+    ],
+    [
+      "def subscriptions(self) -> Dict[str, Any]:"
+    ],
+    [
+      "def expire_at(self) -> int:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\nfrom web3._utils.compat import (\n    Literal,\n)\n\n\nclass Empty:\n    def __bool__(self) -> Literal[False]:\n        return False\n\n\nempty = Empty()\nfrom typing import (\n    Any,\n    List,\n    NoReturn,\n    Optional,\n    Tuple,\n    Union,\n)\n\nfrom eth_account import (\n    Account,\n)\nfrom eth_typing import (\n    Address,\n    ChecksumAddress,\n    HexStr,\n)\nfrom eth_utils import (\n    is_checksum_address,\n    is_string,\n)\nfrom eth_utils.toolz import (\n    assoc,\n)\n\nfrom web3._utils.empty import (\n    Empty,\n    empty,\n)\nfrom web3._utils.encoding import (\n    to_hex,\n)\nfrom web3.module import (\n    Module,\n)\nfrom web3.types import (\n    ENS,\n    BlockIdentifier,\n    FilterParams,\n    GasPriceStrategy,\n    StateOverride,\n    TxParams,\n    Wei,\n)\n\n\nclass BaseEth(Module):\n    _default_account: Union[ChecksumAddress, Empty] = empty\n    _default_block: BlockIdentifier = \"latest\"\n    _default_contract_factory: Any = None\n    _gas_price_strategy = None\n\n    is_async = False\n    account = Account()\n\n    def namereg(self) -> NoReturn:\n        raise NotImplementedError()\n\n    def icap_namereg(self) -> NoReturn:\n        raise NotImplementedError()\n\n    @property\n    def default_block(self) -> BlockIdentifier:\n        return self._default_block\n\n    @default_block.setter\n    def default_block(self, value: BlockIdentifier) -> None:\n        self._default_block = value\n\n    @property\n    def default_account(self) -> Union[ChecksumAddress, Empty]:\n        return self._default_account\n\n    @default_account.setter\n    def default_account(self, account: Union[ChecksumAddress, Empty]) -> None:\n        self._default_account = account\n\n    def send_transaction_munger(self, transaction: TxParams) ->",
+    "```python\ndef construct_event_topic_set(\n    event_abi: ABIEvent,\n    abi_codec: ABICodec,\n    arguments: Optional[Union[Sequence[Any], Dict[str, Any]]] = None,\n) -> List[HexStr]:\n    if arguments is None:\n        arguments = {}\n    if isinstance(arguments, (list, tuple)):\n        if len(arguments) != len(event_abi[\"inputs\"]):\n            raise ValueError(\n                \"When passing an argument list, the number of arguments must \"\n                \"match the event constructor.\"\n            )\n        arguments = {\n            arg[\"name\"]: [arg_value]\n            for arg, arg_value in zip(event_abi[\"inputs\"], arguments)\n        }\n\n    normalized_args = {\n        key: value if is_list_like(value) else [value]\n        # type ignored b/c arguments is always a dict at this point\n        for key, value in arguments.items()  # type: ignore\n    }\n\n    # typed dict cannot be used w/ a normal Dict\n    # https://github.com/python/mypy/issues/4976\n    event_topic = encode_hex(event_abi_to_log_topic(event_abi))  # type: ignore\n    indexed_args = get_indexed_event_inputs(event_abi)\n    zipped_abi_and_args = [\n        (arg, normalized_args.get(arg[\"name\"], [None])) for arg in indexed_args\n    ]\n    encoded_args = [\n        [\n            (\n                None\n                if option is None\n                else encode_hex(abi_codec.encode([arg[\"type\"]], [option]))\n            )\n            for option in arg_options\n        ]\n        for arg, arg_options in zipped_abi_and_args\n    ]\n\n    topics = list(normalize_topic_list([event_topic] + encoded_args))\n    return topics\n```",
+    "```python\ndef request_blocking(\n    self,\n    method: Union[RPCEndpoint, Callable[..., RPCEndpoint]],\n    params: Any,\n    error_formatters: Optional[Callable[..., Any]] = None,\n    null_result_formatters: Optional[Callable[..., Any]] = None,\n) -> Any:\n    \"\"\"\n    Make a synchronous request using the provider\n    \"\"\"\n    response = self._make_request(method, params)\n    return self.formatted_response(\n        response, params, error_formatters, null_result_formatters\n    )\n```",
+    "```python\nasync def _get_next_message(self) -> Any:\n    try:\n        return await self._message_stream().__anext__()\n    except ConnectionClosedOK:\n        raise StopAsyncIteration\n```",
+    "```python\ndef combine_middlewares(\n    middlewares: Sequence[Middleware],\n    w3: \"Web3\",\n    provider_request_fn: MakeRequestFn,\n) -> Callable[..., \"RPCResponse\"]:\n    \"\"\"\n    Returns a callable function which takes method and params as positional arguments\n    and passes these args through the request processors, makes the request, and passes\n    the response through the response processors.\n    \"\"\"\n    accumulator_fn = provider_request_fn\n    for middleware in reversed(middlewares):\n        # initialize the middleware and wrap the accumulator function down the stack\n        accumulator_fn = middleware(w3).wrap_make_request(accumulator_fn)\n    return accumulator_fn\n```"
+  ],
+  "extra": {
+    "repo": "ethereum/web3.py",
+    "lang": "python"
+  },
+  "prefill_s": 5.797643205150962,
+  "decode_s": 80.23107672855258,
+  "wall_s": 86.7553091160953,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

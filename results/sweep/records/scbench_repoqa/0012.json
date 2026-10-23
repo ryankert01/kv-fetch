@@ -1,0 +1,66 @@
+{
+  "task": "scbench_repoqa",
+  "index": 12,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29804,
+  "n_steps": 2048,
+  "n_fed": 563,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": null,
+      "end": 400
+    },
+    {
+      "start": 568,
+      "natural_stop": 863,
+      "end": 864
+    },
+    {
+      "start": 1067,
+      "natural_stop": null,
+      "end": 1467
+    },
+    {
+      "start": 1659,
+      "natural_stop": null,
+      "end": 2048
+    }
+  ],
+  "score": 0.5,
+  "answers": [
+    [
+      "XMLWatchdog(const File& filename) : FileWatchdog(filename)"
+    ],
+    [
+      "HTMLLayoutPrivate()"
+    ],
+    [
+      "FileWatchdogPrivate(const File& file1) :"
+    ],
+    [
+      "FileRenameActionPrivate( const File& toRename,"
+    ],
+    [
+      "ByteArrayInputStreamPriv(const ByteList& bytes) :"
+    ]
+  ],
+  "turn_texts": [
+    "```cpp\n#include <log4cxx/xml/domconfigurator.h>\n\nnamespace LOG4CXX_NS\n{\nnamespace xml\n{\nclass XMLWatchdog  : public FileWatchdog\n{\n\tpublic:\n\t\tXMLWatchdog(const File& filename) : FileWatchdog(filename)\n\t\t{\n\t\t}\n\n\t\t/**\n\t\tCall DOMConfigurator#doConfigure with the\n\t\t<code>filename</code> to reconfigure log4cxx.\n\t\t*/\n\t\tvoid doOnChange()\n\t\t{\n\t\t\tDOMConfigurator().doConfigure(file(),\n\t\t\t\tLogManager::getLoggerRepository());\n\t\t}\n};\n}\n}\n\nXMLWatchdog* DOMConfigurator::xdog = NULL;\n\n\nIMPLEMENT_LOG4CXX_OBJECT(DOMConfigurator)\n\n#define CONFIGURATION_TAG \"log4j:configuration\"\n#define OLD_CONFIGURATION_TAG \"configuration\"\n#define APPENDER_TAG \"appender\"\n#define APPENDER_REF_TAG \"appender-ref\"\n#define PARAM_TAG \"param\"\n#define LAYOUT_TAG \"layout\"\n#define ROLLING_POLICY_TAG \"rollingPolicy\"\n#define TRIGGERING_POLICY_TAG \"triggeringPolicy\"\n#define CATEGORY \"category\"\n#define LOGGER \"logger\"\n#define LOGGER_REF \"logger-ref\"\n#define CATEGORY_FACTORY_TAG \"categoryFactory\"\n#define NAME_ATTR \"name\"\n#define CLASS_ATTR \"class\"\n#define VALUE_ATTR \"value\"\n#define ROOT_TAG \"root\"\n#define ROOT_REF \"root-ref\"\n#define LEVEL_TAG \"level\"\n#define PRIORITY_TAG \"priority\"\n#define FILTER_TAG \"filter\"\n#define ERROR_HANDLER_TAG \"errorHandler\"\n#define REF_ATTR \"ref\"\n#define ADDITIVITY_ATTR \"additivity\"\n#define THRESHOLD_ATTR \"threshold\"\n#define STRINGSTREAM_ATTR \"stringstream\"\n#define CONFIG_DEBUG_ATTR \"configDebug\"\n#define INTERNAL_DEBUG_ATTR \"debug\"\n#define THREAD_CONFIG_ATTR \"threadConfiguration\"\n\nDOMConfigurator::DOMConfigurator()\n\t: m_priv(std::make_unique<DOMConfiguratorPrivate>())\n{\n}\n\nDOMConfigurator::~DOMConfigurator() {}\n\n/**\nUsed internally to parse appenders by ID",
+    "```cpp\nstruct HTMLLayout::HTMLLayoutPrivate\n{\n\tHTMLLayoutPrivate()\n\t\t: locationInfo(false)\n\t\t, title(LOG4CXX_STR(\"Log4cxx Log Messages\"))\n\t\t, dateFormat()\n\t\t, expectedPatternLength(100)\n\t\t{}\n\n\t// Print no location info by default\n\tbool locationInfo; //= false\n\n\tLogString title;\n\n\thelpers::ISO8601DateFormat dateFormat;\n\n\t// Expected length of a formatted event excluding the message text\n\tsize_t expectedPatternLength;\n};\n\nIMPLEMENT_LOG4CXX_OBJECT(HTMLLayout)\n\n\nHTMLLayout::HTMLLayout()\n\t: m_priv(std::make_unique<HTMLLayoutPrivate>())\n{\n\tm_priv->dateFormat.setTimeZone(TimeZone::getGMT());\n\tm_priv->expectedPatternLength = getFormattedEventCharacterCount() * 2;\n}\n\nHTMLLayout::~HTMLLayout() {}\n\n\nvoid HTMLLayout::setOption(const LogString& option,\n\tconst LogString& value)\n{\n\n\tif (StringHelper::equalsIgnoreCase(option,\n\t\t\tLOG4CXX_STR(\"TITLE\"), LOG4CXX_STR(\"title\")))\n\t{\n\t\tsetTitle(value);\n\t}\n\telse if (StringHelper::equalsIgnoreCase(option,\n\t\t\tLOG4CXX_STR(\"LOCATIONINFO\"), LOG4CXX_STR(\"locationinfo\")))\n\t{\n\t\tsetLocationInfo(OptionConverter::toBoolean(value, false));\n\t\tm_priv->expectedPatternLength = getFormattedEventCharacterCount() * 2;\n\t}\n}\n```",
+    "```cpp\n#include <log4cxx/helpers/filewatchdog.h>\n\nnamespace LOG4CXX_NS\n{\nnamespace helpers\n{\nclass FileWatchdog\n{\npublic:\n\tFileWatchdog(const File& file1)\n\t\t: file(file1), delay(DEFAULT_DELAY), lastModif(0),\n\t\twarnedAlready(false), interrupted(0), thread() {}\n\n\t/**\n\tThe name of the file to observe  for changes.\n\t*/\n\tFile file;\n\n\t/**\n\tThe delay to observe between every check.\n\tBy default set DEFAULT_DELAY.*/\n\tlong delay;\n\tlog4cxx_time_t lastModif;\n\tbool warnedAlready;\n\tvolatile int interrupted;\n\tPool pool;\n\tstd::thread thread;\n\tstd::condition_variable interrupt;\n\tstd::mutex interrupt_mutex;\n};\n\nFileWatchdog::FileWatchdog(const File& file1)\n\t: m_priv(std::make_unique<FileWatchdogPrivate>(file1))\n{\n}\n\nFileWatchdog::~FileWatchdog()\n{\n\tif (m_priv->thread.joinable())\n\t\tstop();\n}\n\n\nbool FileWatchdog::is_active()\n{\n\treturn m_priv->thread.joinable();\n}\n\nvoid FileWatchdog::stop()\n{\n\tLogLog::debug(LOG4CXX_STR(\"Stopping file watchdog\"));\n\tm_priv->interrupted = 0xFFFF;\n\n\t{\n\t\tstd::unique_lock<std::mutex> lock(m_priv->interrupt_mutex);\n\t\tm_priv->interrupt.notify_all();\n\t}\n\tm_priv->thread.join();\n}\n\nconst File& FileWatchdog::file()\n{\n\treturn m_priv->file;\n}\n\nvoid FileWatchdog::checkAndConfigure()\n{\n\tLogString msg(LOG4CXX_STR(\"Checking [\"));\n\tmsg += m_priv->file.getPath();\n\tmsg += LOG4CXX_STR(\"]\");\n\tLogLog::debug(msg);\n\tPool pool1;\n\n\tif (!m_priv->file.exists(pool1))\n\t{\n\t\tif (!m_priv->warnedAlready)\n\t\t{\n\t\t\tLogLog::debug(((LogString) LOG4CXX_STR(\"[\"))\n\t\t\t\t+",
+    "```cpp\n#include <log4cxx/rolling/filerenameaction.h>\n#include <log4cxx/helpers/loglog.h>\n#include <log4cxx/helpers/stringhelper.h>\n#include <log4cxx/helpers/pool.h>\n#include <log4cxx/helpers/loglog.h>\n#include <log4cxx/helpers/optionconverter.h>\n#include <log4cxx/helpers/transcoder.h>\n#include <log4cxx/helpers/exception.h>\n#include <log4cxx/helpers/threadutility.h>\n#include <log4cxx/helpers/stringhelper.h>\n#include <functional>\n#include <chrono>\n\nusing namespace LOG4CXX_NS;\nusing namespace LOG4CXX_NS::rolling;\nusing namespace LOG4CXX_NS::helpers;\n\nlong FileWatchdog::DEFAULT_DELAY = 60000;\n\nstruct FileWatchdog::FileWatchdogPrivate{\n\tFileWatchdogPrivate(const File& file1) :\n\t\tfile(file1), delay(DEFAULT_DELAY), lastModif(0),\n\t\twarnedAlready(false), interrupted(0), thread(){}\n\n\t/**\n\tThe name of the file to observe  for changes.\n\t*/\n\tFile file;\n\n\t/**\n\tThe delay to observe between every check.\n\tBy default set DEFAULT_DELAY.*/\n\tlong delay;\n\tlog4cxx_time_t lastModif;\n\tbool warnedAlready;\n\tvolatile int interrupted;\n\tPool pool;\n\tstd::thread thread;\n\tstd::condition_variable interrupt;\n\tstd::mutex interrupt_mutex;\n};\n\nFileWatchdog::FileWatchdog(const File& file1)\n\t: m_priv(std::make_unique<FileWatchdogPrivate>(file1))\n{\n}\n\nFileWatchdog::~FileWatchdog()\n{\n\tif (m_priv->thread.joinable())\n\t\tstop();\n}\n\n\nbool FileWatchdog::is_active()\n{\n\treturn m_priv->thread.joinable();\n}\n\nvoid FileWatchdog::stop()\n{\n\tLogLog::debug(LOG4CXX_STR(\"Stopping file watchdog\"));\n\tm_priv->interrupted = 0xFFFF;\n\n\t{\n"
+  ],
+  "extra": {
+    "repo": "apache/logging-log4cxx",
+    "lang": "cpp"
+  },
+  "prefill_s": 5.723865288309753,
+  "decode_s": 82.94257482327521,
+  "wall_s": 90.37985488027334,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

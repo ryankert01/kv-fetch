@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 6,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 29691,
+  "n_steps": 2048,
+  "n_fed": 846,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 282,
+      "end": 283
+    },
+    {
+      "start": 509,
+      "natural_stop": null,
+      "end": 909
+    },
+    {
+      "start": 1074,
+      "natural_stop": 1136,
+      "end": 1137
+    },
+    {
+      "start": 1304,
+      "natural_stop": 1416,
+      "end": 1417
+    },
+    {
+      "start": 1705,
+      "natural_stop": null,
+      "end": 2048
+    }
+  ],
+  "score": 1.0,
+  "answers": [
+    [
+      "def select("
+    ],
+    [
+      "def implements(torch_function: Callable) -> Callable:"
+    ],
+    [
+      "def assert_valid_dtype(tensor: Tensor) -> None:"
+    ],
+    [
+      "def __tensor_flatten__(self) -> Tuple[List[str], Tuple[Any, ...]]:"
+    ],
+    [
+      "def structured_negative_sampling("
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef select(\n    src: Union[Tensor, List[Any], TensorFrame],\n    index_or_mask: Tensor,\n    dim: int,\n) -> Union[Tensor, List[Any]]:\n    r\"\"\"Selects the input tensor or input list according to a given index or\n    mask vector.\n\n    Args:\n        src (torch.Tensor or list): The input tensor or list.\n        index_or_mask (torch.Tensor): The index or mask vector.\n        dim (int): The dimension along which to select.\n    \"\"\"\n    if isinstance(src, Tensor):\n        if index_or_mask.dtype == torch.bool:\n            return mask_select(src, dim, index_or_mask)\n        return src.index_select(dim, index_or_mask)\n\n    if isinstance(src, (tuple, list)):\n        if dim != 0:\n            raise ValueError(\"Cannot select along dimension other than 0\")\n        if index_or_mask.dtype == torch.bool:\n            return [src[i] for i, m in enumerate(index_or_mask) if m]\n        return [src[i] for i in index_or_mask]\n\n    if isinstance(src, TensorFrame):\n        assert dim == 0\n        if index_or_mask.dtype == torch.bool:\n            return mask_select(src, dim, index_or_mask)\n        return src[index_or_mask]\n\n    raise ValueError(f\"Encountered invalid input type (got '{type(src)}')\")\n```",
+    "```python\nimport functools\nimport typing\nfrom enum import Enum\nfrom typing import (\n    Any,\n    Callable,\n    Dict,\n    List,\n    Literal,\n    NamedTuple,\n    Optional,\n    Sequence,\n    Set,\n    Tuple,\n    Type,\n    Union,\n    get_args,\n    overload,\n)\n\nimport torch\nfrom torch import Tensor\n\nimport torch_geometric.typing\nfrom torch_geometric import is_compiling\nfrom torch_geometric.typing import SparseTensor\n\nHANDLED_FUNCTIONS: Dict[Callable, Callable] = {}\n\nif torch_geometric.typing.WITH_PT20:\n    SUPPORTED_DTYPES: Set[torch.dtype] = {\n        torch.int32,\n        torch.int64,\n    }\nelif not typing.TYPE_CHECKING:  # pragma: no cover\n    SUPPORTED_DTYPES: Set[torch.dtype] = {\n        torch.int64,\n    }\n\nReduceType = Literal['sum', 'mean', 'amin', 'amax', 'add', 'min', 'max']\nPYG_REDUCE: Dict[ReduceType, ReduceType] = {\n    'add': 'sum',\n    'amin': 'min',\n    'amax': 'max'\n}\nTORCH_REDUCE: Dict[ReduceType, ReduceType] = {\n    'add': 'sum',\n    'min': 'amin',\n    'max': 'amax'\n}\n\n\nclass SortOrder(Enum):\n    ROW = 'row'\n    COL = 'col'\n\n\nclass CatMetadata(NamedTuple):\n    nnz: List[int]\n    sparse_size: List[Tuple[Optional[int], Optional[int]]]\n    sort_order: List[Optional[SortOrder]]\n    is_undirected: List[bool]\n\n\ndef implements(torch_function: Callable) -> Callable:\n    r\"\"\"Registers a :pytorch:`PyTorch` function override.\"\"\"\n    @functools.wraps(torch_function)\n    def decorator(my_function: Callable) -> Callable:\n        HAND",
+    "```python\ndef assert_valid_dtype(tensor: Tensor) -> None:\n    if tensor.dtype not in SUPPORTED_DTYPES:\n        raise ValueError(f\"'EdgeIndex' holds an unsupported data type \"\n                         f\"(got '{tensor.dtype}', but expected one of \"\n                         f\"{SUPPORTED_DTYPES})\")\n```",
+    "```python\ndef __tensor_flatten__(self) -> Tuple[List[str], Tuple[Any, ...]]:\n    if not torch_geometric.typing.WITH_PT22:  # pragma: no cover\n        raise RuntimeError(\"'torch.compile' with 'EdgeIndex' only \"\n                           \"supported from PyTorch 2.2 onwards\")\n    assert self._data is not None\n    # TODO Add `_T_index`.\n    attrs = ['_data', '_indptr', '_T_perm', '_T_indptr']\n    return attrs, ()\n```",
+    "```python\ndef structured_negative_sampling(\n    edge_index: Tensor,\n    num_nodes: Optional[int] = None,\n    contains_neg_self_loops: bool = True,\n) -> Tuple[Tensor, Tensor, Tensor]:\n    r\"\"\"Samples a negative edge :obj:`(i,k)` for every positive edge\n    :obj:`(i,j)` in the graph given by :attr:`edge_index`, and returns it as a\n    tuple of the form :obj:`(i,j,k)`.\n\n    Args:\n        edge_index (LongTensor): The edge indices.\n        num_nodes (int, optional): The number of nodes, *i.e.*\n            :obj:`max_val + 1` of :attr:`edge_index`. (default: :obj:`None`)\n        contains_neg_self_loops (bool, optional): If set to\n            :obj:`False`, sampled negative edges will not contain self loops.\n            (default: :obj:`True`)\n\n    :rtype: (LongTensor, LongTensor, LongTensor)\n\n    Example:\n        >>> edge_index = torch.as_tensor([[0, 0, 1, 2],\n        ...                               [0, 1, 2, 3]])\n        >>> structured_negative_sampling(edge_index)\n        (tensor([0, 0, 1, 2]), tensor([0, 1, 2, 3]), tensor([2, 3, 0, 2]))\n\n    \"\"\"\n    num_nodes = maybe_num_nodes(edge_index, num_nodes)\n\n    row, col = edge_index.cpu()\n    pos_idx = row * num_nodes + col\n    if not contains_neg_self_loops"
+  ],
+  "extra": {
+    "repo": "pyg-team/pytorch_geometric",
+    "lang": "python"
+  },
+  "prefill_s": 6.290339126251638,
+  "decode_s": 81.98563455045223,
+  "wall_s": 89.00325791630894,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

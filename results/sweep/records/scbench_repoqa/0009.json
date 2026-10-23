@@ -1,0 +1,72 @@
+{
+  "task": "scbench_repoqa",
+  "index": 9,
+  "split": "confirm",
+  "think": false,
+  "prompt_tokens": 29615,
+  "n_steps": 1719,
+  "n_fed": 926,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 321,
+      "end": 322
+    },
+    {
+      "start": 541,
+      "natural_stop": 557,
+      "end": 558
+    },
+    {
+      "start": 783,
+      "natural_stop": 997,
+      "end": 998
+    },
+    {
+      "start": 1260,
+      "natural_stop": 1344,
+      "end": 1345
+    },
+    {
+      "start": 1565,
+      "natural_stop": 1718,
+      "end": 1719
+    }
+  ],
+  "score": 0.8,
+  "answers": [
+    [
+      "def _dequantize("
+    ],
+    [
+      "def __iter__(self):"
+    ],
+    [
+      "def rotary_modulate_by_freq(tensor, idx, pos, position_embedding_base):"
+    ],
+    [
+      "def f_default_compute_relax_param(relax_pname: str, torch_params: List[Any]) -> Any:"
+    ],
+    [
+      "def create_softmax_func_for_single_seq(bb: relax.BlockBuilder, config: LlamaConfig) -> None:"
+    ]
+  ],
+  "turn_texts": [
+    "```python\ndef _dequantize(\n    self,\n    param: Parameter,\n    qparams: List[relax.Var],\n    bb: relax.BlockBuilder,\n    func_name: str,\n) -> relax.Var:\n    \"\"\"Applying dequantization to the input parameter.\n    This method is called by `transform_module` below, and is not\n    directly invoked outside the class.\n\n    Parameters\n    ----------\n    param : Parameter\n        The parameter whose quantized tensors are to be dequantized.\n\n    qparams : List[relax.Var]\n        The relax.Var of the quantized tensors of all parameters in the model.\n\n    Returns\n    -------\n    The dequantized parameter, in the form of a relax.Var.\n    \"\"\"\n    # Get the dequantization function of this parameter.\n    f_dequantize = param.quant_spec.get_dequantize_func(\n        param_info=param.param_info_dict[func_name],\n        qparam_info=[qparam.struct_info for qparam in qparams],\n    )\n    if f_dequantize is None:\n        # If the parameter does not have a dequantization function, its \"quantized\n        # data\" is expected to have only one element.\n        assert len(qparams) == 1, (\n            \"A parameter without dequantization function is expected not to have \"\n            'more than one \"quantized data\".'\n        )\n        return qparams[0]\n    else:\n        # Apply the dequantization function.\n        return bb.emit(f_dequantize(bb, qparams))\n```",
+    "```python\ndef __iter__(self):\n    return iter(self.modules)\n```",
+    "```python\ndef rotary_modulate_by_freq(tensor, idx, pos, position_embedding_base):\n    head_dim = tensor.shape[-1]\n    dtype = tensor.dtype\n    n_feat_half = head_dim // 2\n    feat_idx = idx[-1]\n    inv_freq = te.const(1, \"float32\") / (\n        te.power(\n            te.const(position_embedding_base, \"float32\"),\n            ((2 * feat_idx) % head_dim).astype(\"float32\") / head_dim.astype(\"float32\"),\n        )\n    )\n    freq = pos * inv_freq\n    left_indices = idx[:-1] + (feat_idx - n_feat_half,)\n    right_indices = idx[:-1] + (feat_idx + n_feat_half,)\n    return te.cos(freq).astype(dtype) * tensor(*idx) + te.sin(freq).astype(dtype) * tvm.tir.Select(\n        feat_idx >= n_feat_half,\n        tensor[(*left_indices,)],\n        -tensor[(*right_indices,)],\n    )\n```",
+    "```python\ndef check_decoding(ctx: relax.transform.PatternCheckContext) -> bool:\n    call = ctx.annotated_expr[\"w\"]\n    if not isinstance(call, relax.Call):\n        return False\n    gv = call.args[0]\n    if not isinstance(gv, relax.GlobalVar):\n        return False\n    return gv.name_hint.startswith(\"decode\") or gv.name_hint.startswith(\"fused_decode\")\n```",
+    "```python\ndef create_softmax_func_for_single_seq(bb: relax.BlockBuilder, config: LlamaConfig) -> None:\n    with bb.function(\"softmax_with_temperature\"):\n        logits = nn.Placeholder(\n            (1, 1, tvm.tir.SizeVar(\"vocab_size\", \"int64\")), dtype=\"float32\", name=\"logits\"\n        )\n        temperature = nn.Placeholder((), dtype=\"float32\", name=\"temperature\")\n        with bb.dataflow():\n            div = bb.emit(relax.op.divide(logits, temperature))\n            softmax = bb.emit(relax.op.nn.softmax(div, axis=-1))\n            gv = bb.emit_output(softmax)\n        bb.emit_func_output(gv, [logits, temperature])\n```"
+  ],
+  "extra": {
+    "repo": "mlc-ai/mlc-llm",
+    "lang": "python"
+  },
+  "prefill_s": 5.68483982142061,
+  "decode_s": 68.65944531839341,
+  "wall_s": 75.00457702111453,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}

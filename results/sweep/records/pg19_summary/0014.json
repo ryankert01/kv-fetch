@@ -1,0 +1,34 @@
+{
+  "task": "pg19_summary",
+  "index": 14,
+  "split": "explore",
+  "think": false,
+  "prompt_tokens": 30476,
+  "n_steps": 1157,
+  "n_fed": 0,
+  "turns": [
+    {
+      "start": 0,
+      "natural_stop": 1156,
+      "end": 1157
+    }
+  ],
+  "score": null,
+  "answers": [
+    []
+  ],
+  "turn_texts": [
+    "**Summary of \"The Patriotes of '37: A Chronicle of the Lower Canadian Rebellion\" by Alfred D. Decelles**\n\n**Introduction and Prefatory Note**  \nThe book begins with a preface by Alfred D. Decelles, who notes that the text was originally written in French and translated by Mr. Stewart Wallace. The book is a collaborative effort, with Wallace emphasizing his role in the translation, while Decelles acknowledges his contribution. The work is a joint product, and the author expresses satisfaction in having a collaborator who is an English Canadian and a French Canadian, as the book narrates the political conflict between the two races in Canada.\n\n**Chapter I: Canadians, Old and New**  \nThe book opens by discussing the historical context of French and English Canadians in Canada. After the Seven Years' War, French Canadians were under British rule, but they generally coexisted peacefully. The American Revolution and the French Revolution had little impact on the relationship between the two groups. The War of 1812 saw French-Canadian soldiers fighting alongside English soldiers, which helped to solidify a sense of unity. However, tensions began to emerge as the two groups began to see each other as rivals.\n\n**Chapter II: The Rights of the Defeated**  \nThe British government treated French Canadians with a degree of tolerance, granting them civil rights and allowing them to practice their religion. The Quebec Act of 1774 and the 1791 Constitution Act established a system of government that gave French Canadians a voice in the political process. However, the British government's policies were not always welcomed by the French-Canadian population, who felt that their rights were being undermined. The French-Canadian population began to push for more rights and representation, leading to a growing sense of resentment.\n\n**Chapter III: 'The Reign of Terror'**  \nThe book then discusses the rise of the French-Canadian political movement, led by Louis Joseph Papineau. The French-Canadian population began to feel that their rights were being ignored by the British government. The British government's policies were seen as oppressive, and the French-Canadian population began to organize to demand more rights. The book describes the growing tensions between the two groups, with the French-Canadian population becoming more radical in their demands.\n\n**Chapter IV: The Rise of Papineau**  \nPapineau became a prominent figure in the French-Canadian political movement. He was a leader who advocated for the rights of French-Canadians and was known for his eloquence and ability to rally support. The book describes how Papineau's leadership led to a growing movement for reform. The French-Canadian population began to see Papineau as a symbol of their struggle for rights and representation.\n\n**Chapter V: The Ninety-Two Resolutions**  \nThe book then discusses the Ninety-Two Resolutions, a set of resolutions passed by the Lower Canadian Assembly in 1834. These resolutions cal"
+  ],
+  "extra": {
+    "book_index": 20,
+    "title": "The 'Patriotes' of '37 by Alfred D. Decelles"
+  },
+  "prefill_s": 5.207763244397938,
+  "decode_s": 36.820655900985,
+  "wall_s": 42.50969919189811,
+  "git": {
+    "commit": "5bb182b7876ef56f1a04ca709d0ca375e771967b",
+    "dirty": false
+  }
+}
