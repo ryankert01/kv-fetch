@@ -1,0 +1,531 @@
+{
+  "provenance": {
+    "model": "Qwen/Qwen3-4B",
+    "context_length": 32768,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "bac7d5e987be3bb6bfbc7c804e71fdc5289004d6",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/small_eval.yaml",
+    "timestamp": "2026-10-23T14:44:44",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX A6000",
+    "transformers": "4.57.1",
+    "trace_dir": "traces/small_eval/Qwen__Qwen3-4B__32768",
+    "n_traces": 40,
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": true
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "GRADUAL_SHARE_MIN": null,
+        "LEAD_TIME_MIN": null
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 32768,
+        "chat_template_kwargs": {
+          "enable_thinking": false,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "small_eval": {
+        "model": "meta-llama/Llama-3.2-3B-Instruct",
+        "context_length": 32768,
+        "decode_steps": 256,
+        "samples_per_task": 20,
+        "seed": 0,
+        "tasks": [
+          {
+            "name": "ruler_multikey",
+            "kind": "ruler",
+            "ruler_task": "niah_multikey_1",
+            "suppress_stop": true
+          },
+          {
+            "name": "longgen",
+            "kind": "longgen",
+            "suppress_stop": true
+          }
+        ],
+        "layers": {
+          "mode": "auto",
+          "fracs": [
+            0.1,
+            0.5,
+            0.9
+          ],
+          "probe": {
+            "ruler_task": "niah_single_2",
+            "samples": 4,
+            "steps": 8,
+            "seed": 1
+          }
+        },
+        "analysis": {
+          "budget_frac": 0.05,
+          "k": [
+            1,
+            4
+          ],
+          "predictors": [
+            "last_step",
+            "ema"
+          ],
+          "topk_coverage_K": [
+            128,
+            256,
+            512,
+            1024
+          ]
+        },
+        "analysis_workers": 16,
+        "max_wall_s": 3600,
+        "trace_dir": "traces/small_eval",
+        "out_dir": "results/small_eval"
+      }
+    }
+  },
+  "summary": {
+    "128": {
+      "page_fraction": 0.06255828793625111,
+      "eligible_mass_kept_mean": 0.9137199491262435,
+      "eligible_mass_kept_min": 0.8813450336456299,
+      "query": {
+        "recall_last_step_k1": {
+          "mean": -0.004573042690753937,
+          "worst": 0.007607579231262207
+        },
+        "recall_last_step_k4": {
+          "mean": -0.004898868501186371,
+          "worst": 0.008222043514251709
+        },
+        "recall_ema_k1": {
+          "mean": -0.004461660981178284,
+          "worst": 0.007332742214202881
+        },
+        "recall_ema_k4": {
+          "mean": -0.004901091754436493,
+          "worst": 0.008125782012939453
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": 1.775,
+          "worst": 3.0
+        },
+        "class_agreement": {
+          "mean": 0.9577088872312034,
+          "worst": 0.9488937099950763
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.0378463660573504,
+          "worst": 0.046021048744460856
+        }
+      },
+      "kv_mean": {
+        "recall_last_step_k1": {
+          "mean": -0.0032700493931770323,
+          "worst": 0.005410492420196533
+        },
+        "recall_last_step_k4": {
+          "mean": -0.003532414138317108,
+          "worst": 0.005916953086853027
+        },
+        "recall_ema_k1": {
+          "mean": -0.0022647365927696227,
+          "worst": 0.0041231513023376465
+        },
+        "recall_ema_k4": {
+          "mean": -0.0025561794638633726,
+          "worst": 0.00468754768371582
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": 0.1625,
+          "worst": 1.0
+        },
+        "class_agreement": {
+          "mean": 0.9322394838244964,
+          "worst": 0.9243445347119645
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.039663952347707886,
+          "worst": 0.047113490891186605
+        }
+      }
+    },
+    "256": {
+      "page_fraction": 0.12511657587250222,
+      "eligible_mass_kept_mean": 0.9501247793436051,
+      "eligible_mass_kept_min": 0.9288029670715332,
+      "query": {
+        "recall_last_step_k1": {
+          "mean": -0.00197041779756546,
+          "worst": 0.0033513903617858887
+        },
+        "recall_last_step_k4": {
+          "mean": -0.0022447332739830017,
+          "worst": 0.0038985013961791992
+        },
+        "recall_ema_k1": {
+          "mean": -0.0015170618891716004,
+          "worst": 0.002736032009124756
+        },
+        "recall_ema_k4": {
+          "mean": -0.0017760217189788819,
+          "worst": 0.0033072233200073242
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": -0.075,
+          "worst": 1.0
+        },
+        "class_agreement": {
+          "mean": 0.9709988197905524,
+          "worst": 0.9645225566223535
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.028575604608148945,
+          "worst": 0.03490429591334318
+        }
+      },
+      "kv_mean": {
+        "recall_last_step_k1": {
+          "mean": -0.0012306302785873413,
+          "worst": 0.0021956562995910645
+        },
+        "recall_last_step_k4": {
+          "mean": -0.0014304473996162414,
+          "worst": 0.002633333206176758
+        },
+        "recall_ema_k1": {
+          "mean": -0.0009581893682479858,
+          "worst": 0.0019321441650390625
+        },
+        "recall_ema_k4": {
+          "mean": -0.0011428147554397583,
+          "worst": 0.002377748489379883
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": 0.175,
+          "worst": 1.0
+        },
+        "class_agreement": {
+          "mean": 0.9648885694144246,
+          "worst": 0.9585333579517479
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.02161679232540408,
+          "worst": 0.026387863121614973
+        }
+      }
+    },
+    "512": {
+      "page_fraction": 0.25023315174500443,
+      "eligible_mass_kept_mean": 0.9769754037261009,
+      "eligible_mass_kept_min": 0.9662940502166748,
+      "query": {
+        "recall_last_step_k1": {
+          "mean": -0.0004490658640861511,
+          "worst": 0.000832974910736084
+        },
+        "recall_last_step_k4": {
+          "mean": -0.0005458757281303406,
+          "worst": 0.001059114933013916
+        },
+        "recall_ema_k1": {
+          "mean": -0.00028591454029083254,
+          "worst": 0.0006320476531982422
+        },
+        "recall_ema_k4": {
+          "mean": -0.0003581628203392029,
+          "worst": 0.0008275508880615234
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": -0.075,
+          "worst": 1.0
+        },
+        "class_agreement": {
+          "mean": 0.9918479501131507,
+          "worst": 0.9887793882323979
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.00787560369049057,
+          "worst": 0.010820562530773018
+        }
+      },
+      "kv_mean": {
+        "recall_last_step_k1": {
+          "mean": -0.00031017959117889403,
+          "worst": 0.000597536563873291
+        },
+        "recall_last_step_k4": {
+          "mean": -0.0003864005208015442,
+          "worst": 0.0008192062377929688
+        },
+        "recall_ema_k1": {
+          "mean": -0.00023305714130401612,
+          "worst": 0.0005028843879699707
+        },
+        "recall_ema_k4": {
+          "mean": -0.00029141604900360105,
+          "worst": 0.0006715655326843262
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": -0.05,
+          "worst": 1.0
+        },
+        "class_agreement": {
+          "mean": 0.9869903748442935,
+          "worst": 0.9840134170359429
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.007821252054022277,
+          "worst": 0.009785819793205315
+        }
+      }
+    },
+    "1024": {
+      "page_fraction": 0.5004663034900089,
+      "eligible_mass_kept_mean": 0.9942763030529023,
+      "eligible_mass_kept_min": 0.9912965893745422,
+      "query": {
+        "recall_last_step_k1": {
+          "mean": -3.6415457725524905e-05,
+          "worst": 7.539987564086914e-05
+        },
+        "recall_last_step_k4": {
+          "mean": -4.7740340232849124e-05,
+          "worst": 0.00010770559310913086
+        },
+        "recall_ema_k1": {
+          "mean": -1.989901065826416e-05,
+          "worst": 6.0439109802246094e-05
+        },
+        "recall_ema_k4": {
+          "mean": -2.6254355907440187e-05,
+          "worst": 8.660554885864258e-05
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "class_agreement": {
+          "mean": 0.999811099896027,
+          "worst": 0.9995845642540621
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.00013491053081355725,
+          "worst": 0.00030388355489906205
+        }
+      },
+      "kv_mean": {
+        "recall_last_step_k1": {
+          "mean": -3.052353858947754e-05,
+          "worst": 7.939338684082031e-05
+        },
+        "recall_last_step_k4": {
+          "mean": -4.2222440242767334e-05,
+          "worst": 0.00011110305786132812
+        },
+        "recall_ema_k1": {
+          "mean": -2.2548437118530274e-05,
+          "worst": 6.115436553955078e-05
+        },
+        "recall_ema_k4": {
+          "mean": -3.0194222927093505e-05,
+          "worst": 8.690357208251953e-05
+        },
+        "lead_median_last_step": {
+          "mean": 0.0,
+          "worst": 0.0
+        },
+        "lead_median_ema": {
+          "mean": 0.025,
+          "worst": 1.0
+        },
+        "class_agreement": {
+          "mean": 0.9981125582987136,
+          "worst": 0.9970150172328902
+        },
+        "max_abs_class_share_delta": {
+          "mean": 0.0009445950738210095,
+          "worst": 0.0014155588380108317
+        }
+      }
+    }
+  }
+}
