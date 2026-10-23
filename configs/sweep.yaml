@@ -45,3 +45,11 @@ sweep:
       template: "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough."
       chars_per_token_upper: 8
   out: results/sweep/sweep_runs.json
+
+# Which cheap signal predicts revivals (scripts/analyze_signals.py).
+signals:
+  names: [attn_last, attn_ema, key_mean, quest, q_trend]
+  ks: [1, 4, 16]                 # horizon: signal at step t - k, page needed at step t
+  budget_frac: 0.05              # "predicted" = in the signal's top 5 % of eligible pages
+  ema_alpha: 0.3
+  q_slope_steps: 4               # q_trend: slope from q[t] - q[t-4], extrapolated k steps
