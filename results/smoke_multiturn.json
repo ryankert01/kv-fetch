@@ -5,11 +5,11 @@
     "page_size": 16,
     "w": 8,
     "git": {
-      "commit": "a59b169dd36ea1f801a6debaa9aff0de8de4ac50",
+      "commit": "96d8b657ee6049af486e6f9fd6ca78a3fee7ed16",
       "dirty": true
     },
     "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/smoke_2k.yaml",
-    "timestamp": "2026-10-23T16:17:22",
+    "timestamp": "2026-10-23T17:45:38",
     "host": "gpuserv4",
     "torch": "2.8.0+cu128",
     "gpu": "NVIDIA RTX A6000",
@@ -270,5 +270,7 @@
   "answers": [
     "9294187"
   ],
-  "pass": true
+  "pass": true,
+  "kv_mean_same_tokens": true,
+  "kv_mean_max_abs_diff": 0.0003662109375
 }

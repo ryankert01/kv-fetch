@@ -1,0 +1,35 @@
+inherit: sweep.yaml
+
+# Long reasoning traces for the "can we win?" comparison against eviction (H2O, SnapKV, RaaS,
+# LazyEviction, R-KV, ForesightKV upper bound), keep-all (Quest) and lookahead-offload
+# (OasisKV upper bound) methods. Qwen3-4B thinking mode: ForesightKV reports Qwen3-4B on AIME.
+
+trace:
+  head_reduce: kv_mean           # store per-KV-group mass (1/4 the size); queries stay per head
+
+sweep:
+  max_context: 16896             # prompts are short; the context is the self-generated chain
+  max_new_tokens: 16384
+  context_margin: 256
+  shard_size: 2                  # long samples: finer jobs balance the GPUs better
+  trace_dir: /share3/saves/ryankert_l/kvfetch/traces/reasoning
+  records_dir: results/reasoning/records
+  claims_dir: results/reasoning/claims
+  tasks:
+    _replace: true             # only these tasks, not the sweep's six
+    aime24:
+      loader: aime
+      name: aime24
+      dataset: HuggingFaceH4___aime_2024/**/*.arrow
+      instruction: "\nPlease reason step by step, and put your final answer within \\boxed{}."
+      n: 30
+    aime25:
+      loader: aime
+      name: aime25
+      dataset: math-ai___aime25/**/*.arrow
+      instruction: "\nPlease reason step by step, and put your final answer within \\boxed{}."
+      n: 30
+    math500:
+      level: 5
+      instruction: "\nPlease reason step by step, and put your final answer within \\boxed{}."
+      n: 16

@@ -205,7 +205,14 @@ def pg19_summary(tok, sc: dict, budget_tokens: int, n: int) -> list[SweepSample]
     return out
 
 
-LOADERS = {"math500": math500, "longbench_v2": longbench_v2, "scbench_kv": scbench_kv,
+def aime(tok, sc: dict, budget_tokens: int, n: int) -> list[SweepSample]:
+    """AIME problems (fields problem / answer), thinking on; sc["dataset"] is the cache glob."""
+    d = _arrow(sc["dataset"])
+    return [SweepSample(sc["name"], i, [r["problem"] + sc["instruction"]], [[str(r["answer"])]], think=True,
+                        extra={"id": str(r.get("id", i))}) for i, r in enumerate(d) if i < n]
+
+
+LOADERS = {"aime": aime, "math500": math500, "longbench_v2": longbench_v2, "scbench_kv": scbench_kv,
            "scbench_repoqa": scbench_repoqa, "qmsum": qmsum, "pg19_summary": pg19_summary}
 
 
@@ -217,7 +224,7 @@ def score(task: str, turn_texts: list[str], answers: list[list[str]]) -> float |
     for text, refs in zip(turn_texts, answers):
         if not refs:
             continue
-        if task == "math500":
+        if task in ("math500", "aime24", "aime25"):
             boxed = re.findall(r"\\boxed\{((?:[^{}]|\{[^{}]*\})*)\}", text)
             got = boxed[-1] if boxed else ""
             hits.append(float(re.sub(r"\s", "", got) == re.sub(r"\s", "", refs[0])))

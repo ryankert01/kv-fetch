@@ -21,7 +21,7 @@ def capture(model, input_ids: torch.Tensor, *, layers: list[int], cfg: dict, dec
         decode_steps=decode_steps, obs_window=tcfg["prefill_obs_window"],
         flush_every=tcfg["flush_every"], device=input_ids.device,
         mass_dtype=mass_dtype or tcfg["mass_dtype"], head_dim=dims.head_dim,
-        record_q=tcfg.get("record_q", False),
+        record_q=tcfg.get("record_q", False), head_reduce=tcfg.get("head_reduce", "none"),
     )
     with tracer:
         res, cache = generate(model, input_ids, max_new_tokens=decode_steps, stop_ids=stop_ids,
@@ -54,7 +54,7 @@ def trace_meta(*, prov: dict, tracer: AttentionTracer, res: GenResult, task: str
         **prov,
         "task": task, "sample_id": sample_id,
         "layers": tracer.layers, "num_heads": tracer.num_heads, "num_kv_heads": tracer.num_kv_heads,
-        "head_granularity": "query",
+        "head_granularity": "query" if tracer.head_reduce == "none" else tracer.head_reduce,
         "prompt_len": tracer.prompt_len, "n_steps": len(res.tokens),
         "obs_window": tracer.obs_window,
         "natural_stop_step": res.natural_stop_step,

@@ -15,9 +15,12 @@ import yaml
 
 
 def _deep_merge(base: dict, over: dict) -> dict:
+    """Child values win; dicts merge recursively unless the child dict says ``_replace: true``."""
     out = copy.deepcopy(base)
     for k, v in over.items():
-        if isinstance(v, dict) and isinstance(out.get(k), dict):
+        if isinstance(v, dict) and v.get("_replace"):
+            out[k] = copy.deepcopy({kk: vv for kk, vv in v.items() if kk != "_replace"})
+        elif isinstance(v, dict) and isinstance(out.get(k), dict):
             out[k] = _deep_merge(out[k], v)
         else:
             out[k] = copy.deepcopy(v)

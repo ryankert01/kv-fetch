@@ -77,7 +77,7 @@ class AttentionTracer:
     def __init__(self, *, layers: list[int], num_heads: int, num_kv_heads: int, page_size: int,
                  prompt_len: int, decode_steps: int, obs_window: int, flush_every: int,
                  device: torch.device | str, mass_dtype: str = "float16", head_dim: int | None = None,
-                 record_q: bool = False):
+                 record_q: bool = False, head_reduce: str = "none"):
         self.layers = list(layers)
         self.slot = {l: i for i, l in enumerate(self.layers)}
         self.num_heads, self.num_kv_heads = num_heads, num_kv_heads
@@ -88,7 +88,13 @@ class AttentionTracer:
         self.flush_every = flush_every
         self.device = torch.device(device)
         self.tdtype = getattr(torch, mass_dtype)
-        L, H, P = len(self.layers), num_heads, self.n_pages
+        # "kv_mean": store mass averaged over each GQA group (the unit tiers act on), 1/G the size.
+        # Queries (record_q) always stay per query head.
+        if head_reduce not in ("none", "kv_mean"):
+            raise ValueError(head_reduce)
+        self.head_reduce = head_reduce
+        L, P = len(self.layers), self.n_pages
+        H = num_kv_heads if head_reduce == "kv_mean" else num_heads
         self.mass = np.zeros((decode_steps, L, H, P), dtype=np.dtype(mass_dtype))
         self.obs = torch.zeros((self.obs_window, L, H, P), dtype=self.tdtype, device=self.device)
         self._buf = torch.zeros((flush_every, L, H, P), dtype=self.tdtype, device=self.device)
@@ -98,8 +104,8 @@ class AttentionTracer:
         if record_q:
             if head_dim is None:
                 raise ValueError("record_q needs head_dim")
-            self.q = np.zeros((decode_steps, L, H, head_dim), dtype=np.dtype(mass_dtype))
-            self._qbuf = torch.zeros((flush_every, L, H, head_dim), dtype=self.tdtype, device=self.device)
+            self.q = np.zeros((decode_steps, L, num_heads, head_dim), dtype=np.dtype(mass_dtype))
+            self._qbuf = torch.zeros((flush_every, L, num_heads, head_dim), dtype=self.tdtype, device=self.device)
         self.key_summary: np.ndarray | None = None
         self._mode: str | None = None
         self._q_start = 0
@@ -164,6 +170,13 @@ class AttentionTracer:
             out[slot] = stats.to(self.tdtype).cpu().numpy()
         self.key_summary = out
 
+    def _reduce(self, mass: torch.Tensor) -> torch.Tensor:
+        """[Hq, ..., P] -> [KVH, ..., P] mean over each GQA group when head_reduce == kv_mean."""
+        if self.head_reduce == "none":
+            return mass
+        g = self.num_heads // self.num_kv_heads
+        return mass.reshape(self.num_kv_heads, g, *mass.shape[1:]).mean(1)
+
     def obs_numpy(self) -> np.ndarray:
         return self.obs.cpu().numpy()
 
@@ -180,7 +193,8 @@ class AttentionTracer:
             if q.shape[1] != 1:
                 raise RuntimeError("decode step with more than one query")
             probs = attention_probs(q, k, scaling)[:, 0]  # [Hq, N]
-            self._buf[self._step - self._buf_start, slot] = page_reduce(probs, self.page_size, self.n_pages).to(self.tdtype)
+            self._buf[self._step - self._buf_start, slot] = self._reduce(
+                page_reduce(probs, self.page_size, self.n_pages)).to(self.tdtype)
             if self.record_q:
                 self._qbuf[self._step - self._buf_start, slot] = q[:, 0].to(self.tdtype)
         else:
@@ -190,7 +204,7 @@ class AttentionTracer:
             if not bool(rows.any()):
                 return
             probs = attention_probs(q[:, rows], k, scaling, q_pos=pos[rows])  # [Hq, nr, N]
-            mass = page_reduce(probs, self.page_size, self.n_pages).to(self.tdtype)  # [Hq, nr, P]
+            mass = self._reduce(page_reduce(probs, self.page_size, self.n_pages)).to(self.tdtype)  # [H, nr, P]
             self.obs[(pos[rows] - lo), slot] = mass.transpose(0, 1)
             last = pos == self.prompt_len - 1
             if self.record_q and bool(last.any()):  # step 0 = the last prompt token's query

@@ -51,7 +51,8 @@ def main() -> None:
     cfg = config_from_args(args)
     sw = cfg["sweep"]
     tasks = args.tasks or list(sw["tasks"])
-    n_per = args.limit or sw["samples_per_task"]
+    def n_for(task: str) -> int:
+        return args.limit or sw["tasks"][task].get("n", sw["samples_per_task"])
     budget = sw["max_context"] - sw["max_new_tokens"] - sw["context_margin"]
 
     model, tok = load_model(sw["model"], cfg, args.device, traced=True)
@@ -60,7 +61,7 @@ def main() -> None:
                       max_new_tokens=sw["max_new_tokens"])
     trace_dir, rec_dir = Path(sw["trace_dir"]), Path(sw["records_dir"])
     samples_cache: dict = {}
-    jobs = [(t, k) for t in tasks for k in range(math.ceil(n_per / sw["shard_size"]))]
+    jobs = [(t, k) for t in tasks for k in range(math.ceil(n_for(t) / sw["shard_size"]))]
 
     while True:
         job = next((j for j in jobs if (not args.claim)
@@ -71,7 +72,7 @@ def main() -> None:
         task, shard = job
         tc = sw["tasks"][task]
         if task not in samples_cache:
-            samples_cache[task] = LOADERS[task](tok, tc, budget, n_per)
+            samples_cache[task] = LOADERS[tc.get("loader", task)](tok, tc, budget, n_for(task))
         for s in samples_cache[task][shard * sw["shard_size"]:(shard + 1) * sw["shard_size"]]:
             rec_path = rec_dir / task / f"{s.index:04d}.json"
             if rec_path.exists():

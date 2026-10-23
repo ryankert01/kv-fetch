@@ -103,6 +103,21 @@ def main() -> None:
     report["pass"] = bool(worst <= sc["q_mass_atol"] and min(overlaps) >= sc["q_min_topb_overlap"]
                           and ks_err <= 1.0 and report["fed_tokens_match"]
                           and len(res.turns) == len(sc["followups"]) + 1 and report["max_row_sum_err"] < 5e-3)
+    # (5) head_reduce=kv_mean stores the GQA-group mean of exactly these masses
+    tr2 = AttentionTracer(layers=layers, num_heads=dims.num_heads, num_kv_heads=dims.num_kv_heads,
+                          page_size=cfg["definitions"]["page_size"], prompt_len=n, decode_steps=sc["max_new_tokens"],
+                          obs_window=cfg["trace"]["prefill_obs_window"], flush_every=cfg["trace"]["flush_every"],
+                          device=args.device, head_reduce="kv_mean")
+    with tr2:
+        res2 = generate(model, ids, max_new_tokens=sc["max_new_tokens"], stop_ids=stops, suppress_stop=False,
+                        prefill_chunk_size=cfg["models"]["prefill_chunk_size"], tracer=tr2,
+                        followups=followups, eot_ids=eot, turn_max_new=sc["turn_max_new"])
+    g = dims.num_heads // dims.num_kv_heads
+    full = tr.mass[:T].astype(np.float32)
+    want = full.reshape(T, len(layers), dims.num_kv_heads, g, -1).mean(3)
+    report["kv_mean_same_tokens"] = res2.tokens == res.tokens
+    report["kv_mean_max_abs_diff"] = float(np.abs(tr2.mass[:T].astype(np.float32) - want).max())
+    report["pass"] = bool(report["pass"] and report["kv_mean_same_tokens"] and report["kv_mean_max_abs_diff"] < 1e-3)
     write_json(sc["out"], {"provenance": provenance(cfg, model=sc["model"], context_length=n), **report})
     print({k: v for k, v in report.items() if k not in ("turn_texts", "turns")})
     for i, t in enumerate(report["turn_texts"]):
