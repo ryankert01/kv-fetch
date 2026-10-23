@@ -61,7 +61,9 @@ models:
   local_files_only: true
   dtype: bfloat16
   attn_implementation: sdpa
-  prefill_chunk_size: 8192
+  # >= prompt length -> one causal chunk, mask-free, SDPA flash kernel (~2x faster at 32K
+  # than 8K chunks, which need an explicit mask). 128K will need chunking for memory.
+  prefill_chunk_size: 32768
   chat_template_kwargs:
     enable_thinking: false      # Qwen3: no <think> block
     date_string: "26 Jul 2024"  # Llama-3.x templates otherwise inject today's date
