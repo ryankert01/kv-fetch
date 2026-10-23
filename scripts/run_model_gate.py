@@ -97,9 +97,11 @@ def main() -> None:
         if args.claim:
             out.parent.mkdir(parents=True, exist_ok=True)
             try:
-                os.close(os.open(str(out) + ".claim", os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+                fd = os.open(str(out) + ".claim", os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             except FileExistsError:
                 continue
+            os.write(fd, f"pid={os.getpid()} device={os.environ.get('CUDA_VISIBLE_DEVICES')}\n".encode())
+            os.close(fd)
         run_job(cfg, m, L, args.device)
 
 
