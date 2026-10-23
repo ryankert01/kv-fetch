@@ -84,25 +84,36 @@ def main() -> None:
     cfg = config_from_args(args)
 
     if args.claim:
-        jobs = all_jobs(cfg)
-    elif args.worker:
+        # rescan from the top after every job, so jobs released later are still picked up
+        while (job := claim_next(cfg, args.skip_done)) is not None:
+            run_job(cfg, *job, args.device)
+        return
+    if args.worker:
         i, n = map(int, args.worker.split("/"))
         jobs = all_jobs(cfg)[i::n]
     else:
         jobs = [(args.model, args.length)]
     for m, L in jobs:
-        out = job_path(cfg, m, L)
-        if args.skip_done and out.exists():
+        if args.skip_done and job_path(cfg, m, L).exists():
             continue
-        if args.claim:
-            out.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                fd = os.open(str(out) + ".claim", os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            except FileExistsError:
-                continue
-            os.write(fd, f"pid={os.getpid()} device={os.environ.get('CUDA_VISIBLE_DEVICES')}\n".encode())
-            os.close(fd)
         run_job(cfg, m, L, args.device)
+
+
+def claim_next(cfg: dict, skip_done: bool) -> tuple[str, int] | None:
+    """Atomically claim the first unclaimed job (O_EXCL .claim file holding our pid)."""
+    for m, L in all_jobs(cfg):
+        out = job_path(cfg, m, L)
+        if skip_done and out.exists():
+            continue
+        out.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            fd = os.open(str(out) + ".claim", os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            continue
+        os.write(fd, f"pid={os.getpid()} device={os.environ.get('CUDA_VISIBLE_DEVICES')}\n".encode())
+        os.close(fd)
+        return m, L
+    return None
 
 
 if __name__ == "__main__":

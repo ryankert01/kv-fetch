@@ -1,7 +1,7 @@
 # RESULTS — Phase 0 (definitions and infrastructure)
 
 Branch `phase0`. Environment: `.venv` (torch 2.8.0+cu128, transformers 4.57.1, Python 3.11),
-RTX A6000 / RTX 6000 Ada (48 GB), shared machine — capped at 3 GPUs from the gate onward.
+RTX A6000 / RTX 6000 Ada (48 GB), shared machine — after the first hour of the gate, limited to devices 1, 2, 3 (+6 later).
 Every result JSON carries `provenance` (model, context length, page size, w, git commit +
 dirty flag, resolved config). Reproduce any step with the command listed in its section.
 
