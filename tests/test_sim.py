@@ -65,6 +65,11 @@ def test_offload_stalls_on_demand_vs_perfect_prefetch():
     perfect = simulate_offload(m=m, sel=sel, prefetch=sel, eligible=elig, capacity=2)
     assert perfect["stall_pages_per_step"] == 0 and perfect["nostall_coverage_of_selected"] == 1.0
     assert perfect["prefetch_pages_per_step"] == pytest.approx(2 / T)
+    pinned = np.zeros((T, 1, P), bool)
+    pinned[:, 0, 0] = True
+    skip = simulate_offload(m=m, sel=sel, prefetch=None, eligible=elig, capacity=1, base=pinned)
+    # 4 hit steps cover pinned + selected (2 of 4 pages); the 2 stall steps keep only the pinned page
+    assert skip["skip_stall_coverage"] == pytest.approx((4 * 2 / 4 + 2 * 1 / 4) / T)
 
 
 def test_quest_bound_and_stale_prefetch_shape():

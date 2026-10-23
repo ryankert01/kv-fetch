@@ -7,6 +7,7 @@ Eviction methods -> attention coverage (the rest is lost for good). Keep-all (Qu
 how many selected pages must be fetched on demand (stalls) given an L-step prefetch lookahead.
 """
 import argparse
+import multiprocessing as mp
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
@@ -68,7 +69,7 @@ def analyze(path: Path, cfg: dict) -> dict:
                     rk = pf_r[(pf_name, Lk)]
                     pf = sel if pf_name == "oasis_ub" else (None if rk is None else mask_from_ranks(rk, bsel, elig))
                     r["offload"][f"{pf_name}@L{Lk}"] = simulate_offload(m=m, sel=sel, prefetch=pf, eligible=elig,
-                                                                        capacity=cap)
+                                                                        capacity=cap, base=pinned[:, None, :])
             res[str(btok)] = r
         out["layers"][str(layer)] = res
     return out
@@ -77,11 +78,6 @@ def analyze(path: Path, cfg: dict) -> dict:
 def _one(job):
     path, cfg = job
     return analyze(path, cfg)
-
-
-def _init(threads: int) -> None:
-    for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
-        os.environ[v] = str(threads)
 
 
 def summarize(rows: list[dict], cfg: dict) -> dict:
@@ -114,10 +110,12 @@ def main() -> None:
     args = p.parse_args()
     cfg = config_from_args(args)
     cc = cfg["compare"]
+    for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        os.environ[v] = str(cc["blas_threads"])        # read by BLAS as each spawned worker imports numpy
     paths = [pth for pth in sorted(Path(cfg["sweep"]["trace_dir"]).rglob("*.safetensors"))
              if load_meta(pth).get("split") == args.split
              and (args.tasks is None or load_meta(pth)["task"] in args.tasks)]
-    with ProcessPoolExecutor(args.workers, initializer=_init, initargs=(cc["blas_threads"],)) as ex:
+    with ProcessPoolExecutor(args.workers, mp_context=mp.get_context("spawn")) as ex:
         rows = list(ex.map(_one, [(pth, cfg) for pth in paths]))
     summary = summarize(rows, cfg)
     a = summary["ALL"]

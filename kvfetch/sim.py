@@ -168,9 +168,11 @@ def evict_context(m: np.ndarray, init: np.ndarray, key_mean: np.ndarray, exist: 
 
 # ----------------------------------------------------------------- offload family
 def simulate_offload(*, m: np.ndarray, sel: np.ndarray, prefetch: np.ndarray | None, eligible: np.ndarray,
-                     capacity: int) -> dict:
+                     capacity: int, base: np.ndarray | None = None) -> dict:
     """GPU cache of ``capacity`` selectable pages (LRU), attended set sel [T, S, P], prefetch set
-    decided early for each step (or None = on demand only). Returns per-KV-head step means."""
+    decided early for each step (or None = on demand only). Returns per-KV-head step means.
+    ``base`` (always resident, e.g. pinned pages) adds ``skip_stall_coverage``: the attention
+    covered if a step attends only to resident pages instead of waiting for the misses."""
     T, S, P = m.shape
     gpu = np.zeros((S, P), bool)
     last_used = np.full((S, P), -1, np.int64)
@@ -194,8 +196,11 @@ def simulate_offload(*, m: np.ndarray, sel: np.ndarray, prefetch: np.ndarray | N
             pr = np.where(gpu[s_] & ~sel[t, s_], last_used[s_], np.iinfo(np.int64).max)
             gpu[s_, np.argpartition(pr, over[s_] - 1)[:over[s_]]] = False
     n = T * S
-    return {"stall_pages_per_step": stalls / n, "prefetch_pages_per_step": pref / n,
-            "nostall_coverage_of_selected": coverage(covered, m * sel)}
+    out = {"stall_pages_per_step": stalls / n, "prefetch_pages_per_step": pref / n,
+           "nostall_coverage_of_selected": coverage(covered, m * sel)}
+    if base is not None:
+        out["skip_stall_coverage"] = coverage(covered | base, m)
+    return out
 
 
 def prefetch_query(name: str, q: np.ndarray, L: int, cfg: dict) -> np.ndarray | None:
