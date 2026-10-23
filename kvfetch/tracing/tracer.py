@@ -76,7 +76,8 @@ def attention_probs(q: torch.Tensor, k: torch.Tensor, scaling: float,
 class AttentionTracer:
     def __init__(self, *, layers: list[int], num_heads: int, num_kv_heads: int, page_size: int,
                  prompt_len: int, decode_steps: int, obs_window: int, flush_every: int,
-                 device: torch.device | str, mass_dtype: str = "float16"):
+                 device: torch.device | str, mass_dtype: str = "float16", head_dim: int | None = None,
+                 record_q: bool = False):
         self.layers = list(layers)
         self.slot = {l: i for i, l in enumerate(self.layers)}
         self.num_heads, self.num_kv_heads = num_heads, num_kv_heads
@@ -92,6 +93,14 @@ class AttentionTracer:
         self.obs = torch.zeros((self.obs_window, L, H, P), dtype=self.tdtype, device=self.device)
         self._buf = torch.zeros((flush_every, L, H, P), dtype=self.tdtype, device=self.device)
         self._buf_start = 1  # decode step held in _buf[0]
+        # optional: post-RoPE decode queries, same step convention as mass (q[0] = last prompt token)
+        self.record_q = record_q
+        if record_q:
+            if head_dim is None:
+                raise ValueError("record_q needs head_dim")
+            self.q = np.zeros((decode_steps, L, H, head_dim), dtype=np.dtype(mass_dtype))
+            self._qbuf = torch.zeros((flush_every, L, H, head_dim), dtype=self.tdtype, device=self.device)
+        self.key_summary: np.ndarray | None = None
         self._mode: str | None = None
         self._q_start = 0
         self._step = 0
@@ -134,7 +143,26 @@ class AttentionTracer:
         n = self.steps_recorded - self._buf_start
         if n > 0:
             self.mass[self._buf_start:self._buf_start + n] = self._buf[:n].cpu().numpy()
+            if self.record_q:
+                self.q[self._buf_start:self._buf_start + n] = self._qbuf[:n].cpu().numpy()
         self._buf_start = self.steps_recorded
+
+    @torch.no_grad()
+    def finalize_key_summary(self, cache) -> None:
+        """Per-page post-RoPE key mean / min / max for the traced layers, from the final cache:
+        [L, 3, KVH, P, d]. Keys never change once written, so the summary of a page is valid at
+        every step after the page is complete. The partial last page is padded by replication."""
+        P, ps = self.n_pages, self.page_size
+        out = None
+        for slot, layer in enumerate(self.layers):
+            k = cache.layers[layer].keys[0].float()                     # [KVH, N, d]
+            kvh, n, d = k.shape
+            x = F.pad(k.transpose(1, 2), (0, P * ps - n), mode="replicate").view(kvh, d, P, ps)
+            stats = torch.stack([x.mean(-1), x.amin(-1), x.amax(-1)]).transpose(-1, -2)  # [3, KVH, P, d]
+            if out is None:
+                out = np.zeros((len(self.layers), 3, kvh, P, d), dtype=self.mass.dtype)
+            out[slot] = stats.to(self.tdtype).cpu().numpy()
+        self.key_summary = out
 
     def obs_numpy(self) -> np.ndarray:
         return self.obs.cpu().numpy()
@@ -153,6 +181,8 @@ class AttentionTracer:
                 raise RuntimeError("decode step with more than one query")
             probs = attention_probs(q, k, scaling)[:, 0]  # [Hq, N]
             self._buf[self._step - self._buf_start, slot] = page_reduce(probs, self.page_size, self.n_pages).to(self.tdtype)
+            if self.record_q:
+                self._qbuf[self._step - self._buf_start, slot] = q[:, 0].to(self.tdtype)
         else:
             lo = self.prompt_len - self.obs_window
             pos = torch.arange(self._q_start, self._q_start + q.shape[1], device=q.device)
@@ -162,3 +192,6 @@ class AttentionTracer:
             probs = attention_probs(q[:, rows], k, scaling, q_pos=pos[rows])  # [Hq, nr, N]
             mass = page_reduce(probs, self.page_size, self.n_pages).to(self.tdtype)  # [Hq, nr, P]
             self.obs[(pos[rows] - lo), slot] = mass.transpose(0, 1)
+            last = pos == self.prompt_len - 1
+            if self.record_q and bool(last.any()):  # step 0 = the last prompt token's query
+                self.q[0, slot] = q[:, last][:, 0].to(self.tdtype).cpu().numpy()

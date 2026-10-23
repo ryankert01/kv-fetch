@@ -74,6 +74,31 @@ def format_prompt(tok, user_text: str, assistant_prefix: str, cfg: dict) -> str:
     return head + assistant_prefix
 
 
+def followup_turns(tok, first_user: str, later_users: list[str], cfg: dict,
+                   sentinel: str = "⁣ASSISTANT_REPLY⁣") -> tuple[list[list[int]], list[int]]:
+    """Token ids to feed after each assistant reply, rendered by the model's own chat template.
+
+    Returns (followups, eot_ids). Follow-up i is the template text between the end of an
+    assistant turn and the start of the next one (user turn + generation prompt), WITHOUT the
+    end-of-turn token: ``generate`` prepends ``eot_ids`` only when a turn ended without
+    emitting a stop token itself."""
+    kwargs = cfg["models"].get("chat_template_kwargs", {}) or {}
+    msgs = [{"role": "user", "content": first_user}]
+    out, eot_text = [], None
+    for u in later_users:
+        msgs = msgs + [{"role": "assistant", "content": sentinel}, {"role": "user", "content": u}]
+        text = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, **kwargs)
+        suffix = text[text.rindex(sentinel) + len(sentinel):]
+        if eot_text is None:  # the template's end-of-turn marker: the special token right after the reply
+            ids = tok(suffix, add_special_tokens=False)["input_ids"]
+            eot_text = tok.decode(ids[:1])
+        if not suffix.startswith(eot_text):
+            raise ValueError(f"unexpected template continuation: {suffix[:40]!r}")
+        out.append(tok(suffix[len(eot_text):], add_special_tokens=False)["input_ids"])
+    eot_ids = tok(eot_text, add_special_tokens=False)["input_ids"] if eot_text else []
+    return out, eot_ids
+
+
 def encode(tok, text: str, offsets: bool = False):
     enc = tok(text, add_special_tokens=False, return_offsets_mapping=offsets)
     return enc

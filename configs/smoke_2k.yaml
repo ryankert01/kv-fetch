@@ -20,3 +20,19 @@ smoke:
   bf16_topb_frac: 0.05
   bf16_min_topb_overlap: 0.9           # mean |TopB(traced) & TopB(eager)| / B
   out: results/smoke_2k.json
+
+# Validation of query recording, key summaries and multi-turn (fed) decoding.
+smoke_multiturn:
+  model: Qwen/Qwen3-1.7B
+  task: niah_single_2
+  context_length: 2048
+  followups:
+    - "Repeat the number you found, then say in which part of the text it appeared."
+    - "Is there any other special magic number in the text? Answer briefly."
+  max_new_tokens: 400
+  turn_max_new: 120
+  q_mass_atol: 3.0e-2            # q is stored in fp16: logit error ~ |q||k| * 1e-3
+  q_min_topb_overlap: 0.95
+  key_summary_atol: 1.0e-3       # fp16 storage of key mean/min/max: |err| <= atol + rtol * |key|
+  key_summary_rtol: 1.0e-3       # fp16 half-ulp is 4.9e-4 relative
+  out: results/smoke_multiturn.json

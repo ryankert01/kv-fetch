@@ -8,6 +8,9 @@ Tensors
   always:            obs_mass  [W, L, H, P]  fp16   last W prompt queries (end-of-prefill signal)
                      tokens    [T]           int32  generated token ids (token s+1 is produced at step s)
                      prompt_ids [prompt_len] int32
+  optional (extra):  token_kind [T]           int8   0 = generated, 1 = fed (follow-up user turn)
+                     q          [T, L, H, d]  fp16   post-RoPE decode query (q[0] = last prompt token)
+                     key_summary [L, 3, KVH, P, d] fp16  per-page post-RoPE key mean / min / max
 Metadata: one JSON string under key "kvfetch" (provenance, layers, heads, spans, ...).
 M_w is not stored: it is an exact window sum of m (see kvfetch.metrics.importance).
 """
@@ -64,7 +67,8 @@ def to_topk(mass: np.ndarray, k: int) -> dict[str, np.ndarray]:
 
 
 def save_trace(path: str | Path, *, meta: dict, mass: np.ndarray, obs_mass: np.ndarray,
-               tokens: np.ndarray, prompt_ids: np.ndarray, fmt: str = "full", topk: int = 512) -> Path:
+               tokens: np.ndarray, prompt_ids: np.ndarray, fmt: str = "full", topk: int = 512,
+               extra: dict[str, np.ndarray] | None = None) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     meta = dict(meta, schema_version=SCHEMA_VERSION, format=fmt, step_convention=STEP_CONVENTION,
@@ -78,6 +82,10 @@ def save_trace(path: str | Path, *, meta: dict, mass: np.ndarray, obs_mass: np.n
         meta["topk"] = int(tensors["topk_idx"].shape[-1])
     else:
         raise ValueError(fmt)
+    for k, v in (extra or {}).items():
+        if k in tensors:
+            raise ValueError(f"extra tensor {k!r} clashes with a schema tensor")
+        tensors[k] = np.ascontiguousarray(v)
     save_file(tensors, str(path), metadata={"kvfetch": json.dumps(meta)})
     return path
 
