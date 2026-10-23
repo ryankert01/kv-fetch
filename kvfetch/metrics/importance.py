@@ -34,6 +34,37 @@ def eligible_pages(prompt_len: int, n_pages: int, page_size: int, pinned: dict) 
     return mask
 
 
+def eligibility_matrix(prompt_len: int, n_steps: int, n_pages: int, page_size: int, pinned: dict) -> np.ndarray:
+    """[T, P]: pages subject to the tiering decision at step t (keys visible: [0, prompt_len + t)).
+    decode_region == True: the static prompt-only set of ``eligible_pages``.
+    decode_region == "aged": any page whose last token is >= recent_tokens behind the current
+    length, so self-generated context (reasoning chains, earlier turns) joins once it ages."""
+    mode = pinned.get("decode_region", True)
+    if mode is True:
+        return np.broadcast_to(eligible_pages(prompt_len, n_pages, page_size, pinned), (n_steps, n_pages))
+    if mode != "aged":
+        raise ValueError(f"decode_region={mode!r}")
+    page_end = (np.arange(n_pages)[None, :] + 1) * page_size          # exclusive end position
+    horizon = prompt_len + np.arange(n_steps)[:, None] - pinned["recent_tokens"]
+    out = page_end <= horizon
+    out[:, :pinned.get("sink_pages", 0)] = False
+    return out
+
+
+def topb_mask_var(score: np.ndarray, frac: float, eligible: np.ndarray, rounding: str = "ceil"):
+    """Top-B per (t, series) with a per-step eligible set: score [T, S, P], eligible [T, P].
+    B_t = budget_pages(frac, n_eligible_t). Returns (mask [T,S,P], cutoff [T,S], B [T]).
+    Ties at the cutoff are all included."""
+    n = eligible.sum(-1)
+    B = np.array([budget_pages(frac, int(k), rounding) if k > 0 else 0 for k in n])
+    s = np.where(eligible[:, None, :], score.astype(np.float32), -np.inf)
+    srt = -np.sort(-s, axis=-1)
+    idx = np.broadcast_to(np.clip(B - 1, 0, None)[:, None, None], (s.shape[0], s.shape[1], 1))
+    cut = np.take_along_axis(srt, idx, axis=-1)[..., 0]
+    mask = (s >= cut[..., None]) & eligible[:, None, :] & (B > 0)[:, None, None]
+    return mask, cut, B
+
+
 def budget_pages(frac: float, n_eligible: int, rounding: str = "ceil") -> int:
     x = frac * n_eligible
     b = math.ceil(x) if rounding == "ceil" else math.floor(x) if rounding == "floor" else round(x)

@@ -15,7 +15,11 @@ definitions:
   pinned:
     sink_pages: 1               # first N pages (attention sink)
     recent_prompt_pages: 0      # last N full prompt pages (local window), 0 = none
-    decode_region: true         # pages touching generated tokens (incl. the partial last prompt page)
+    # true: every page touching generated tokens is pinned (prompt-only decisions).
+    # aged: a page becomes eligible once its last token is >= recent_tokens behind the
+    #       current position (needed when the long context is self-generated, e.g. reasoning).
+    decode_region: true
+    recent_tokens: 128          # local window kept resident when decode_region == aged
 
   # GQA: tiers live at KV-head granularity, but the spec says keep per-head data.
   # Traces store query heads; aggregation is an analysis-time view.
@@ -39,6 +43,19 @@ lead_time:
   mode: first                   # first = spec definition; contiguous = only the unbroken predicted run before the need
   required_lead: 0              # steps of lead needed for no stall (0 = Tier 2 promotion is free)
 
+# Revival ("important -> dormant -> important again"). Uses the trajectory hysteresis:
+# a page is "high" while in the top-B of m (enter at the cutoff, leave below exit_ratio of it).
+revival:
+  budget_frac: 0.05
+  exit_ratio: 0.5                      # same hysteresis as trajectory.exit_ratio
+  dormancy_steps: [4, 8, 16, 32, 64]   # a revival = re-entry after >= D dormant steps; reported per D
+  dormancy_main: 16
+  # H2O/SnapKV-style permanent eviction at this budget (scores = prefill-window mass +
+  # accumulated decode mass); regret = share of later attention landing on evicted pages.
+  eviction_budget_fracs: [0.05, 0.10]
+  q_lags: [1, 4, 16, 64]               # query autocorrelation lags (steps)
+  q_pca_var: 0.9                       # effective dimension = components for this explained variance
+
 # Trace storage (spec §7 Phase 0; open item §9.3).
 trace:
   format: full                  # full | topk
@@ -46,16 +63,26 @@ trace:
   mass_dtype: float16
   prefill_obs_window: 32        # also record m for the last N prompt queries (end-of-prefill signal)
   flush_every: 64               # decode steps buffered on GPU before copying to host
+  record_q: false               # also store the post-RoPE decode query per (step, layer, head)
+  key_summary: false            # also store per-page post-RoPE key mean/min/max (cheap-predictor inputs)
 
 # Reference predictors used only to exercise the metric pipeline end to end.
 # The Phase 2 predictor comparison is NOT implemented here.
 reference_predictors:
   ema_alpha: 0.3
 
-# Phase 1 decision point (spec §7). Must be filled in by the human BEFORE Phase 1 runs.
+# Phase 1 decision point (spec §7). Proposed by Claude on 2026-10-23 and accepted by the
+# user. Derived from the project's positioning, not tuned on data. Evaluated once, on the
+# held-out "confirm" half of each dataset.
 decision_point:
-  GRADUAL_SHARE_MIN: null
-  LEAD_TIME_MIN: null
+  # InfiniGen already looks 1 step ahead; a median lead <= 1 step is no gain over it.
+  LEAD_TIME_MIN: 1
+  # Trend prediction must address >= 1 in 4 stall-causing onsets to justify its memory cost.
+  GRADUAL_SHARE_MIN: 0.25
+  # Denominator: onsets that follow a deep-low period (class_shares()["gradual_share_of_onsets"]).
+  # Consistent with trajectory.sudden_max_rise_steps = 2: a rise within 2 steps cannot be
+  # caught more than 1 step early by any predictor.
+  GRADUAL_SHARE_DENOMINATOR: onsets_after_low
 
 models:
   local_files_only: true
