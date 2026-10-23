@@ -1,5 +1,8 @@
 # RESULTS — Phase 0 (definitions and infrastructure)
 
+**Visual, plain-language version: [`report.html`](report.html)** (open in a browser; regenerate with
+`python scripts/make_report.py configs/report.yaml`).
+
 Branch `phase0`. Environment: `.venv` (torch 2.8.0+cu128, transformers 4.57.1, Python 3.11),
 RTX A6000 / RTX 6000 Ada (48 GB), shared machine — after the first hour of the gate, limited to devices 1, 2, 3 (+6 later).
 Every result JSON carries `provenance` (model, context length, page size, w, git commit +
@@ -296,9 +299,9 @@ large eval. Phase 1's guard itself only needs 32K.
    (`floor_ratio`, `sudden_max_rise_steps`, `exit_ratio`, `oscillating_min_transitions`)
    directly set that split, so fix them together with the decision values. Hardware input
    for `LEAD_TIME_MIN` (Llama-3.1-8B, page 16): a page is 64 KiB per layer, 2 MiB across 32
-   layers. At ~24 GB/s PCIe 4.0 and a ≥ 20 ms batch-1 step, one step moves ~240 full pages vs.
+   layers. At ~24 GB/s PCIe 4.0 and a ≥ 20 ms batch-1 step, one step moves ~230 full pages vs.
    B = 410 pages (5 % at 128K). Since lead 0 already includes one full step of transfer time,
-   at batch 1 extra lead only matters for churn bursts above ~60 % of B per step. It matters
+   at batch 1 extra lead only matters for churn bursts above ~56 % of B per step. It matters
    much more at batch > 1 or on slower links. Pick the regime the paper targets.
 2. **Custom multi-turn re-reference task.** Same mechanism also fixes the RULER problem in §5:
    feed each new question's tokens as decode steps so the jump lands inside the traced window.
