@@ -1,0 +1,541 @@
+{
+  "provenance": {
+    "model": null,
+    "context_length": null,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "c425f27221718b105f1c9a117cf466026842e26d",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/model_gate.yaml",
+    "timestamp": "2026-10-23T15:02:09",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX A6000",
+    "transformers": "4.57.1",
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": true
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "GRADUAL_SHARE_MIN": null,
+        "LEAD_TIME_MIN": null
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 32768,
+        "chat_template_kwargs": {
+          "enable_thinking": false,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "gate": {
+        "candidates": [
+          "meta-llama/Llama-3.2-1B-Instruct",
+          "meta-llama/Llama-3.2-3B-Instruct",
+          "Qwen/Qwen2.5-1.5B-Instruct",
+          "Qwen/Qwen2.5-3B-Instruct",
+          "Qwen/Qwen3-1.7B",
+          "Qwen/Qwen3-4B"
+        ],
+        "reference_candidates": [
+          "meta-llama/Llama-3.1-8B-Instruct",
+          "Qwen/Qwen2.5-7B-Instruct",
+          "Qwen/Qwen3-8B"
+        ],
+        "lengths": [
+          16384,
+          32768
+        ],
+        "tasks": [
+          "niah_single_1",
+          "niah_single_2",
+          "niah_single_3",
+          "niah_multikey_1",
+          "niah_multikey_2",
+          "niah_multikey_3"
+        ],
+        "groups": {
+          "needle": [
+            "niah_single_1",
+            "niah_single_2",
+            "niah_single_3"
+          ],
+          "multikey": [
+            "niah_multikey_1",
+            "niah_multikey_2",
+            "niah_multikey_3"
+          ]
+        },
+        "num_samples": 50,
+        "seed": 0,
+        "pass_threshold": 85.6,
+        "out_dir": "results/model_gate"
+      }
+    }
+  },
+  "rows": [
+    {
+      "model": "meta-llama/Llama-3.2-1B-Instruct",
+      "length": 16384,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 98.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 96.0,
+      "niah_multikey_2": 76.0,
+      "niah_multikey_3": 26.0,
+      "group_needle": 99.33333333333333,
+      "group_multikey": 66.0,
+      "passed": false,
+      "wall_min": 3.954158568692704,
+      "mean_prefill_s": 0.5941069754740844,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "meta-llama/Llama-3.2-1B-Instruct",
+      "length": 32768,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 94.0,
+      "niah_single_3": 98.0,
+      "niah_multikey_1": 92.0,
+      "niah_multikey_2": 82.0,
+      "niah_multikey_3": 8.0,
+      "group_needle": 97.33333333333333,
+      "group_multikey": 60.666666666666664,
+      "passed": false,
+      "wall_min": 16.534957556830097,
+      "mean_prefill_s": 3.0596270438221596,
+      "git": "66c01a9"
+    },
+    {
+      "model": "meta-llama/Llama-3.2-3B-Instruct",
+      "length": 16384,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 98.0,
+      "niah_multikey_2": 100.0,
+      "niah_multikey_3": 98.0,
+      "group_needle": 100.0,
+      "group_multikey": 98.66666666666667,
+      "passed": true,
+      "wall_min": 9.24144746673604,
+      "mean_prefill_s": 1.525952762014543,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "meta-llama/Llama-3.2-3B-Instruct",
+      "length": 32768,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 98.0,
+      "niah_multikey_2": 94.0,
+      "niah_multikey_3": 60.0,
+      "group_needle": 100.0,
+      "group_multikey": 84.0,
+      "passed": false,
+      "wall_min": 38.743999563126515,
+      "mean_prefill_s": 7.283389136542876,
+      "git": "66c01a9"
+    },
+    {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "length": 16384,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 98.0,
+      "niah_multikey_2": 98.0,
+      "niah_multikey_3": 56.0,
+      "group_needle": 100.0,
+      "group_multikey": 84.0,
+      "passed": false,
+      "wall_min": 4.875515077418338,
+      "mean_prefill_s": 0.6088179708520571,
+      "git": "f45a4af"
+    },
+    {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "length": 32768,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 94.0,
+      "niah_multikey_2": 86.0,
+      "niah_multikey_3": 44.0,
+      "group_needle": 100.0,
+      "group_multikey": 74.66666666666667,
+      "passed": false,
+      "wall_min": 15.717986864736304,
+      "mean_prefill_s": 2.725260370823865,
+      "git": "66c01a9"
+    },
+    {
+      "model": "Qwen/Qwen2.5-3B-Instruct",
+      "length": 16384,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 100.0,
+      "niah_multikey_3": 68.0,
+      "group_needle": 100.0,
+      "group_multikey": 89.33333333333333,
+      "passed": true,
+      "wall_min": 9.845328993893538,
+      "mean_prefill_s": 1.479400190319866,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "Qwen/Qwen2.5-3B-Instruct",
+      "length": 32768,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 98.0,
+      "niah_multikey_2": 98.0,
+      "niah_multikey_3": 64.0,
+      "group_needle": 100.0,
+      "group_multikey": 86.66666666666667,
+      "passed": true,
+      "wall_min": 22.860307995649055,
+      "mean_prefill_s": 3.9260652681905777,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "Qwen/Qwen3-1.7B",
+      "length": 16384,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 86.0,
+      "niah_multikey_3": 88.0,
+      "group_needle": 100.0,
+      "group_multikey": 91.33333333333333,
+      "passed": true,
+      "wall_min": 8.103225645733376,
+      "mean_prefill_s": 0.9710601229127497,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "Qwen/Qwen3-1.7B",
+      "length": 32768,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 98.0,
+      "niah_multikey_2": 74.0,
+      "niah_multikey_3": 46.0,
+      "group_needle": 100.0,
+      "group_multikey": 72.66666666666667,
+      "passed": false,
+      "wall_min": 28.243795184139163,
+      "mean_prefill_s": 4.890345158480729,
+      "git": "66c01a9"
+    },
+    {
+      "model": "Qwen/Qwen3-4B",
+      "length": 16384,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 96.0,
+      "niah_multikey_2": 100.0,
+      "niah_multikey_3": 100.0,
+      "group_needle": 100.0,
+      "group_multikey": 98.66666666666667,
+      "passed": true,
+      "wall_min": 13.069982223569726,
+      "mean_prefill_s": 2.0053150819428267,
+      "git": "f45a4af"
+    },
+    {
+      "model": "Qwen/Qwen3-4B",
+      "length": 32768,
+      "role": "iteration",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 98.0,
+      "niah_multikey_3": 96.0,
+      "group_needle": 100.0,
+      "group_multikey": 98.0,
+      "passed": true,
+      "wall_min": 36.59232413647696,
+      "mean_prefill_s": 6.434782942604895,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "meta-llama/Llama-3.1-8B-Instruct",
+      "length": 16384,
+      "role": "reference",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 100.0,
+      "niah_multikey_3": 98.0,
+      "group_needle": 100.0,
+      "group_multikey": 99.33333333333333,
+      "passed": true,
+      "wall_min": 17.696236370597035,
+      "mean_prefill_s": 3.0437226125660044,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "meta-llama/Llama-3.1-8B-Instruct",
+      "length": 32768,
+      "role": "reference",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 100.0,
+      "niah_multikey_3": 100.0,
+      "group_needle": 100.0,
+      "group_multikey": 100.0,
+      "passed": true,
+      "wall_min": 42.53289219549236,
+      "mean_prefill_s": 7.779032186570888,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "Qwen/Qwen2.5-7B-Instruct",
+      "length": 16384,
+      "role": "reference",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 98.0,
+      "niah_multikey_3": 100.0,
+      "group_needle": 100.0,
+      "group_multikey": 99.33333333333333,
+      "passed": true,
+      "wall_min": 16.346925117603192,
+      "mean_prefill_s": 2.700702520220851,
+      "git": "9c5cfa8"
+    },
+    {
+      "model": "Qwen/Qwen2.5-7B-Instruct",
+      "length": 32768,
+      "role": "reference",
+      "niah_single_1": 98.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 98.0,
+      "niah_multikey_3": 90.0,
+      "group_needle": 99.33333333333333,
+      "group_multikey": 96.0,
+      "passed": true,
+      "wall_min": 38.008817123125,
+      "mean_prefill_s": 6.886963399667293,
+      "git": "bac7d5e"
+    },
+    {
+      "model": "Qwen/Qwen3-8B",
+      "length": 16384,
+      "role": "reference",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 100.0,
+      "niah_multikey_3": 100.0,
+      "group_needle": 100.0,
+      "group_multikey": 100.0,
+      "passed": true,
+      "wall_min": 28.468669099981586,
+      "mean_prefill_s": 4.565994368589793,
+      "git": "f45a4af"
+    },
+    {
+      "model": "Qwen/Qwen3-8B",
+      "length": 32768,
+      "role": "reference",
+      "niah_single_1": 100.0,
+      "niah_single_2": 100.0,
+      "niah_single_3": 100.0,
+      "niah_multikey_1": 100.0,
+      "niah_multikey_2": 98.0,
+      "niah_multikey_3": 100.0,
+      "group_needle": 100.0,
+      "group_multikey": 99.33333333333333,
+      "passed": true,
+      "wall_min": 47.667563956153266,
+      "mean_prefill_s": 8.501329955104739,
+      "git": "bac7d5e"
+    }
+  ],
+  "longest_passing_length": {
+    "meta-llama/Llama-3.2-3B-Instruct": 16384,
+    "Qwen/Qwen2.5-3B-Instruct": 32768,
+    "Qwen/Qwen3-1.7B": 16384,
+    "Qwen/Qwen3-4B": 32768,
+    "meta-llama/Llama-3.1-8B-Instruct": 32768,
+    "Qwen/Qwen2.5-7B-Instruct": 32768,
+    "Qwen/Qwen3-8B": 32768
+  },
+  "missing": []
+}

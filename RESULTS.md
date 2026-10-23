@@ -230,7 +230,28 @@ sampling noise.)
   2 KV heads (group 8) and the large-logit heads described in §2.
 * Wall time per job ranged 4–39 min; Qwen3-4B @ 32K took 37 min (6.4 s prefill per sample).
 
-**Reference candidates (§4: the reference model must pass too):** REFERENCE_PLACEHOLDER
+**Reference candidates (§4: the reference model must pass too):**
+
+| model | len | s1 | s2 | s3 | mk1 | mk2 | mk3 | needle avg | multi-key avg | pass |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Llama-3.1-8B-Instruct | 16K | 100 | 100 | 100 | 100 | 100 | 98 | 100 | 99.3 | yes |
+| Llama-3.1-8B-Instruct | 32K | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | yes |
+| Qwen2.5-7B-Instruct | 16K | 100 | 100 | 100 | 100 | 98 | 100 | 100 | 99.3 | yes |
+| Qwen2.5-7B-Instruct | 32K | 98 | 100 | 100 | 100 | 98 | 90 | 99.3 | 96.0 | yes |
+| Qwen3-8B | 16K | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | yes |
+| Qwen3-8B | 32K | 100 | 100 | 100 | 100 | 98 | 100 | 100 | 99.3 | yes |
+
+All three pass at 16K and 32K, near ceiling, so the gate does not separate them. The choice
+rests on the §4 guard and on 128K:
+
+| pairing (iteration → reference) | for | against |
+|---|---|---|
+| **Qwen3-4B @ 32K → Qwen3-8B** (recommended) | same family and GQA shape (8 KV heads, group 4); both pass 32K with margin | Qwen3 is natively 32K, so a 128K reference needs YaRN and its own 128K gate |
+| Llama-3.2-3B @ 16K → Llama-3.1-8B | native 128K reference, 100 % at 32K | small eval capped at 16K (fails 32K by 1.6 pts, within noise; a re-gate with more samples could flip it) |
+| Qwen3-4B @ 32K → Llama-3.1-8B | best small model + native-128K reference | cross-family: e.g. pinned-mass share is 44 % (Qwen3-4B) vs 77 % (Llama-3.2-3B), so the §4 agreement check is at risk for reasons unrelated to trajectories |
+
+None of the references has been gated at 128K yet; whichever you pick needs that before the
+large eval. Phase 1's guard itself only needs 32K.
 
 ---
 

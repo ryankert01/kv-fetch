@@ -1,0 +1,3843 @@
+{
+  "provenance": {
+    "model": "Qwen/Qwen3-8B",
+    "context_length": 32768,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "bac7d5e987be3bb6bfbc7c804e71fdc5289004d6",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/model_gate.yaml",
+    "timestamp": "2026-10-23T15:01:28",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX A6000",
+    "transformers": "4.57.1",
+    "num_samples": 50,
+    "seed": 0,
+    "max_position_embeddings": 40960,
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": true
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "GRADUAL_SHARE_MIN": null,
+        "LEAD_TIME_MIN": null
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 32768,
+        "chat_template_kwargs": {
+          "enable_thinking": false,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "gate": {
+        "candidates": [
+          "meta-llama/Llama-3.2-1B-Instruct",
+          "meta-llama/Llama-3.2-3B-Instruct",
+          "Qwen/Qwen2.5-1.5B-Instruct",
+          "Qwen/Qwen2.5-3B-Instruct",
+          "Qwen/Qwen3-1.7B",
+          "Qwen/Qwen3-4B"
+        ],
+        "reference_candidates": [
+          "meta-llama/Llama-3.1-8B-Instruct",
+          "Qwen/Qwen2.5-7B-Instruct",
+          "Qwen/Qwen3-8B"
+        ],
+        "lengths": [
+          16384,
+          32768
+        ],
+        "tasks": [
+          "niah_single_1",
+          "niah_single_2",
+          "niah_single_3",
+          "niah_multikey_1",
+          "niah_multikey_2",
+          "niah_multikey_3"
+        ],
+        "groups": {
+          "needle": [
+            "niah_single_1",
+            "niah_single_2",
+            "niah_single_3"
+          ],
+          "multikey": [
+            "niah_multikey_1",
+            "niah_multikey_2",
+            "niah_multikey_3"
+          ]
+        },
+        "num_samples": 50,
+        "seed": 0,
+        "pass_threshold": 85.6,
+        "out_dir": "results/model_gate"
+      }
+    }
+  },
+  "per_task": {
+    "niah_single_1": 100.0,
+    "niah_single_2": 100.0,
+    "niah_single_3": 100.0,
+    "niah_multikey_1": 100.0,
+    "niah_multikey_2": 98.0,
+    "niah_multikey_3": 100.0
+  },
+  "groups": {
+    "needle": 100.0,
+    "multikey": 99.33333333333333
+  },
+  "pass_threshold": 85.6,
+  "passed": true,
+  "wall_s": 2860.053837369196,
+  "records": [
+    {
+      "task": "niah_single_1",
+      "index": 0,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1652000"
+      ],
+      "pred": " **1652000**.",
+      "score": 1.0,
+      "prefill_s": 8.67901860550046,
+      "decode_s": 0.546866787597537
+    },
+    {
+      "task": "niah_single_1",
+      "index": 1,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7548969"
+      ],
+      "pred": " **7548969**.",
+      "score": 1.0,
+      "prefill_s": 8.394571116194129,
+      "decode_s": 0.4882920188829303
+    },
+    {
+      "task": "niah_single_1",
+      "index": 2,
+      "prompt_tokens": 32634,
+      "answers": [
+        "9926169"
+      ],
+      "pred": " **9926169**.",
+      "score": 1.0,
+      "prefill_s": 8.533305536024272,
+      "decode_s": 0.48735380358994007
+    },
+    {
+      "task": "niah_single_1",
+      "index": 3,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2763454"
+      ],
+      "pred": " **2763454**.",
+      "score": 1.0,
+      "prefill_s": 8.479235687293112,
+      "decode_s": 0.4878464387729764
+    },
+    {
+      "task": "niah_single_1",
+      "index": 4,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6616983"
+      ],
+      "pred": " **6616983**.",
+      "score": 1.0,
+      "prefill_s": 8.497034057043493,
+      "decode_s": 0.4888154724612832
+    },
+    {
+      "task": "niah_single_1",
+      "index": 5,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9694233"
+      ],
+      "pred": ": **9694233**.",
+      "score": 1.0,
+      "prefill_s": 8.484211219474673,
+      "decode_s": 0.5376229714602232
+    },
+    {
+      "task": "niah_single_1",
+      "index": 6,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3647258"
+      ],
+      "pred": " **3647258**.",
+      "score": 1.0,
+      "prefill_s": 8.52200308162719,
+      "decode_s": 0.4885660521686077
+    },
+    {
+      "task": "niah_single_1",
+      "index": 7,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9385030"
+      ],
+      "pred": " **9385030**.",
+      "score": 1.0,
+      "prefill_s": 8.503417897038162,
+      "decode_s": 0.4895147457718849
+    },
+    {
+      "task": "niah_single_1",
+      "index": 8,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9337275"
+      ],
+      "pred": " **9337275**.",
+      "score": 1.0,
+      "prefill_s": 8.546324126422405,
+      "decode_s": 0.4886099146679044
+    },
+    {
+      "task": "niah_single_1",
+      "index": 9,
+      "prompt_tokens": 32637,
+      "answers": [
+        "5356321"
+      ],
+      "pred": " **5356321**.",
+      "score": 1.0,
+      "prefill_s": 8.562580216675997,
+      "decode_s": 0.4894277136772871
+    },
+    {
+      "task": "niah_single_1",
+      "index": 10,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2209689"
+      ],
+      "pred": " **2209689**.",
+      "score": 1.0,
+      "prefill_s": 8.564710211008787,
+      "decode_s": 0.48919419292360544
+    },
+    {
+      "task": "niah_single_1",
+      "index": 11,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9151751"
+      ],
+      "pred": " **9151751**.",
+      "score": 1.0,
+      "prefill_s": 8.573501231148839,
+      "decode_s": 0.48903506342321634
+    },
+    {
+      "task": "niah_single_1",
+      "index": 12,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9837299"
+      ],
+      "pred": ": **9837299**.",
+      "score": 1.0,
+      "prefill_s": 8.576279855333269,
+      "decode_s": 0.5382516728714108
+    },
+    {
+      "task": "niah_single_1",
+      "index": 13,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6565376"
+      ],
+      "pred": " **6565376**.",
+      "score": 1.0,
+      "prefill_s": 8.578022420406342,
+      "decode_s": 0.48935632687062025
+    },
+    {
+      "task": "niah_single_1",
+      "index": 14,
+      "prompt_tokens": 32637,
+      "answers": [
+        "7929245"
+      ],
+      "pred": ": **7929245**.",
+      "score": 1.0,
+      "prefill_s": 8.58435380551964,
+      "decode_s": 0.5381638780236244
+    },
+    {
+      "task": "niah_single_1",
+      "index": 15,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6054737"
+      ],
+      "pred": " **6054737**.",
+      "score": 1.0,
+      "prefill_s": 8.588640615344048,
+      "decode_s": 0.48928734846413136
+    },
+    {
+      "task": "niah_single_1",
+      "index": 16,
+      "prompt_tokens": 32637,
+      "answers": [
+        "3748552"
+      ],
+      "pred": " **3748552**.",
+      "score": 1.0,
+      "prefill_s": 8.591292791999876,
+      "decode_s": 0.48904640413820744
+    },
+    {
+      "task": "niah_single_1",
+      "index": 17,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3101395"
+      ],
+      "pred": " **3101395**.",
+      "score": 1.0,
+      "prefill_s": 8.588143257424235,
+      "decode_s": 0.4891920182853937
+    },
+    {
+      "task": "niah_single_1",
+      "index": 18,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6923530"
+      ],
+      "pred": " **6923530**.",
+      "score": 1.0,
+      "prefill_s": 8.586519041098654,
+      "decode_s": 0.48891238309442997
+    },
+    {
+      "task": "niah_single_1",
+      "index": 19,
+      "prompt_tokens": 32637,
+      "answers": [
+        "5163139"
+      ],
+      "pred": " **5163139**.",
+      "score": 1.0,
+      "prefill_s": 8.591360564343631,
+      "decode_s": 0.489114822819829
+    },
+    {
+      "task": "niah_single_1",
+      "index": 20,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2134351"
+      ],
+      "pred": ": **2134351**.",
+      "score": 1.0,
+      "prefill_s": 8.592807163484395,
+      "decode_s": 0.5372289996594191
+    },
+    {
+      "task": "niah_single_1",
+      "index": 21,
+      "prompt_tokens": 32634,
+      "answers": [
+        "1840715"
+      ],
+      "pred": " **1840715**.",
+      "score": 1.0,
+      "prefill_s": 8.60065844655037,
+      "decode_s": 0.4892118461430073
+    },
+    {
+      "task": "niah_single_1",
+      "index": 22,
+      "prompt_tokens": 32631,
+      "answers": [
+        "8711661"
+      ],
+      "pred": " **8711661**.",
+      "score": 1.0,
+      "prefill_s": 8.592916686087847,
+      "decode_s": 0.4896554099395871
+    },
+    {
+      "task": "niah_single_1",
+      "index": 23,
+      "prompt_tokens": 32634,
+      "answers": [
+        "7500695"
+      ],
+      "pred": " **7500695**.",
+      "score": 1.0,
+      "prefill_s": 8.599884929135442,
+      "decode_s": 0.4894212791696191
+    },
+    {
+      "task": "niah_single_1",
+      "index": 24,
+      "prompt_tokens": 32637,
+      "answers": [
+        "4672402"
+      ],
+      "pred": " **4672402**.",
+      "score": 1.0,
+      "prefill_s": 8.597807759419084,
+      "decode_s": 0.48947484139353037
+    },
+    {
+      "task": "niah_single_1",
+      "index": 25,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5228194"
+      ],
+      "pred": " **5228194**.",
+      "score": 1.0,
+      "prefill_s": 8.56219266820699,
+      "decode_s": 0.4888081355020404
+    },
+    {
+      "task": "niah_single_1",
+      "index": 26,
+      "prompt_tokens": 32634,
+      "answers": [
+        "9777337"
+      ],
+      "pred": ": **9777337**.",
+      "score": 1.0,
+      "prefill_s": 8.589811250567436,
+      "decode_s": 0.537140971980989
+    },
+    {
+      "task": "niah_single_1",
+      "index": 27,
+      "prompt_tokens": 32634,
+      "answers": [
+        "8811731"
+      ],
+      "pred": " **8811731**.",
+      "score": 1.0,
+      "prefill_s": 8.58832321036607,
+      "decode_s": 0.4891501385718584
+    },
+    {
+      "task": "niah_single_1",
+      "index": 28,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2662740"
+      ],
+      "pred": " **2662740**.",
+      "score": 1.0,
+      "prefill_s": 8.59554051142186,
+      "decode_s": 0.48904060292989016
+    },
+    {
+      "task": "niah_single_1",
+      "index": 29,
+      "prompt_tokens": 32634,
+      "answers": [
+        "7930787"
+      ],
+      "pred": " **7930787**.",
+      "score": 1.0,
+      "prefill_s": 8.588622990995646,
+      "decode_s": 0.48921281658113003
+    },
+    {
+      "task": "niah_single_1",
+      "index": 30,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1999959"
+      ],
+      "pred": " **1999959**.",
+      "score": 1.0,
+      "prefill_s": 8.565913751721382,
+      "decode_s": 0.4889347739517689
+    },
+    {
+      "task": "niah_single_1",
+      "index": 31,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9838183"
+      ],
+      "pred": " **9838183**.",
+      "score": 1.0,
+      "prefill_s": 8.59250634163618,
+      "decode_s": 0.4890382084995508
+    },
+    {
+      "task": "niah_single_1",
+      "index": 32,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8281181"
+      ],
+      "pred": " **8281181**.",
+      "score": 1.0,
+      "prefill_s": 8.561544531956315,
+      "decode_s": 0.48979313764721155
+    },
+    {
+      "task": "niah_single_1",
+      "index": 33,
+      "prompt_tokens": 32637,
+      "answers": [
+        "4939322"
+      ],
+      "pred": " **4939322**.",
+      "score": 1.0,
+      "prefill_s": 8.597271259874105,
+      "decode_s": 0.48892549611628056
+    },
+    {
+      "task": "niah_single_1",
+      "index": 34,
+      "prompt_tokens": 32631,
+      "answers": [
+        "3627900"
+      ],
+      "pred": " **3627900**.",
+      "score": 1.0,
+      "prefill_s": 8.596924185752869,
+      "decode_s": 0.4887364897876978
+    },
+    {
+      "task": "niah_single_1",
+      "index": 35,
+      "prompt_tokens": 32634,
+      "answers": [
+        "5293338"
+      ],
+      "pred": " **5293338**.",
+      "score": 1.0,
+      "prefill_s": 8.596845727413893,
+      "decode_s": 0.48883177898824215
+    },
+    {
+      "task": "niah_single_1",
+      "index": 36,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2005470"
+      ],
+      "pred": " **2005470**.",
+      "score": 1.0,
+      "prefill_s": 8.601153758354485,
+      "decode_s": 0.4901309823617339
+    },
+    {
+      "task": "niah_single_1",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5685338"
+      ],
+      "pred": ": **5685338**.",
+      "score": 1.0,
+      "prefill_s": 8.565594573505223,
+      "decode_s": 0.5375873008742929
+    },
+    {
+      "task": "niah_single_1",
+      "index": 38,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9024153"
+      ],
+      "pred": " **9024153**.",
+      "score": 1.0,
+      "prefill_s": 8.566980718635023,
+      "decode_s": 0.48810848966240883
+    },
+    {
+      "task": "niah_single_1",
+      "index": 39,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6252129"
+      ],
+      "pred": " **6252129**.",
+      "score": 1.0,
+      "prefill_s": 8.564744271337986,
+      "decode_s": 0.4893051302060485
+    },
+    {
+      "task": "niah_single_1",
+      "index": 40,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1867978"
+      ],
+      "pred": " **1867978**.",
+      "score": 1.0,
+      "prefill_s": 8.598334652371705,
+      "decode_s": 0.488988533616066
+    },
+    {
+      "task": "niah_single_1",
+      "index": 41,
+      "prompt_tokens": 32634,
+      "answers": [
+        "4290132"
+      ],
+      "pred": " **4290132**.",
+      "score": 1.0,
+      "prefill_s": 8.589120483025908,
+      "decode_s": 0.4904029341414571
+    },
+    {
+      "task": "niah_single_1",
+      "index": 42,
+      "prompt_tokens": 32043,
+      "answers": [
+        "4628694"
+      ],
+      "pred": " **4628694**.",
+      "score": 1.0,
+      "prefill_s": 8.368974984623492,
+      "decode_s": 0.48492906987667084
+    },
+    {
+      "task": "niah_single_1",
+      "index": 43,
+      "prompt_tokens": 32634,
+      "answers": [
+        "2401274"
+      ],
+      "pred": " **2401274**.",
+      "score": 1.0,
+      "prefill_s": 8.583423416130245,
+      "decode_s": 0.4889446208253503
+    },
+    {
+      "task": "niah_single_1",
+      "index": 44,
+      "prompt_tokens": 32634,
+      "answers": [
+        "5729962"
+      ],
+      "pred": " **5729962**.",
+      "score": 1.0,
+      "prefill_s": 8.587215637788177,
+      "decode_s": 0.4889201242476702
+    },
+    {
+      "task": "niah_single_1",
+      "index": 45,
+      "prompt_tokens": 32634,
+      "answers": [
+        "4522513"
+      ],
+      "pred": " **4522513**.",
+      "score": 1.0,
+      "prefill_s": 8.583726733922958,
+      "decode_s": 0.48890944477170706
+    },
+    {
+      "task": "niah_single_1",
+      "index": 46,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7205386"
+      ],
+      "pred": " **7205386**.",
+      "score": 1.0,
+      "prefill_s": 8.55253300908953,
+      "decode_s": 0.4886369230225682
+    },
+    {
+      "task": "niah_single_1",
+      "index": 47,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3846995"
+      ],
+      "pred": " **3846995**.",
+      "score": 1.0,
+      "prefill_s": 8.581377634778619,
+      "decode_s": 0.4892697222530842
+    },
+    {
+      "task": "niah_single_1",
+      "index": 48,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1328107"
+      ],
+      "pred": " **1328107**.",
+      "score": 1.0,
+      "prefill_s": 8.584304448217154,
+      "decode_s": 0.48906639963388443
+    },
+    {
+      "task": "niah_single_1",
+      "index": 49,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2427900"
+      ],
+      "pred": " **2427900**.",
+      "score": 1.0,
+      "prefill_s": 8.551447674632072,
+      "decode_s": 0.4885284788906574
+    },
+    {
+      "task": "niah_single_2",
+      "index": 0,
+      "prompt_tokens": 32038,
+      "answers": [
+        "7855872"
+      ],
+      "pred": " **7855872**.",
+      "score": 1.0,
+      "prefill_s": 8.299492666497827,
+      "decode_s": 0.48537393566221
+    },
+    {
+      "task": "niah_single_2",
+      "index": 1,
+      "prompt_tokens": 32041,
+      "answers": [
+        "1632104"
+      ],
+      "pred": " **1632104**.",
+      "score": 1.0,
+      "prefill_s": 8.318530106917024,
+      "decode_s": 0.4849521117284894
+    },
+    {
+      "task": "niah_single_2",
+      "index": 2,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2568781"
+      ],
+      "pred": " **2568781**.",
+      "score": 1.0,
+      "prefill_s": 8.520805885083973,
+      "decode_s": 0.4894521152600646
+    },
+    {
+      "task": "niah_single_2",
+      "index": 3,
+      "prompt_tokens": 32041,
+      "answers": [
+        "5755051"
+      ],
+      "pred": " **5755051**.",
+      "score": 1.0,
+      "prefill_s": 8.401459735818207,
+      "decode_s": 0.483900404535234
+    },
+    {
+      "task": "niah_single_2",
+      "index": 4,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2826577"
+      ],
+      "pred": " **2826577**.",
+      "score": 1.0,
+      "prefill_s": 8.556723421439528,
+      "decode_s": 0.48841144796460867
+    },
+    {
+      "task": "niah_single_2",
+      "index": 5,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2540686"
+      ],
+      "pred": " **2540686**.",
+      "score": 1.0,
+      "prefill_s": 8.533262738958001,
+      "decode_s": 0.488941996358335
+    },
+    {
+      "task": "niah_single_2",
+      "index": 6,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4472715"
+      ],
+      "pred": " **4472715**.",
+      "score": 1.0,
+      "prefill_s": 8.336629249155521,
+      "decode_s": 0.4844749150797725
+    },
+    {
+      "task": "niah_single_2",
+      "index": 7,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6201515"
+      ],
+      "pred": " **6201515**.",
+      "score": 1.0,
+      "prefill_s": 8.532118225470185,
+      "decode_s": 0.48845286574214697
+    },
+    {
+      "task": "niah_single_2",
+      "index": 8,
+      "prompt_tokens": 32041,
+      "answers": [
+        "8415699"
+      ],
+      "pred": " **8415699**.",
+      "score": 1.0,
+      "prefill_s": 8.342295174486935,
+      "decode_s": 0.48411377612501383
+    },
+    {
+      "task": "niah_single_2",
+      "index": 9,
+      "prompt_tokens": 32640,
+      "answers": [
+        "3022591"
+      ],
+      "pred": " **3022591**.",
+      "score": 1.0,
+      "prefill_s": 8.543164658360183,
+      "decode_s": 0.48983476497232914
+    },
+    {
+      "task": "niah_single_2",
+      "index": 10,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5106132"
+      ],
+      "pred": " **5106132**.",
+      "score": 1.0,
+      "prefill_s": 8.347667507827282,
+      "decode_s": 0.4854651568457484
+    },
+    {
+      "task": "niah_single_2",
+      "index": 11,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9495906"
+      ],
+      "pred": " **9495906**.",
+      "score": 1.0,
+      "prefill_s": 8.570281052961946,
+      "decode_s": 0.48885566275566816
+    },
+    {
+      "task": "niah_single_2",
+      "index": 12,
+      "prompt_tokens": 32044,
+      "answers": [
+        "6510253"
+      ],
+      "pred": " **6510253**.",
+      "score": 1.0,
+      "prefill_s": 8.33148518204689,
+      "decode_s": 0.4846150577068329
+    },
+    {
+      "task": "niah_single_2",
+      "index": 13,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5180762"
+      ],
+      "pred": " **5180762**.",
+      "score": 1.0,
+      "prefill_s": 8.433904055505991,
+      "decode_s": 0.4826504625380039
+    },
+    {
+      "task": "niah_single_2",
+      "index": 14,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7089255"
+      ],
+      "pred": " **7089255**.",
+      "score": 1.0,
+      "prefill_s": 8.546879790723324,
+      "decode_s": 0.4899199837818742
+    },
+    {
+      "task": "niah_single_2",
+      "index": 15,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1523149"
+      ],
+      "pred": " **1523149**.",
+      "score": 1.0,
+      "prefill_s": 8.542180502787232,
+      "decode_s": 0.4913898892700672
+    },
+    {
+      "task": "niah_single_2",
+      "index": 16,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7891367"
+      ],
+      "pred": " **7891367**.",
+      "score": 1.0,
+      "prefill_s": 8.346837452612817,
+      "decode_s": 0.4853087514638901
+    },
+    {
+      "task": "niah_single_2",
+      "index": 17,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6577189"
+      ],
+      "pred": " **6577189**.",
+      "score": 1.0,
+      "prefill_s": 8.558550328016281,
+      "decode_s": 0.4875487443059683
+    },
+    {
+      "task": "niah_single_2",
+      "index": 18,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7712759"
+      ],
+      "pred": " **7712759**.",
+      "score": 1.0,
+      "prefill_s": 8.3556421790272,
+      "decode_s": 0.4848098838701844
+    },
+    {
+      "task": "niah_single_2",
+      "index": 19,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9195773"
+      ],
+      "pred": " **9195773**.",
+      "score": 1.0,
+      "prefill_s": 8.54657236021012,
+      "decode_s": 0.490369469858706
+    },
+    {
+      "task": "niah_single_2",
+      "index": 20,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9349619"
+      ],
+      "pred": " **9349619**.",
+      "score": 1.0,
+      "prefill_s": 8.587171481922269,
+      "decode_s": 0.4879493694752455
+    },
+    {
+      "task": "niah_single_2",
+      "index": 21,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2672660"
+      ],
+      "pred": " **2672660**.",
+      "score": 1.0,
+      "prefill_s": 8.552118439227343,
+      "decode_s": 0.4885082598775625
+    },
+    {
+      "task": "niah_single_2",
+      "index": 22,
+      "prompt_tokens": 32038,
+      "answers": [
+        "3437669"
+      ],
+      "pred": " **3437669**.",
+      "score": 1.0,
+      "prefill_s": 8.350913563743234,
+      "decode_s": 0.4870923776179552
+    },
+    {
+      "task": "niah_single_2",
+      "index": 23,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1120829"
+      ],
+      "pred": " **1120829**.",
+      "score": 1.0,
+      "prefill_s": 8.548078520223498,
+      "decode_s": 0.5201156418770552
+    },
+    {
+      "task": "niah_single_2",
+      "index": 24,
+      "prompt_tokens": 32041,
+      "answers": [
+        "8613402"
+      ],
+      "pred": " **8613402**.",
+      "score": 1.0,
+      "prefill_s": 8.35375854279846,
+      "decode_s": 0.4929474079981446
+    },
+    {
+      "task": "niah_single_2",
+      "index": 25,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6765836"
+      ],
+      "pred": " **6765836**.",
+      "score": 1.0,
+      "prefill_s": 8.547936501912773,
+      "decode_s": 0.49023659992963076
+    },
+    {
+      "task": "niah_single_2",
+      "index": 26,
+      "prompt_tokens": 32041,
+      "answers": [
+        "9494427"
+      ],
+      "pred": " **9494427**.",
+      "score": 1.0,
+      "prefill_s": 8.353391932323575,
+      "decode_s": 0.4913501236587763
+    },
+    {
+      "task": "niah_single_2",
+      "index": 27,
+      "prompt_tokens": 32038,
+      "answers": [
+        "1749118"
+      ],
+      "pred": " **1749118**.",
+      "score": 1.0,
+      "prefill_s": 8.352907841093838,
+      "decode_s": 0.5049732634797692
+    },
+    {
+      "task": "niah_single_2",
+      "index": 28,
+      "prompt_tokens": 32038,
+      "answers": [
+        "3045470"
+      ],
+      "pred": " **3045470**.",
+      "score": 1.0,
+      "prefill_s": 8.351045458577573,
+      "decode_s": 0.4947527013719082
+    },
+    {
+      "task": "niah_single_2",
+      "index": 29,
+      "prompt_tokens": 32041,
+      "answers": [
+        "5766094"
+      ],
+      "pred": " **5766094**.",
+      "score": 1.0,
+      "prefill_s": 8.356068283319473,
+      "decode_s": 0.48854574002325535
+    },
+    {
+      "task": "niah_single_2",
+      "index": 30,
+      "prompt_tokens": 32038,
+      "answers": [
+        "1133756"
+      ],
+      "pred": " **1133756**.",
+      "score": 1.0,
+      "prefill_s": 8.483527578413486,
+      "decode_s": 0.49228880926966667
+    },
+    {
+      "task": "niah_single_2",
+      "index": 31,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6399839"
+      ],
+      "pred": " **6399839**.",
+      "score": 1.0,
+      "prefill_s": 8.545401640236378,
+      "decode_s": 0.5151672549545765
+    },
+    {
+      "task": "niah_single_2",
+      "index": 32,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5388567"
+      ],
+      "pred": " **5388567**.",
+      "score": 1.0,
+      "prefill_s": 8.346965895034373,
+      "decode_s": 0.4923086855560541
+    },
+    {
+      "task": "niah_single_2",
+      "index": 33,
+      "prompt_tokens": 32041,
+      "answers": [
+        "3523901"
+      ],
+      "pred": " **3523901**.",
+      "score": 1.0,
+      "prefill_s": 8.379210683517158,
+      "decode_s": 0.5279794512316585
+    },
+    {
+      "task": "niah_single_2",
+      "index": 34,
+      "prompt_tokens": 32038,
+      "answers": [
+        "2188373"
+      ],
+      "pred": " **2188373**.",
+      "score": 1.0,
+      "prefill_s": 8.356162899173796,
+      "decode_s": 0.5155403260141611
+    },
+    {
+      "task": "niah_single_2",
+      "index": 35,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2981958"
+      ],
+      "pred": " **2981958**.",
+      "score": 1.0,
+      "prefill_s": 8.553615486249328,
+      "decode_s": 0.5176005410030484
+    },
+    {
+      "task": "niah_single_2",
+      "index": 36,
+      "prompt_tokens": 32038,
+      "answers": [
+        "2426692"
+      ],
+      "pred": " **2426692**.",
+      "score": 1.0,
+      "prefill_s": 8.354126427322626,
+      "decode_s": 0.49006041791290045
+    },
+    {
+      "task": "niah_single_2",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "7390655"
+      ],
+      "pred": " **7390655**.",
+      "score": 1.0,
+      "prefill_s": 8.552154917269945,
+      "decode_s": 0.49372187443077564
+    },
+    {
+      "task": "niah_single_2",
+      "index": 38,
+      "prompt_tokens": 32038,
+      "answers": [
+        "7383509"
+      ],
+      "pred": " **7383509**.",
+      "score": 1.0,
+      "prefill_s": 8.34850764926523,
+      "decode_s": 0.49807979073375463
+    },
+    {
+      "task": "niah_single_2",
+      "index": 39,
+      "prompt_tokens": 32041,
+      "answers": [
+        "6352327"
+      ],
+      "pred": " **6352327**.",
+      "score": 1.0,
+      "prefill_s": 8.352613812312484,
+      "decode_s": 0.4908420676365495
+    },
+    {
+      "task": "niah_single_2",
+      "index": 40,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5663765"
+      ],
+      "pred": " **5663765**.",
+      "score": 1.0,
+      "prefill_s": 8.548393212258816,
+      "decode_s": 0.4918559342622757
+    },
+    {
+      "task": "niah_single_2",
+      "index": 41,
+      "prompt_tokens": 32640,
+      "answers": [
+        "6093918"
+      ],
+      "pred": " **6093918**.",
+      "score": 1.0,
+      "prefill_s": 8.550476300530136,
+      "decode_s": 0.49096259474754333
+    },
+    {
+      "task": "niah_single_2",
+      "index": 42,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4148439"
+      ],
+      "pred": " **4148439**.",
+      "score": 1.0,
+      "prefill_s": 8.354672723449767,
+      "decode_s": 0.48788105975836515
+    },
+    {
+      "task": "niah_single_2",
+      "index": 43,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1097762"
+      ],
+      "pred": " **1097762**.",
+      "score": 1.0,
+      "prefill_s": 8.54765556473285,
+      "decode_s": 0.517021200619638
+    },
+    {
+      "task": "niah_single_2",
+      "index": 44,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8202497"
+      ],
+      "pred": " **8202497**.",
+      "score": 1.0,
+      "prefill_s": 8.544262662529945,
+      "decode_s": 0.510445605032146
+    },
+    {
+      "task": "niah_single_2",
+      "index": 45,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7316476"
+      ],
+      "pred": " **7316476**.",
+      "score": 1.0,
+      "prefill_s": 8.355529082939029,
+      "decode_s": 0.4964197874069214
+    },
+    {
+      "task": "niah_single_2",
+      "index": 46,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4606685"
+      ],
+      "pred": " **4606685**.",
+      "score": 1.0,
+      "prefill_s": 8.35163735318929,
+      "decode_s": 0.4889501193538308
+    },
+    {
+      "task": "niah_single_2",
+      "index": 47,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7977738"
+      ],
+      "pred": " **7977738**.",
+      "score": 1.0,
+      "prefill_s": 8.35788709577173,
+      "decode_s": 0.4860333641991019
+    },
+    {
+      "task": "niah_single_2",
+      "index": 48,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1094804"
+      ],
+      "pred": " **1094804**.",
+      "score": 1.0,
+      "prefill_s": 8.550867732614279,
+      "decode_s": 0.49928886257112026
+    },
+    {
+      "task": "niah_single_2",
+      "index": 49,
+      "prompt_tokens": 32038,
+      "answers": [
+        "1381112"
+      ],
+      "pred": " **1381112**.",
+      "score": 1.0,
+      "prefill_s": 8.345341179519892,
+      "decode_s": 0.4864490460604429
+    },
+    {
+      "task": "niah_single_3",
+      "index": 0,
+      "prompt_tokens": 32044,
+      "answers": [
+        "99c0b33b-2251-48da-95d1-efc4f032f074"
+      ],
+      "pred": ":\n\n**99c0b33b-2251-48da-95d1-efc4f032f074**",
+      "score": 1.0,
+      "prefill_s": 8.282754625193775,
+      "decode_s": 1.819697287864983
+    },
+    {
+      "task": "niah_single_3",
+      "index": 1,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5f9a5dac-b31d-46e9-9ab4-85a9ee275b48"
+      ],
+      "pred": ":\n\n**5f9a5dac-b31d-46e9-9ab4-85a9ee275b48**",
+      "score": 1.0,
+      "prefill_s": 8.536056789569557,
+      "decode_s": 1.6887769177556038
+    },
+    {
+      "task": "niah_single_3",
+      "index": 2,
+      "prompt_tokens": 32041,
+      "answers": [
+        "eb57ff8f-6236-4946-9199-d90ab382782f"
+      ],
+      "pred": ": **eb57ff8f-6236-4946-9199-d90ab382782f**.",
+      "score": 1.0,
+      "prefill_s": 8.321759809739888,
+      "decode_s": 1.829664058983326
+    },
+    {
+      "task": "niah_single_3",
+      "index": 3,
+      "prompt_tokens": 32044,
+      "answers": [
+        "1c4658e6-0326-40a1-82dd-4e2d164f7cf3"
+      ],
+      "pred": ":\n\n**1c4658e6-0326-40a1-82dd-4e2d164f7cf3**",
+      "score": 1.0,
+      "prefill_s": 8.316479773260653,
+      "decode_s": 1.7989318612962961
+    },
+    {
+      "task": "niah_single_3",
+      "index": 4,
+      "prompt_tokens": 32640,
+      "answers": [
+        "c0b71420-a4ac-4c93-8fb0-de8a1c1c0bd6"
+      ],
+      "pred": ":\n\n**c0b71420-a4ac-4c93-8fb0-de8a1c1c0bd6**",
+      "score": 1.0,
+      "prefill_s": 8.520347970537841,
+      "decode_s": 1.6463222866877913
+    },
+    {
+      "task": "niah_single_3",
+      "index": 5,
+      "prompt_tokens": 32041,
+      "answers": [
+        "7da6883d-4a3f-4b8c-9128-80a7eb1d726f"
+      ],
+      "pred": ":\n\n**7da6883d-4a3f-4b8c-9128-80a7eb1d726f**",
+      "score": 1.0,
+      "prefill_s": 8.32598470710218,
+      "decode_s": 1.814686380326748
+    },
+    {
+      "task": "niah_single_3",
+      "index": 6,
+      "prompt_tokens": 32037,
+      "answers": [
+        "8d553979-fea1-444a-bb48-b556433fbba1"
+      ],
+      "pred": ":\n\n**8d553979-fea1-444a-bb48-b556433fbba1**",
+      "score": 1.0,
+      "prefill_s": 8.331246006302536,
+      "decode_s": 1.6040722727775574
+    },
+    {
+      "task": "niah_single_3",
+      "index": 7,
+      "prompt_tokens": 32037,
+      "answers": [
+        "77dfcd60-f96f-4abc-b22d-841c41d41b4a"
+      ],
+      "pred": ":\n\n**77dfcd60-f96f-4abc-b22d-841c41d41b4a**",
+      "score": 1.0,
+      "prefill_s": 8.328892481513321,
+      "decode_s": 1.6146653378382325
+    },
+    {
+      "task": "niah_single_3",
+      "index": 8,
+      "prompt_tokens": 32638,
+      "answers": [
+        "b2ca1bff-84ac-4e67-872e-3eb7c5257116"
+      ],
+      "pred": ":\n\n**b2ca1bff-84ac-4e67-872e-3eb7c5257116**",
+      "score": 1.0,
+      "prefill_s": 8.555947044864297,
+      "decode_s": 1.6879246225580573
+    },
+    {
+      "task": "niah_single_3",
+      "index": 9,
+      "prompt_tokens": 32038,
+      "answers": [
+        "5e5c5d5d-f954-472d-90ea-49c4f5c2b337"
+      ],
+      "pred": ":\n\n**5e5c5d5d-f954-472d-90ea-49c4f5c2b337**",
+      "score": 1.0,
+      "prefill_s": 8.334383106790483,
+      "decode_s": 1.8129845447838306
+    },
+    {
+      "task": "niah_single_3",
+      "index": 10,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1c36cc1f-540c-431a-ad22-722a99c595ae"
+      ],
+      "pred": ":\n\n**1c36cc1f-540c-431a-ad22-722a99c595ae**",
+      "score": 1.0,
+      "prefill_s": 8.529596459120512,
+      "decode_s": 1.7276728674769402
+    },
+    {
+      "task": "niah_single_3",
+      "index": 11,
+      "prompt_tokens": 32639,
+      "answers": [
+        "9a9daae4-1765-42e6-8dfb-84a256cee4f9"
+      ],
+      "pred": ":\n\n**9a9daae4-1765-42e6-8dfb-84a256cee4f9**",
+      "score": 1.0,
+      "prefill_s": 8.563923064619303,
+      "decode_s": 1.695515839383006
+    },
+    {
+      "task": "niah_single_3",
+      "index": 12,
+      "prompt_tokens": 32043,
+      "answers": [
+        "2a1d466b-6421-42a9-a857-bc0a7d0f9dd8"
+      ],
+      "pred": ":\n\n**2a1d466b-6421-42a9-a857-bc0a7d0f9dd8**",
+      "score": 1.0,
+      "prefill_s": 8.344223349355161,
+      "decode_s": 1.8195054093375802
+    },
+    {
+      "task": "niah_single_3",
+      "index": 13,
+      "prompt_tokens": 32038,
+      "answers": [
+        "db41f1e8-6b52-436e-82f1-5a8b8c31b17b"
+      ],
+      "pred": ":\n\n**db41f1e8-6b52-436e-82f1-5a8b8c31b17b**",
+      "score": 1.0,
+      "prefill_s": 8.333812713623047,
+      "decode_s": 1.86863221693784
+    },
+    {
+      "task": "niah_single_3",
+      "index": 14,
+      "prompt_tokens": 32040,
+      "answers": [
+        "28ec182f-5c12-4f39-b9dd-5955d26b304c"
+      ],
+      "pred": ":\n\n**28ec182f-5c12-4f39-b9dd-5955d26b304c**",
+      "score": 1.0,
+      "prefill_s": 8.328953263349831,
+      "decode_s": 1.7754092821851373
+    },
+    {
+      "task": "niah_single_3",
+      "index": 15,
+      "prompt_tokens": 32640,
+      "answers": [
+        "22ec8323-aea3-410c-934f-9495754bb416"
+      ],
+      "pred": ":\n\n**22ec8323-aea3-410c-934f-9495754bb416**",
+      "score": 1.0,
+      "prefill_s": 8.532389899715781,
+      "decode_s": 1.7374647157266736
+    },
+    {
+      "task": "niah_single_3",
+      "index": 16,
+      "prompt_tokens": 32634,
+      "answers": [
+        "cbad66c0-8d76-492b-86cc-a1eff6b594c6"
+      ],
+      "pred": ":\n\n**cbad66c0-8d76-492b-86cc-a1eff6b594c6**",
+      "score": 1.0,
+      "prefill_s": 8.567272656597197,
+      "decode_s": 1.6187899317592382
+    },
+    {
+      "task": "niah_single_3",
+      "index": 17,
+      "prompt_tokens": 32037,
+      "answers": [
+        "79c10518-401b-46f8-ab0f-ecbe8cd4ee0e"
+      ],
+      "pred": ":\n\n**79c10518-401b-46f8-ab0f-ecbe8cd4ee0e**",
+      "score": 1.0,
+      "prefill_s": 8.353296247310936,
+      "decode_s": 1.601150835864246
+    },
+    {
+      "task": "niah_single_3",
+      "index": 18,
+      "prompt_tokens": 32041,
+      "answers": [
+        "46403293-565d-44a8-8f33-d93e7e4fc409"
+      ],
+      "pred": ":\n\n**46403293-565d-44a8-8f33-d93e7e4fc409**",
+      "score": 1.0,
+      "prefill_s": 8.352378886193037,
+      "decode_s": 1.8412787141278386
+    },
+    {
+      "task": "niah_single_3",
+      "index": 19,
+      "prompt_tokens": 32040,
+      "answers": [
+        "15e33ebe-f1e5-422a-bb29-238550043c6e"
+      ],
+      "pred": ":\n\n**15e33ebe-f1e5-422a-bb29-238550043c6e**",
+      "score": 1.0,
+      "prefill_s": 8.342396183870733,
+      "decode_s": 1.7611950477585196
+    },
+    {
+      "task": "niah_single_3",
+      "index": 20,
+      "prompt_tokens": 32038,
+      "answers": [
+        "a3845a38-6d50-473d-bfd1-fee0894f8d4d"
+      ],
+      "pred": ":\n\n**a3845a38-6d50-473d-bfd1-fee0894f8d4d**",
+      "score": 1.0,
+      "prefill_s": 8.363377874717116,
+      "decode_s": 1.7420192891731858
+    },
+    {
+      "task": "niah_single_3",
+      "index": 21,
+      "prompt_tokens": 32037,
+      "answers": [
+        "8c954478-d9ad-4e09-8de4-2b51c2549035"
+      ],
+      "pred": ":\n\n**8c954478-d9ad-4e09-8de4-2b51c2549035**",
+      "score": 1.0,
+      "prefill_s": 8.358809812925756,
+      "decode_s": 1.7933712154626846
+    },
+    {
+      "task": "niah_single_3",
+      "index": 22,
+      "prompt_tokens": 32639,
+      "answers": [
+        "c5415192-fd49-4888-b5df-394c75037ce0"
+      ],
+      "pred": ":\n\n**c5415192-fd49-4888-b5df-394c75037ce0**",
+      "score": 1.0,
+      "prefill_s": 8.584491959773004,
+      "decode_s": 1.7376809222623706
+    },
+    {
+      "task": "niah_single_3",
+      "index": 23,
+      "prompt_tokens": 32636,
+      "answers": [
+        "b2bbacce-f266-4fc2-958b-c9f6ba444579"
+      ],
+      "pred": ":\n\n**b2bbacce-f266-4fc2-958b-c9f6ba444579**",
+      "score": 1.0,
+      "prefill_s": 8.567602822557092,
+      "decode_s": 1.6401110561564565
+    },
+    {
+      "task": "niah_single_3",
+      "index": 24,
+      "prompt_tokens": 32637,
+      "answers": [
+        "baae94ac-4dbf-46e3-a5db-2f62d11497ef"
+      ],
+      "pred": ":\n\n**baae94ac-4dbf-46e3-a5db-2f62d11497ef**",
+      "score": 1.0,
+      "prefill_s": 8.58761340752244,
+      "decode_s": 1.6040662014856935
+    },
+    {
+      "task": "niah_single_3",
+      "index": 25,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9d4795f4-9de3-4618-829f-eb0dc2cf6710"
+      ],
+      "pred": ":\n\n**9d4795f4-9de3-4618-829f-eb0dc2cf6710**",
+      "score": 1.0,
+      "prefill_s": 8.609003849327564,
+      "decode_s": 1.7448040153831244
+    },
+    {
+      "task": "niah_single_3",
+      "index": 26,
+      "prompt_tokens": 32037,
+      "answers": [
+        "9d6a7c99-a328-41bc-861f-bafc628136ca"
+      ],
+      "pred": ":\n\n**9d6a7c99-a328-41bc-861f-bafc628136ca**",
+      "score": 1.0,
+      "prefill_s": 8.368797837756574,
+      "decode_s": 1.6526127317920327
+    },
+    {
+      "task": "niah_single_3",
+      "index": 27,
+      "prompt_tokens": 32638,
+      "answers": [
+        "c7d964c8-6d12-4081-858b-dfa9ea963aba"
+      ],
+      "pred": ":\n\n**c7d964c8-6d12-4081-858b-dfa9ea963aba**",
+      "score": 1.0,
+      "prefill_s": 8.590505097061396,
+      "decode_s": 1.6748040840029716
+    },
+    {
+      "task": "niah_single_3",
+      "index": 28,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2867b8c9-f805-4a05-827b-71fa0bbd41fe"
+      ],
+      "pred": ":\n\n**2867b8c9-f805-4a05-827b-71fa0bbd41fe**",
+      "score": 1.0,
+      "prefill_s": 8.556592435576022,
+      "decode_s": 1.7172233164310455
+    },
+    {
+      "task": "niah_single_3",
+      "index": 29,
+      "prompt_tokens": 32640,
+      "answers": [
+        "268b55f5-18dc-4a78-9a0e-bdd50547af2f"
+      ],
+      "pred": ":\n\n**268b55f5-18dc-4a78-9a0e-bdd50547af2f**",
+      "score": 1.0,
+      "prefill_s": 8.552062399685383,
+      "decode_s": 1.7175986571237445
+    },
+    {
+      "task": "niah_single_3",
+      "index": 30,
+      "prompt_tokens": 32038,
+      "answers": [
+        "4e4494ea-c907-4278-80a1-0e56134d9895"
+      ],
+      "pred": ":\n\n**4e4494ea-c907-4278-80a1-0e56134d9895**",
+      "score": 1.0,
+      "prefill_s": 8.3496003607288,
+      "decode_s": 1.7982490872964263
+    },
+    {
+      "task": "niah_single_3",
+      "index": 31,
+      "prompt_tokens": 32638,
+      "answers": [
+        "26dd6375-9942-4a0a-99e0-ef1611583df1"
+      ],
+      "pred": ":\n\n**26dd6375-9942-4a0a-99e0-ef1611583df1**",
+      "score": 1.0,
+      "prefill_s": 8.573340077884495,
+      "decode_s": 1.7632053010165691
+    },
+    {
+      "task": "niah_single_3",
+      "index": 32,
+      "prompt_tokens": 32637,
+      "answers": [
+        "8d157779-6349-47ac-a941-023117cce5c6"
+      ],
+      "pred": ":\n\n**8d157779-6349-47ac-a941-023117cce5c6**",
+      "score": 1.0,
+      "prefill_s": 8.574957594275475,
+      "decode_s": 1.7422639206051826
+    },
+    {
+      "task": "niah_single_3",
+      "index": 33,
+      "prompt_tokens": 32640,
+      "answers": [
+        "da578c90-a082-4455-9727-341b58ad51a6"
+      ],
+      "pred": ":\n\n**da578c90-a082-4455-9727-341b58ad51a6**",
+      "score": 1.0,
+      "prefill_s": 8.539324121549726,
+      "decode_s": 1.7756501510739326
+    },
+    {
+      "task": "niah_single_3",
+      "index": 34,
+      "prompt_tokens": 32038,
+      "answers": [
+        "0cfbff6f-a040-4c69-a482-1d4472a705f6"
+      ],
+      "pred": ":\n\n**0cfbff6f-a040-4c69-a482-1d4472a705f6**",
+      "score": 1.0,
+      "prefill_s": 8.350260059349239,
+      "decode_s": 1.7152355294674635
+    },
+    {
+      "task": "niah_single_3",
+      "index": 35,
+      "prompt_tokens": 32039,
+      "answers": [
+        "0e0e2789-ab09-4df8-b072-009b1d5a2c0a"
+      ],
+      "pred": ":\n\n**0e0e2789-ab09-4df8-b072-009b1d5a2c0a**",
+      "score": 1.0,
+      "prefill_s": 8.352244641631842,
+      "decode_s": 1.7286879224702716
+    },
+    {
+      "task": "niah_single_3",
+      "index": 36,
+      "prompt_tokens": 32038,
+      "answers": [
+        "816ee474-a4d4-4138-8248-379ddb14df9a"
+      ],
+      "pred": ":\n\n**816ee474-a4d4-4138-8248-379ddb14df9a**",
+      "score": 1.0,
+      "prefill_s": 8.358782972209156,
+      "decode_s": 1.6948196198791265
+    },
+    {
+      "task": "niah_single_3",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8317f6ed-24e3-4356-b69f-0bec12d214e9"
+      ],
+      "pred": ":\n\n**8317f6ed-24e3-4356-b69f-0bec12d214e9**",
+      "score": 1.0,
+      "prefill_s": 8.551691502332687,
+      "decode_s": 1.7382603054866195
+    },
+    {
+      "task": "niah_single_3",
+      "index": 38,
+      "prompt_tokens": 32054,
+      "answers": [
+        "21a3089f-0ee8-4394-8905-49b84d7839f0"
+      ],
+      "pred": ":\n\n**21a3089f-0ee8-4394-8905-49b84d7839f0**",
+      "score": 1.0,
+      "prefill_s": 8.364540352486074,
+      "decode_s": 1.8653170932084322
+    },
+    {
+      "task": "niah_single_3",
+      "index": 39,
+      "prompt_tokens": 32040,
+      "answers": [
+        "04071ec1-ce5b-4f1f-8bde-c7cde82d8590"
+      ],
+      "pred": ":\n\n**04071ec1-ce5b-4f1f-8bde-c7cde82d8590**",
+      "score": 1.0,
+      "prefill_s": 8.359187967143953,
+      "decode_s": 1.6050784289836884
+    },
+    {
+      "task": "niah_single_3",
+      "index": 40,
+      "prompt_tokens": 32640,
+      "answers": [
+        "bba0762b-0f3d-4da6-b803-a1e873adf8c7"
+      ],
+      "pred": ":\n\n**bba0762b-0f3d-4da6-b803-a1e873adf8c7**",
+      "score": 1.0,
+      "prefill_s": 8.564030536450446,
+      "decode_s": 1.61576091311872
+    },
+    {
+      "task": "niah_single_3",
+      "index": 41,
+      "prompt_tokens": 32638,
+      "answers": [
+        "f5b02b92-1fd5-4c5d-a046-3f5b719c007f"
+      ],
+      "pred": ":\n\n**f5b02b92-1fd5-4c5d-a046-3f5b719c007f**",
+      "score": 1.0,
+      "prefill_s": 8.586232665926218,
+      "decode_s": 1.824514559470117
+    },
+    {
+      "task": "niah_single_3",
+      "index": 42,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1899d792-2815-4cc2-b78f-ff800fd15755"
+      ],
+      "pred": ":\n\n**1899d792-2815-4cc2-b78f-ff800fd15755**",
+      "score": 1.0,
+      "prefill_s": 8.559669067151845,
+      "decode_s": 1.7217801259830594
+    },
+    {
+      "task": "niah_single_3",
+      "index": 43,
+      "prompt_tokens": 32639,
+      "answers": [
+        "bcc5a50f-78ff-4735-a27d-7da624b3294a"
+      ],
+      "pred": ":  \n**bcc5a50f-78ff-4735-a27d-7da624b3294a**",
+      "score": 1.0,
+      "prefill_s": 8.591313148848712,
+      "decode_s": 1.729509735479951
+    },
+    {
+      "task": "niah_single_3",
+      "index": 44,
+      "prompt_tokens": 32639,
+      "answers": [
+        "adc48011-79a3-4927-8ff1-2379ea71a3d7"
+      ],
+      "pred": ":\n\n**adc48011-79a3-4927-8ff1-2379ea71a3d7**",
+      "score": 1.0,
+      "prefill_s": 8.601487624458969,
+      "decode_s": 1.7244911855086684
+    },
+    {
+      "task": "niah_single_3",
+      "index": 45,
+      "prompt_tokens": 32640,
+      "answers": [
+        "0e66df4a-e095-4c87-b73d-5b4d96b6bca3"
+      ],
+      "pred": ":\n\n**0e66df4a-e095-4c87-b73d-5b4d96b6bca3**",
+      "score": 1.0,
+      "prefill_s": 8.571885419078171,
+      "decode_s": 1.7327733114361763
+    },
+    {
+      "task": "niah_single_3",
+      "index": 46,
+      "prompt_tokens": 32638,
+      "answers": [
+        "bf355f6d-ec78-42ec-8d62-bd311cb0d247"
+      ],
+      "pred": ":\n\n**bf355f6d-ec78-42ec-8d62-bd311cb0d247**",
+      "score": 1.0,
+      "prefill_s": 8.597748529165983,
+      "decode_s": 1.6754986364394426
+    },
+    {
+      "task": "niah_single_3",
+      "index": 47,
+      "prompt_tokens": 32038,
+      "answers": [
+        "77ce9897-12c3-46be-9664-0b9412e7a989"
+      ],
+      "pred": ":\n\n**77ce9897-12c3-46be-9664-0b9412e7a989**",
+      "score": 1.0,
+      "prefill_s": 8.373874064534903,
+      "decode_s": 1.797092911787331
+    },
+    {
+      "task": "niah_single_3",
+      "index": 48,
+      "prompt_tokens": 32038,
+      "answers": [
+        "6701eeed-921c-410a-8013-df00bcab698e"
+      ],
+      "pred": ":\n\n**6701eeed-921c-410a-8013-df00bcab698e**",
+      "score": 1.0,
+      "prefill_s": 8.375127403065562,
+      "decode_s": 1.6507279928773642
+    },
+    {
+      "task": "niah_single_3",
+      "index": 49,
+      "prompt_tokens": 32038,
+      "answers": [
+        "930356d2-f842-47bb-b9bb-d6f486e0b36f"
+      ],
+      "pred": ":\n\n**930356d2-f842-47bb-b9bb-d6f486e0b36f**",
+      "score": 1.0,
+      "prefill_s": 8.379740237258375,
+      "decode_s": 1.6608632635325193
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 0,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5469475"
+      ],
+      "pred": " **5469475**.",
+      "score": 1.0,
+      "prefill_s": 8.563597116619349,
+      "decode_s": 0.49128682538866997
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 1,
+      "prompt_tokens": 32632,
+      "answers": [
+        "9676435"
+      ],
+      "pred": " **9676435**.",
+      "score": 1.0,
+      "prefill_s": 8.558169133029878,
+      "decode_s": 0.4927391242235899
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 2,
+      "prompt_tokens": 32635,
+      "answers": [
+        "6707406"
+      ],
+      "pred": ": **6707406**.",
+      "score": 1.0,
+      "prefill_s": 8.580824295990169,
+      "decode_s": 0.5401083640754223
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 3,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5782171"
+      ],
+      "pred": " **5782171**.",
+      "score": 1.0,
+      "prefill_s": 8.5858169849962,
+      "decode_s": 0.4922252083197236
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 4,
+      "prompt_tokens": 32637,
+      "answers": [
+        "8236804"
+      ],
+      "pred": " **8236804**.",
+      "score": 1.0,
+      "prefill_s": 8.590742212720215,
+      "decode_s": 0.4912324231117964
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 5,
+      "prompt_tokens": 32636,
+      "answers": [
+        "4859491"
+      ],
+      "pred": " **4859491**.",
+      "score": 1.0,
+      "prefill_s": 8.610471753403544,
+      "decode_s": 0.49141490552574396
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 6,
+      "prompt_tokens": 32637,
+      "answers": [
+        "1232339"
+      ],
+      "pred": " **1232339**.",
+      "score": 1.0,
+      "prefill_s": 8.595220904797316,
+      "decode_s": 0.4960939474403858
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 7,
+      "prompt_tokens": 32639,
+      "answers": [
+        "2404966"
+      ],
+      "pred": " **2404966**.",
+      "score": 1.0,
+      "prefill_s": 8.594877255149186,
+      "decode_s": 0.49153428990393877
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 8,
+      "prompt_tokens": 32635,
+      "answers": [
+        "2542078"
+      ],
+      "pred": " **2542078**.",
+      "score": 1.0,
+      "prefill_s": 8.589309175498784,
+      "decode_s": 0.4910305915400386
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 9,
+      "prompt_tokens": 32638,
+      "answers": [
+        "5575102"
+      ],
+      "pred": " **5575102**.",
+      "score": 1.0,
+      "prefill_s": 8.588415555655956,
+      "decode_s": 0.5053074862807989
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 10,
+      "prompt_tokens": 32638,
+      "answers": [
+        "7933414"
+      ],
+      "pred": " **7933414**.",
+      "score": 1.0,
+      "prefill_s": 8.592749105766416,
+      "decode_s": 0.49327421467751265
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 11,
+      "prompt_tokens": 32636,
+      "answers": [
+        "7625469"
+      ],
+      "pred": " **7625469**.",
+      "score": 1.0,
+      "prefill_s": 8.581293024122715,
+      "decode_s": 0.4928281856700778
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 12,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8822269"
+      ],
+      "pred": " **8822269**.",
+      "score": 1.0,
+      "prefill_s": 8.630130941048265,
+      "decode_s": 0.4886433109641075
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 13,
+      "prompt_tokens": 32044,
+      "answers": [
+        "1177205"
+      ],
+      "pred": " **1177205**.",
+      "score": 1.0,
+      "prefill_s": 8.369318038225174,
+      "decode_s": 0.4878423037007451
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 14,
+      "prompt_tokens": 32640,
+      "answers": [
+        "5682634"
+      ],
+      "pred": ": **5682634**.",
+      "score": 1.0,
+      "prefill_s": 8.579827258363366,
+      "decode_s": 0.5474820407107472
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 15,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6557882"
+      ],
+      "pred": " **6557882**.",
+      "score": 1.0,
+      "prefill_s": 8.610455895774066,
+      "decode_s": 0.49589958135038614
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 16,
+      "prompt_tokens": 32039,
+      "answers": [
+        "7217581"
+      ],
+      "pred": " **7217581**.",
+      "score": 1.0,
+      "prefill_s": 8.38642785511911,
+      "decode_s": 0.4930305164307356
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 17,
+      "prompt_tokens": 32635,
+      "answers": [
+        "8179235"
+      ],
+      "pred": " **8179235**.",
+      "score": 1.0,
+      "prefill_s": 8.61537139955908,
+      "decode_s": 0.49134692177176476
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 18,
+      "prompt_tokens": 32636,
+      "answers": [
+        "1717179"
+      ],
+      "pred": " **1717179**.",
+      "score": 1.0,
+      "prefill_s": 8.60413402877748,
+      "decode_s": 0.4921433851122856
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 19,
+      "prompt_tokens": 32637,
+      "answers": [
+        "5495057"
+      ],
+      "pred": " **5495057**.",
+      "score": 1.0,
+      "prefill_s": 8.622587319463491,
+      "decode_s": 0.4937411155551672
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 20,
+      "prompt_tokens": 32639,
+      "answers": [
+        "7343784"
+      ],
+      "pred": " **7343784**.",
+      "score": 1.0,
+      "prefill_s": 8.614122995175421,
+      "decode_s": 0.49244752153754234
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 21,
+      "prompt_tokens": 32640,
+      "answers": [
+        "2941180"
+      ],
+      "pred": " **2941180**.",
+      "score": 1.0,
+      "prefill_s": 8.585551091469824,
+      "decode_s": 0.4943395061418414
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 22,
+      "prompt_tokens": 32635,
+      "answers": [
+        "3470606"
+      ],
+      "pred": " **3470606**.",
+      "score": 1.0,
+      "prefill_s": 8.61750729009509,
+      "decode_s": 0.49163972958922386
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 23,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5714290"
+      ],
+      "pred": " **5714290**.",
+      "score": 1.0,
+      "prefill_s": 8.614573052152991,
+      "decode_s": 0.49250009190291166
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 24,
+      "prompt_tokens": 32635,
+      "answers": [
+        "6429333"
+      ],
+      "pred": " **6429333**.",
+      "score": 1.0,
+      "prefill_s": 8.624401843175292,
+      "decode_s": 0.49285717122256756
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 25,
+      "prompt_tokens": 32638,
+      "answers": [
+        "8997414"
+      ],
+      "pred": " **8997414**.",
+      "score": 1.0,
+      "prefill_s": 8.618650276213884,
+      "decode_s": 0.49098919704556465
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 26,
+      "prompt_tokens": 32634,
+      "answers": [
+        "3540804"
+      ],
+      "pred": " **3540804**.",
+      "score": 1.0,
+      "prefill_s": 8.62236771825701,
+      "decode_s": 0.494544074870646
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 27,
+      "prompt_tokens": 32634,
+      "answers": [
+        "9299999"
+      ],
+      "pred": " **9299999**.",
+      "score": 1.0,
+      "prefill_s": 8.622372654266655,
+      "decode_s": 0.4933803640305996
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 28,
+      "prompt_tokens": 32633,
+      "answers": [
+        "7397133"
+      ],
+      "pred": " **7397133**.",
+      "score": 1.0,
+      "prefill_s": 8.629765131510794,
+      "decode_s": 0.49487580079585314
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 29,
+      "prompt_tokens": 32636,
+      "answers": [
+        "1991770"
+      ],
+      "pred": " **1991770**.",
+      "score": 1.0,
+      "prefill_s": 8.611380874179304,
+      "decode_s": 0.49065691884607077
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 30,
+      "prompt_tokens": 32637,
+      "answers": [
+        "6527651"
+      ],
+      "pred": " **6527651**.",
+      "score": 1.0,
+      "prefill_s": 8.628516347147524,
+      "decode_s": 0.490146204829216
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 31,
+      "prompt_tokens": 32039,
+      "answers": [
+        "9916223"
+      ],
+      "pred": " **9916223**.",
+      "score": 1.0,
+      "prefill_s": 8.400606468319893,
+      "decode_s": 0.4869617661461234
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 32,
+      "prompt_tokens": 32633,
+      "answers": [
+        "4644818"
+      ],
+      "pred": " **4644818**.",
+      "score": 1.0,
+      "prefill_s": 8.624777861870825,
+      "decode_s": 0.4939876366406679
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 33,
+      "prompt_tokens": 32637,
+      "answers": [
+        "9047756"
+      ],
+      "pred": " **9047756**.",
+      "score": 1.0,
+      "prefill_s": 8.628545608371496,
+      "decode_s": 0.49286379013210535
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 34,
+      "prompt_tokens": 32638,
+      "answers": [
+        "3512758"
+      ],
+      "pred": " **3512758**.",
+      "score": 1.0,
+      "prefill_s": 8.621729640290141,
+      "decode_s": 0.4914054162800312
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 35,
+      "prompt_tokens": 32640,
+      "answers": [
+        "3081380"
+      ],
+      "pred": " **3081380**.",
+      "score": 1.0,
+      "prefill_s": 8.601112372241914,
+      "decode_s": 0.49151464737951756
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 36,
+      "prompt_tokens": 32638,
+      "answers": [
+        "7407179"
+      ],
+      "pred": " **7407179**.",
+      "score": 1.0,
+      "prefill_s": 8.698200047016144,
+      "decode_s": 0.48767656926065683
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 37,
+      "prompt_tokens": 32640,
+      "answers": [
+        "1845941"
+      ],
+      "pred": " **1845941**.",
+      "score": 1.0,
+      "prefill_s": 8.600841542705894,
+      "decode_s": 0.4935750886797905
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 38,
+      "prompt_tokens": 32635,
+      "answers": [
+        "3509650"
+      ],
+      "pred": " **3509650**.",
+      "score": 1.0,
+      "prefill_s": 8.628149338066578,
+      "decode_s": 0.49333124700933695
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 39,
+      "prompt_tokens": 32632,
+      "answers": [
+        "9489662"
+      ],
+      "pred": " **9489662**.",
+      "score": 1.0,
+      "prefill_s": 8.613356249406934,
+      "decode_s": 0.4907440897077322
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 40,
+      "prompt_tokens": 32636,
+      "answers": [
+        "6528650"
+      ],
+      "pred": " **6528650**.",
+      "score": 1.0,
+      "prefill_s": 8.615227558650076,
+      "decode_s": 0.48996392916888
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 41,
+      "prompt_tokens": 32044,
+      "answers": [
+        "4774086"
+      ],
+      "pred": " **4774086**.",
+      "score": 1.0,
+      "prefill_s": 8.388029083609581,
+      "decode_s": 0.4869838133454323
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 42,
+      "prompt_tokens": 32639,
+      "answers": [
+        "6292072"
+      ],
+      "pred": " **6292072**.",
+      "score": 1.0,
+      "prefill_s": 8.629272141493857,
+      "decode_s": 0.4902121052145958
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 43,
+      "prompt_tokens": 32639,
+      "answers": [
+        "3387367"
+      ],
+      "pred": " **3387367**.",
+      "score": 1.0,
+      "prefill_s": 8.634746506810188,
+      "decode_s": 0.48996021691709757
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 44,
+      "prompt_tokens": 32041,
+      "answers": [
+        "6809941"
+      ],
+      "pred": " **6809941**.",
+      "score": 1.0,
+      "prefill_s": 8.421076889149845,
+      "decode_s": 0.4861145243048668
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 45,
+      "prompt_tokens": 32637,
+      "answers": [
+        "2609505"
+      ],
+      "pred": " **2609505**.",
+      "score": 1.0,
+      "prefill_s": 8.656543832272291,
+      "decode_s": 0.4907106561586261
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 46,
+      "prompt_tokens": 32635,
+      "answers": [
+        "7249468"
+      ],
+      "pred": " **7249468**.",
+      "score": 1.0,
+      "prefill_s": 8.651462996378541,
+      "decode_s": 0.49121733475476503
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 47,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5291735"
+      ],
+      "pred": " **5291735**.",
+      "score": 1.0,
+      "prefill_s": 8.657842740416527,
+      "decode_s": 0.4922262141481042
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 48,
+      "prompt_tokens": 32041,
+      "answers": [
+        "1793871"
+      ],
+      "pred": " **1793871**.",
+      "score": 1.0,
+      "prefill_s": 8.437307242304087,
+      "decode_s": 0.4887558566406369
+    },
+    {
+      "task": "niah_multikey_1",
+      "index": 49,
+      "prompt_tokens": 32640,
+      "answers": [
+        "8149182"
+      ],
+      "pred": " **8149182**.",
+      "score": 1.0,
+      "prefill_s": 8.620102533139288,
+      "decode_s": 0.4922599671408534
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 0,
+      "prompt_tokens": 32112,
+      "answers": [
+        "8033522"
+      ],
+      "pred": " **8033522**.",
+      "score": 1.0,
+      "prefill_s": 8.410116617567837,
+      "decode_s": 0.4862341871485114
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 1,
+      "prompt_tokens": 32099,
+      "answers": [
+        "6739421"
+      ],
+      "pred": " **6739421**.",
+      "score": 1.0,
+      "prefill_s": 8.431109658442438,
+      "decode_s": 0.486126477830112
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 2,
+      "prompt_tokens": 32562,
+      "answers": [
+        "5780206"
+      ],
+      "pred": " **5780206**.",
+      "score": 1.0,
+      "prefill_s": 8.627924748696387,
+      "decode_s": 0.4906868143007159
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 3,
+      "prompt_tokens": 32567,
+      "answers": [
+        "3723300"
+      ],
+      "pred": " **3723300**.",
+      "score": 1.0,
+      "prefill_s": 8.642646664753556,
+      "decode_s": 0.4903954705223441
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 4,
+      "prompt_tokens": 32110,
+      "answers": [
+        "2120473"
+      ],
+      "pred": " **2120473**.",
+      "score": 1.0,
+      "prefill_s": 8.446437440812588,
+      "decode_s": 0.4880934273824096
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 5,
+      "prompt_tokens": 32617,
+      "answers": [
+        "2546236"
+      ],
+      "pred": " **2546236**.",
+      "score": 1.0,
+      "prefill_s": 8.666492114774883,
+      "decode_s": 0.49115632846951485
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 6,
+      "prompt_tokens": 32553,
+      "answers": [
+        "8026423"
+      ],
+      "pred": " **8026423**.",
+      "score": 1.0,
+      "prefill_s": 8.74341675825417,
+      "decode_s": 0.4885166911408305
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 7,
+      "prompt_tokens": 32575,
+      "answers": [
+        "9950691"
+      ],
+      "pred": " **9950691**.",
+      "score": 1.0,
+      "prefill_s": 8.657422213815153,
+      "decode_s": 0.49323409236967564
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 8,
+      "prompt_tokens": 32119,
+      "answers": [
+        "5475827"
+      ],
+      "pred": " **5475827**.",
+      "score": 1.0,
+      "prefill_s": 8.463288119994104,
+      "decode_s": 0.4909865213558078
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 9,
+      "prompt_tokens": 32606,
+      "answers": [
+        "4446951"
+      ],
+      "pred": " **4446951**.",
+      "score": 1.0,
+      "prefill_s": 8.671364802867174,
+      "decode_s": 0.4920951575040817
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 10,
+      "prompt_tokens": 32626,
+      "answers": [
+        "2987028"
+      ],
+      "pred": " **2987028**.",
+      "score": 1.0,
+      "prefill_s": 8.673462009057403,
+      "decode_s": 0.493522965349257
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 11,
+      "prompt_tokens": 32512,
+      "answers": [
+        "5121530"
+      ],
+      "pred": " **2249479**.",
+      "score": 0.0,
+      "prefill_s": 8.60715129505843,
+      "decode_s": 0.4922569887712598
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 12,
+      "prompt_tokens": 32609,
+      "answers": [
+        "1680448"
+      ],
+      "pred": " **1680448**.",
+      "score": 1.0,
+      "prefill_s": 8.697117518633604,
+      "decode_s": 0.49331660475581884
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 13,
+      "prompt_tokens": 32619,
+      "answers": [
+        "4449716"
+      ],
+      "pred": " **4449716**.",
+      "score": 1.0,
+      "prefill_s": 8.681533015333116,
+      "decode_s": 0.49247016850858927
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 14,
+      "prompt_tokens": 32620,
+      "answers": [
+        "6681785"
+      ],
+      "pred": " **6681785**.",
+      "score": 1.0,
+      "prefill_s": 8.659178669564426,
+      "decode_s": 0.49237116426229477
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 15,
+      "prompt_tokens": 32560,
+      "answers": [
+        "2216514"
+      ],
+      "pred": " **2216514**.",
+      "score": 1.0,
+      "prefill_s": 8.629806159064174,
+      "decode_s": 0.49078731052577496
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 16,
+      "prompt_tokens": 32122,
+      "answers": [
+        "6453605"
+      ],
+      "pred": " **6453605**.",
+      "score": 1.0,
+      "prefill_s": 8.44910055398941,
+      "decode_s": 0.4870482860133052
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 17,
+      "prompt_tokens": 32145,
+      "answers": [
+        "3932770"
+      ],
+      "pred": " **3932770**.",
+      "score": 1.0,
+      "prefill_s": 8.468252838589251,
+      "decode_s": 0.4877618597820401
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 18,
+      "prompt_tokens": 32604,
+      "answers": [
+        "7928495"
+      ],
+      "pred": " **7928495**.",
+      "score": 1.0,
+      "prefill_s": 8.648221028968692,
+      "decode_s": 0.49097877088934183
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 19,
+      "prompt_tokens": 32103,
+      "answers": [
+        "6878998"
+      ],
+      "pred": " **6878998**.",
+      "score": 1.0,
+      "prefill_s": 8.459056219086051,
+      "decode_s": 0.4874904565513134
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 20,
+      "prompt_tokens": 32585,
+      "answers": [
+        "6776797"
+      ],
+      "pred": " **6776797**.",
+      "score": 1.0,
+      "prefill_s": 8.660851168446243,
+      "decode_s": 0.4909188225865364
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 21,
+      "prompt_tokens": 32558,
+      "answers": [
+        "9675278"
+      ],
+      "pred": " **9675278**.",
+      "score": 1.0,
+      "prefill_s": 8.6503880424425,
+      "decode_s": 0.4893123870715499
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 22,
+      "prompt_tokens": 32629,
+      "answers": [
+        "1853144"
+      ],
+      "pred": " **1853144**.",
+      "score": 1.0,
+      "prefill_s": 8.673972275108099,
+      "decode_s": 0.49110906664282084
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 23,
+      "prompt_tokens": 32578,
+      "answers": [
+        "1586206"
+      ],
+      "pred": " **1586206**.",
+      "score": 1.0,
+      "prefill_s": 8.669693533331156,
+      "decode_s": 0.4905389389023185
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 24,
+      "prompt_tokens": 32555,
+      "answers": [
+        "1556306"
+      ],
+      "pred": " **1556306**.",
+      "score": 1.0,
+      "prefill_s": 8.658483193255961,
+      "decode_s": 0.48951257206499577
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 25,
+      "prompt_tokens": 32120,
+      "answers": [
+        "6140910"
+      ],
+      "pred": " **6140910**.",
+      "score": 1.0,
+      "prefill_s": 8.444491053000093,
+      "decode_s": 0.4890023451298475
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 26,
+      "prompt_tokens": 32582,
+      "answers": [
+        "2719702"
+      ],
+      "pred": " **2719702**.",
+      "score": 1.0,
+      "prefill_s": 8.666928152553737,
+      "decode_s": 0.49071054905653
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 27,
+      "prompt_tokens": 32524,
+      "answers": [
+        "6102685"
+      ],
+      "pred": " **6102685**.",
+      "score": 1.0,
+      "prefill_s": 8.647479172796011,
+      "decode_s": 0.4898040071129799
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 28,
+      "prompt_tokens": 32561,
+      "answers": [
+        "1788951"
+      ],
+      "pred": " **1788951**.",
+      "score": 1.0,
+      "prefill_s": 8.667503889650106,
+      "decode_s": 0.4899966027587652
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 29,
+      "prompt_tokens": 32633,
+      "answers": [
+        "6977290"
+      ],
+      "pred": " **6977290**.",
+      "score": 1.0,
+      "prefill_s": 8.683062572032213,
+      "decode_s": 0.4913604576140642
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 30,
+      "prompt_tokens": 32639,
+      "answers": [
+        "5494133"
+      ],
+      "pred": " **5494133**.",
+      "score": 1.0,
+      "prefill_s": 8.6786292437464,
+      "decode_s": 0.49110462982207537
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 31,
+      "prompt_tokens": 32096,
+      "answers": [
+        "6701456"
+      ],
+      "pred": " **6701456**.",
+      "score": 1.0,
+      "prefill_s": 8.448413436301053,
+      "decode_s": 0.4868500540032983
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 32,
+      "prompt_tokens": 32609,
+      "answers": [
+        "1483082"
+      ],
+      "pred": " **1483082**.",
+      "score": 1.0,
+      "prefill_s": 8.677124151960015,
+      "decode_s": 0.49126333370804787
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 33,
+      "prompt_tokens": 32607,
+      "answers": [
+        "3036588"
+      ],
+      "pred": " **3036588**.",
+      "score": 1.0,
+      "prefill_s": 8.676463752985,
+      "decode_s": 0.4925803607329726
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 34,
+      "prompt_tokens": 32557,
+      "answers": [
+        "8976699"
+      ],
+      "pred": " **8976699**.",
+      "score": 1.0,
+      "prefill_s": 8.661080589517951,
+      "decode_s": 0.49113874323666096
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 35,
+      "prompt_tokens": 32601,
+      "answers": [
+        "9248634"
+      ],
+      "pred": " **9248634**.",
+      "score": 1.0,
+      "prefill_s": 8.676017126999795,
+      "decode_s": 0.49093715846538544
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 36,
+      "prompt_tokens": 32555,
+      "answers": [
+        "3503443"
+      ],
+      "pred": " **3503443**.",
+      "score": 1.0,
+      "prefill_s": 8.65661005768925,
+      "decode_s": 0.49069664627313614
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 37,
+      "prompt_tokens": 32547,
+      "answers": [
+        "7580502"
+      ],
+      "pred": " **7580502**.",
+      "score": 1.0,
+      "prefill_s": 8.656428755261004,
+      "decode_s": 0.48986760154366493
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 38,
+      "prompt_tokens": 32626,
+      "answers": [
+        "7505552"
+      ],
+      "pred": " **7505552**.",
+      "score": 1.0,
+      "prefill_s": 8.672419183887541,
+      "decode_s": 0.491599528118968
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 39,
+      "prompt_tokens": 32606,
+      "answers": [
+        "9680914"
+      ],
+      "pred": " **9680914**.",
+      "score": 1.0,
+      "prefill_s": 8.679181803017855,
+      "decode_s": 0.4922403870150447
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 40,
+      "prompt_tokens": 32584,
+      "answers": [
+        "3328360"
+      ],
+      "pred": " **3328360**.",
+      "score": 1.0,
+      "prefill_s": 8.666090292856097,
+      "decode_s": 0.4927769871428609
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 41,
+      "prompt_tokens": 32533,
+      "answers": [
+        "3846377"
+      ],
+      "pred": " **3846377**.",
+      "score": 1.0,
+      "prefill_s": 8.658989721909165,
+      "decode_s": 0.4909163611009717
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 42,
+      "prompt_tokens": 32608,
+      "answers": [
+        "4213230"
+      ],
+      "pred": " **4213230**.",
+      "score": 1.0,
+      "prefill_s": 8.659496211446822,
+      "decode_s": 0.49189937114715576
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 43,
+      "prompt_tokens": 32106,
+      "answers": [
+        "4854069"
+      ],
+      "pred": " **4854069**.",
+      "score": 1.0,
+      "prefill_s": 8.470988001674414,
+      "decode_s": 0.4877450242638588
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 44,
+      "prompt_tokens": 32097,
+      "answers": [
+        "8786009"
+      ],
+      "pred": " **8786009**.",
+      "score": 1.0,
+      "prefill_s": 8.471204142086208,
+      "decode_s": 0.48842081520706415
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 45,
+      "prompt_tokens": 32640,
+      "answers": [
+        "9850769"
+      ],
+      "pred": " **9850769**.",
+      "score": 1.0,
+      "prefill_s": 8.660120647400618,
+      "decode_s": 0.49169022403657436
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 46,
+      "prompt_tokens": 32626,
+      "answers": [
+        "8538219"
+      ],
+      "pred": " **8538219**.",
+      "score": 1.0,
+      "prefill_s": 8.672225316055119,
+      "decode_s": 0.49136699829250574
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 47,
+      "prompt_tokens": 32598,
+      "answers": [
+        "8626118"
+      ],
+      "pred": " **8626118**.",
+      "score": 1.0,
+      "prefill_s": 8.663630372844636,
+      "decode_s": 0.49745703767985106
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 48,
+      "prompt_tokens": 32629,
+      "answers": [
+        "2742498"
+      ],
+      "pred": " **2742498**.",
+      "score": 1.0,
+      "prefill_s": 8.661784215830266,
+      "decode_s": 0.4911030363291502
+    },
+    {
+      "task": "niah_multikey_2",
+      "index": 49,
+      "prompt_tokens": 32624,
+      "answers": [
+        "7093046"
+      ],
+      "pred": " **7093046**.",
+      "score": 1.0,
+      "prefill_s": 8.638698210008442,
+      "decode_s": 0.4907677173614502
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 0,
+      "prompt_tokens": 32575,
+      "answers": [
+        "8e5949be-db18-408e-9941-1e21cd858c73"
+      ],
+      "pred": " **8e5949be-db18-408e-9941-1e21cd858c73**.",
+      "score": 1.0,
+      "prefill_s": 8.588253473863006,
+      "decode_s": 1.7039868384599686
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 1,
+      "prompt_tokens": 32620,
+      "answers": [
+        "d64847fe-22db-4741-ab6f-a94ee871ef90"
+      ],
+      "pred": " **d64847fe-22db-4741-ab6f-a94ee871ef90**.",
+      "score": 1.0,
+      "prefill_s": 8.597007433883846,
+      "decode_s": 1.5608479101210833
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 2,
+      "prompt_tokens": 32551,
+      "answers": [
+        "7ac67d92-af26-4f40-93cf-fc3025f57be1"
+      ],
+      "pred": " **7ac67d92-af26-4f40-93cf-fc3025f57be1**.",
+      "score": 1.0,
+      "prefill_s": 8.602439608424902,
+      "decode_s": 1.6542582623660564
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 3,
+      "prompt_tokens": 30742,
+      "answers": [
+        "e112ba9b-2037-4ae2-b946-5613dd7e712e"
+      ],
+      "pred": " **e112ba9b-2037-4ae2-b946-5613dd7e712e**.",
+      "score": 1.0,
+      "prefill_s": 7.924995688721538,
+      "decode_s": 1.6628160839900374
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 4,
+      "prompt_tokens": 32579,
+      "answers": [
+        "0620b97e-0d91-465e-b355-0bc15889cf11"
+      ],
+      "pred": " **0620b97e-0d91-465e-b355-0bc15889cf11**.",
+      "score": 1.0,
+      "prefill_s": 8.620370439253747,
+      "decode_s": 1.7592496778815985
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 5,
+      "prompt_tokens": 32629,
+      "answers": [
+        "a0408300-c0a9-460f-b8cd-fd9eeaac7f78"
+      ],
+      "pred": ": **a0408300-c0a9-460f-b8cd-fd9eeaac7f78**.",
+      "score": 1.0,
+      "prefill_s": 8.619395627640188,
+      "decode_s": 1.6146575473248959
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 6,
+      "prompt_tokens": 32600,
+      "answers": [
+        "641e6f53-4092-4e98-8a99-e7e977dabd02"
+      ],
+      "pred": ": **641e6f53-4092-4e98-8a99-e7e977dabd02**.",
+      "score": 1.0,
+      "prefill_s": 8.61615767236799,
+      "decode_s": 1.8045249823480844
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 7,
+      "prompt_tokens": 30754,
+      "answers": [
+        "28d5026b-b4fd-4986-9701-275e809cfbc4"
+      ],
+      "pred": " **28d5026b-b4fd-4986-9701-275e809cfbc4**.",
+      "score": 1.0,
+      "prefill_s": 8.180703091435134,
+      "decode_s": 1.6681860331445932
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 8,
+      "prompt_tokens": 30743,
+      "answers": [
+        "e20fe49e-5010-4523-80b5-fba68612a474"
+      ],
+      "pred": ": **e20fe49e-5010-4523-80b5-fba68612a474**.",
+      "score": 1.0,
+      "prefill_s": 7.926528981886804,
+      "decode_s": 1.7625472620129585
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 9,
+      "prompt_tokens": 30753,
+      "answers": [
+        "6028c9a3-ac6a-4e6e-82ac-6e1617e54b20"
+      ],
+      "pred": ": **6028c9a3-ac6a-4e6e-82ac-6e1617e54b20**.",
+      "score": 1.0,
+      "prefill_s": 7.93563945312053,
+      "decode_s": 1.7617199132218957
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 10,
+      "prompt_tokens": 30781,
+      "answers": [
+        "97e4bb01-2aee-4b3d-9ad7-1d3135ffa2ec"
+      ],
+      "pred": " **97e4bb01-2aee-4b3d-9ad7-1d3135ffa2ec**.",
+      "score": 1.0,
+      "prefill_s": 7.929841718636453,
+      "decode_s": 1.5709187220782042
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 11,
+      "prompt_tokens": 30862,
+      "answers": [
+        "5029bddf-6d31-4a9e-a7ab-a6962322edf1"
+      ],
+      "pred": ": **5029bddf-6d31-4a9e-a7ab-a6962322edf1**.",
+      "score": 1.0,
+      "prefill_s": 8.001713099889457,
+      "decode_s": 1.620612814091146
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 12,
+      "prompt_tokens": 30768,
+      "answers": [
+        "c5afde7f-58c1-4b3d-8499-720a0307c520"
+      ],
+      "pred": " **c5afde7f-58c1-4b3d-8499-720a0307c520**.",
+      "score": 1.0,
+      "prefill_s": 8.027956178411841,
+      "decode_s": 1.7591763772070408
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 13,
+      "prompt_tokens": 32621,
+      "answers": [
+        "107036a3-5f2d-4a9d-be44-3e0cca7236ad"
+      ],
+      "pred": ": **107036a3-5f2d-4a9d-be44-3e0cca7236ad**.",
+      "score": 1.0,
+      "prefill_s": 8.632294720038772,
+      "decode_s": 1.7106308238580823
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 14,
+      "prompt_tokens": 32534,
+      "answers": [
+        "45e682ab-98e6-448b-b2aa-9f01539e33a3"
+      ],
+      "pred": ": **45e682ab-98e6-448b-b2aa-9f01539e33a3**.",
+      "score": 1.0,
+      "prefill_s": 8.612835125997663,
+      "decode_s": 1.7993707479909062
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 15,
+      "prompt_tokens": 32615,
+      "answers": [
+        "1d1271f7-6b3e-48b4-8611-265a682fa54c"
+      ],
+      "pred": " **1d1271f7-6b3e-48b4-8611-265a682fa54c**.",
+      "score": 1.0,
+      "prefill_s": 8.635327414609492,
+      "decode_s": 1.8512902138754725
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 16,
+      "prompt_tokens": 30757,
+      "answers": [
+        "d71b3adb-24e8-4cbd-acf4-1897d9008fdc"
+      ],
+      "pred": ": **d71b3adb-24e8-4cbd-acf4-1897d9008fdc**.",
+      "score": 1.0,
+      "prefill_s": 7.927796899341047,
+      "decode_s": 1.5207616416737437
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 17,
+      "prompt_tokens": 30786,
+      "answers": [
+        "6b9902fb-3d8b-4110-83de-1469686aa35d"
+      ],
+      "pred": ": **6b9902fb-3d8b-4110-83de-1469686aa35d**.",
+      "score": 1.0,
+      "prefill_s": 7.950228149071336,
+      "decode_s": 1.761709955520928
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 18,
+      "prompt_tokens": 32527,
+      "answers": [
+        "02304ddc-f981-4fe0-80c0-c656fec4452c"
+      ],
+      "pred": " **02304ddc-f981-4fe0-80c0-c656fec4452c**.",
+      "score": 1.0,
+      "prefill_s": 8.612124036997557,
+      "decode_s": 1.6123299058526754
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 19,
+      "prompt_tokens": 32621,
+      "answers": [
+        "45aa8084-84d5-42ef-9897-e685313df317"
+      ],
+      "pred": " **45aa8084-84d5-42ef-9897-e685313df317**.",
+      "score": 1.0,
+      "prefill_s": 8.67185822315514,
+      "decode_s": 1.7111106058582664
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 20,
+      "prompt_tokens": 30754,
+      "answers": [
+        "6ce4238d-0236-4166-90d0-593e93e0fb2d"
+      ],
+      "pred": ": **6ce4238d-0236-4166-90d0-593e93e0fb2d**.",
+      "score": 1.0,
+      "prefill_s": 7.925380455330014,
+      "decode_s": 1.8139452561736107
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 21,
+      "prompt_tokens": 32607,
+      "answers": [
+        "d793d65c-1bc8-42dd-93c8-8a75acec23df"
+      ],
+      "pred": " **d793d65c-1bc8-42dd-93c8-8a75acec23df**.",
+      "score": 1.0,
+      "prefill_s": 8.629393360577524,
+      "decode_s": 1.658840263262391
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 22,
+      "prompt_tokens": 30761,
+      "answers": [
+        "cda84507-08df-40d8-baa3-832d30da73a0"
+      ],
+      "pred": ": **cda84507-08df-40d8-baa3-832d30da73a0**.",
+      "score": 1.0,
+      "prefill_s": 7.927775116637349,
+      "decode_s": 1.670823223888874
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 23,
+      "prompt_tokens": 30733,
+      "answers": [
+        "465d1ce7-651c-4b64-9660-34489c58cc01"
+      ],
+      "pred": " **465d1ce7-651c-4b64-9660-34489c58cc01**.",
+      "score": 1.0,
+      "prefill_s": 7.935543441213667,
+      "decode_s": 1.7695612320676446
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 24,
+      "prompt_tokens": 32535,
+      "answers": [
+        "798f5d58-90ae-4f8f-910d-a139645a9286"
+      ],
+      "pred": " **798f5d58-90ae-4f8f-910d-a139645a9286**.",
+      "score": 1.0,
+      "prefill_s": 8.613339996896684,
+      "decode_s": 1.8054800387471914
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 25,
+      "prompt_tokens": 32608,
+      "answers": [
+        "68bf98e6-11e6-4889-9e92-58c4ae75a6d4"
+      ],
+      "pred": " **68bf98e6-11e6-4889-9e92-58c4ae75a6d4**.",
+      "score": 1.0,
+      "prefill_s": 8.607366328127682,
+      "decode_s": 1.8045768374577165
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 26,
+      "prompt_tokens": 32630,
+      "answers": [
+        "19408beb-74be-4a62-ba51-6c1e021a97b2"
+      ],
+      "pred": " **19408beb-74be-4a62-ba51-6c1e021a97b2**.",
+      "score": 1.0,
+      "prefill_s": 8.626092963851988,
+      "decode_s": 1.7074068430811167
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 27,
+      "prompt_tokens": 32621,
+      "answers": [
+        "800d2302-b09a-4eef-9976-c6eb0c351b37"
+      ],
+      "pred": ": **800d2302-b09a-4eef-9976-c6eb0c351b37**.",
+      "score": 1.0,
+      "prefill_s": 8.626387157477438,
+      "decode_s": 1.753644859418273
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 28,
+      "prompt_tokens": 32575,
+      "answers": [
+        "864c0812-01ce-4c04-bff9-0a347b1a2aef"
+      ],
+      "pred": ": **864c0812-01ce-4c04-bff9-0a347b1a2aef**.",
+      "score": 1.0,
+      "prefill_s": 8.614048613235354,
+      "decode_s": 1.7526739779859781
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 29,
+      "prompt_tokens": 30734,
+      "answers": [
+        "6a5e5304-25d7-4794-9a14-6cb3847d14d0"
+      ],
+      "pred": ": **6a5e5304-25d7-4794-9a14-6cb3847d14d0**.",
+      "score": 1.0,
+      "prefill_s": 7.9189040046185255,
+      "decode_s": 1.8527876948937774
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 30,
+      "prompt_tokens": 32601,
+      "answers": [
+        "d1f9d369-2e4c-44c0-b7dc-16ffec716585"
+      ],
+      "pred": " **d1f9d369-2e4c-44c0-b7dc-16ffec716585**.",
+      "score": 1.0,
+      "prefill_s": 8.623626847751439,
+      "decode_s": 1.7047320110723376
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 31,
+      "prompt_tokens": 32577,
+      "answers": [
+        "8b88aab9-292a-474b-b20e-f9326eff9529"
+      ],
+      "pred": " **8b88aab9-292a-474b-b20e-f9326eff9529**.",
+      "score": 1.0,
+      "prefill_s": 8.618511765263975,
+      "decode_s": 1.60565697401762
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 32,
+      "prompt_tokens": 30770,
+      "answers": [
+        "c804e02c-5aa6-4e0d-8c06-355bb801f124"
+      ],
+      "pred": ": **c804e02c-5aa6-4e0d-8c06-355bb801f124**.",
+      "score": 1.0,
+      "prefill_s": 7.929113477468491,
+      "decode_s": 1.8071806700900197
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 33,
+      "prompt_tokens": 32568,
+      "answers": [
+        "7cab4310-71d7-42d8-bb75-5da150429349"
+      ],
+      "pred": " **7cab4310-71d7-42d8-bb75-5da150429349**.",
+      "score": 1.0,
+      "prefill_s": 8.580947848968208,
+      "decode_s": 1.7041126070544124
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 34,
+      "prompt_tokens": 32587,
+      "answers": [
+        "28a5800f-5d0c-4407-b959-3fa4fcd354e4"
+      ],
+      "pred": ": **28a5800f-5d0c-4407-b959-3fa4fcd354e4**.",
+      "score": 1.0,
+      "prefill_s": 8.611892277374864,
+      "decode_s": 1.8012696458026767
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 35,
+      "prompt_tokens": 30841,
+      "answers": [
+        "dcfc4948-bc60-4d23-8ee2-23d01f84d424"
+      ],
+      "pred": ": **dcfc4948-bc60-4d23-8ee2-23d01f84d424**.",
+      "score": 1.0,
+      "prefill_s": 7.933841295540333,
+      "decode_s": 1.7132001370191574
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 36,
+      "prompt_tokens": 30762,
+      "answers": [
+        "6124f953-b27d-41a2-ae61-9daaa80493ac"
+      ],
+      "pred": ": **6124f953-b27d-41a2-ae61-9daaa80493ac**.",
+      "score": 1.0,
+      "prefill_s": 7.918362301774323,
+      "decode_s": 1.6632619304582477
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 37,
+      "prompt_tokens": 30770,
+      "answers": [
+        "aaa8cc35-feb5-41a3-b1bc-3f80b473986b"
+      ],
+      "pred": ": **aaa8cc35-feb5-41a3-b1bc-3f80b473986b**.",
+      "score": 1.0,
+      "prefill_s": 7.9337709322571754,
+      "decode_s": 1.5680430103093386
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 38,
+      "prompt_tokens": 30756,
+      "answers": [
+        "8407ef7c-f4a1-4a3c-9c5f-c0acba0f3409"
+      ],
+      "pred": ": **8407ef7c-f4a1-4a3c-9c5f-c0acba0f3409**.",
+      "score": 1.0,
+      "prefill_s": 7.904024166055024,
+      "decode_s": 1.6649396903812885
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 39,
+      "prompt_tokens": 30760,
+      "answers": [
+        "af535118-8a5d-4a31-9a82-5e3de0a7112c"
+      ],
+      "pred": " **af535118-8a5d-4a31-9a82-5e3de0a7112c**.",
+      "score": 1.0,
+      "prefill_s": 7.907452834770083,
+      "decode_s": 1.76050232257694
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 40,
+      "prompt_tokens": 32552,
+      "answers": [
+        "f10e3eb3-ad73-4935-bcb0-268eb33b1e48"
+      ],
+      "pred": " **f10e3eb3-ad73-4935-bcb0-268eb33b1e48**.",
+      "score": 1.0,
+      "prefill_s": 8.580684307031333,
+      "decode_s": 1.607572240754962
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 41,
+      "prompt_tokens": 32632,
+      "answers": [
+        "2c3553a3-32dc-4e15-aa63-9436944d4610"
+      ],
+      "pred": " **2c3553a3-32dc-4e15-aa63-9436944d4610**.",
+      "score": 1.0,
+      "prefill_s": 8.668054260313511,
+      "decode_s": 1.802896206267178
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 42,
+      "prompt_tokens": 32610,
+      "answers": [
+        "7ad03249-e9f5-490a-8f95-7e98086bcfde"
+      ],
+      "pred": " **7ad03249-e9f5-490a-8f95-7e98086bcfde**.",
+      "score": 1.0,
+      "prefill_s": 8.607892115600407,
+      "decode_s": 1.7043365258723497
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 43,
+      "prompt_tokens": 32611,
+      "answers": [
+        "4dfff29d-704c-4c32-8097-12da98ac4777"
+      ],
+      "pred": " **4dfff29d-704c-4c32-8097-12da98ac4777**.",
+      "score": 1.0,
+      "prefill_s": 8.610239784233272,
+      "decode_s": 1.7076437650248408
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 44,
+      "prompt_tokens": 32497,
+      "answers": [
+        "8d99ed90-88a1-47c1-b50f-998b4cb21ec2"
+      ],
+      "pred": " **8d99ed90-88a1-47c1-b50f-998b4cb21ec2**.",
+      "score": 1.0,
+      "prefill_s": 8.56638250220567,
+      "decode_s": 1.7012898940593004
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 45,
+      "prompt_tokens": 30739,
+      "answers": [
+        "74e7f516-89f7-4903-99cd-4671e8ee5bc4"
+      ],
+      "pred": " **74e7f516-89f7-4903-99cd-4671e8ee5bc4**.",
+      "score": 1.0,
+      "prefill_s": 8.192989524453878,
+      "decode_s": 1.7146637393161654
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 46,
+      "prompt_tokens": 30771,
+      "answers": [
+        "2b55aee4-10e3-45ee-8a57-2ee391cbde15"
+      ],
+      "pred": " **2b55aee4-10e3-45ee-8a57-2ee391cbde15**.",
+      "score": 1.0,
+      "prefill_s": 7.910099086351693,
+      "decode_s": 1.6239122953265905
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 47,
+      "prompt_tokens": 32633,
+      "answers": [
+        "0a4c0ffb-b4da-4947-811d-b3659d422292"
+      ],
+      "pred": " **0a4c0ffb-b4da-4947-811d-b3659d422292**.",
+      "score": 1.0,
+      "prefill_s": 8.606658558361232,
+      "decode_s": 1.6613556779921055
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 48,
+      "prompt_tokens": 32639,
+      "answers": [
+        "4dc2af39-7bf3-4c96-82cc-dae8e0a9ffa7"
+      ],
+      "pred": ": **4dc2af39-7bf3-4c96-82cc-dae8e0a9ffa7**.",
+      "score": 1.0,
+      "prefill_s": 8.603737730532885,
+      "decode_s": 1.5667918380349874
+    },
+    {
+      "task": "niah_multikey_3",
+      "index": 49,
+      "prompt_tokens": 32596,
+      "answers": [
+        "b18e93e3-39fa-4736-840c-e4284c6d7abc"
+      ],
+      "pred": " **b18e93e3-39fa-4736-840c-e4284c6d7abc**.",
+      "score": 1.0,
+      "prefill_s": 8.587678162381053,
+      "decode_s": 1.7095611272379756
+    }
+  ]
+}
