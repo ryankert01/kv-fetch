@@ -1,0 +1,47 @@
+inherit: tasks.yaml
+
+# Revival sweep: which datasets make KV pages go important -> dormant -> important again,
+# and which cheap signals (query trajectory, key summaries) could predict it.
+
+definitions:
+  pinned:
+    decode_region: aged          # reasoning chains / earlier turns are self-generated context
+    recent_tokens: 128
+
+trace:
+  record_q: true
+  key_summary: true
+
+sweep:
+  model: Qwen/Qwen3-4B
+  max_context: 32768
+  max_new_tokens: 2048           # all steps incl. fed follow-up tokens
+  context_margin: 256            # tokens left free for chat-template variance
+  samples_per_task: 16           # index % 2 == 0 -> explore, 1 -> confirm (held out)
+  # early / mid / late (0.1 / 0.5 / 0.9 depth) + strongest retrieval layer, from the Qwen3-4B
+  # small-eval probe (results/small_eval/Qwen__Qwen3-4B__32768.json: traced_layers)
+  layers: [4, 18, 29, 32]
+  trace_dir: /share3/saves/ryankert_l/kvfetch/traces/sweep
+  records_dir: results/sweep/records
+  claims_dir: results/sweep/claims
+  shard_size: 4
+  tasks:
+    math500:
+      level: 5
+      instruction: "\nPlease reason step by step, and put your final answer within \\boxed{}."
+    longbench_v2:
+      length: short
+      template: "Please read the following text and answer the question below.\n\n<text>\n{context}\n</text>\n\nWhat is the correct answer to this question: {question}\nChoices:\n(A) {a}\n(B) {b}\n(C) {c}\n(D) {d}\n\nFormat your response as follows: \"The correct answer is (insert answer here)\"."
+    scbench_kv:
+      instruction: "Extract the value corresponding to the specified key in the JSON object below."
+      turn_max_new: 128            # verbose answers restate the 36-char key before the value
+    scbench_repoqa:
+      instruction: "Below is a code repository. For each function description I give you, find that function in the repository and output its complete code."
+      turn_max_new: 400
+      languages: null
+    qmsum:
+      template: "You are given a meeting transcript and a query containing a question or instruction. Answer the query in one or more sentences.\n\nTranscript:\n{context}\n\nNow, answer the query based on the above meeting transcript in one or more sentences.\n\nQuery: {input}\nAnswer:"
+    pg19_summary:
+      template: "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough."
+      chars_per_token_upper: 8
+  out: results/sweep/sweep_runs.json
