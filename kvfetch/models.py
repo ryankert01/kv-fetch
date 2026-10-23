@@ -32,7 +32,8 @@ def model_dims(model) -> ModelDims:
 def load_model(name: str, cfg: dict, device: str | torch.device, traced: bool = False,
                attn_implementation: str | None = None, config_overrides: dict | None = None):
     """Load (model, tokenizer). ``traced=True`` routes attention through the tracer
-    (SDPA for the output, explicit fp32 softmax for the recorded probabilities)."""
+    (SDPA for the output, explicit fp32 softmax for the recorded probabilities).
+    ``attn_implementation`` may also name an implementation registered by the caller."""
     mcfg = cfg["models"]
     if traced:
         register_traced_attention()

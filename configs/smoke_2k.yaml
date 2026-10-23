@@ -1,0 +1,22 @@
+inherit: tasks.yaml
+
+# Spec §10 step 2: validate hooks and schema on a tiny (2K) context.
+smoke:
+  models:                              # cover GQA group sizes 4 / 6 / 2, qkv bias, q/k-norm
+    - meta-llama/Llama-3.2-1B-Instruct
+    - Qwen/Qwen2.5-1.5B-Instruct
+    - Qwen/Qwen3-1.7B
+  task: niah_single_2
+  context_length: 2048
+  decode_steps: 32
+  # fp32 isolation: tracer recompute vs HF eager weights from the same forward (same q/k)
+  fp32_atol: 1.0e-5                    # |delta m| per page <= atol + logit_rtol * max|logit| of the row
+  fp32_logit_rtol: 5.0e-7              # ~4x fp32 eps: rounding of a logit x is ~eps*|x|
+  # fp32 cross-path: traced SDPA decode vs teacher-forced eager. Different kernels give
+  # ~1e-6 relative hidden-state drift, which large-logit models (Qwen2.5) amplify.
+  fp32_crosspath_atol: 5.0e-3
+  # bf16 checks (the precision we actually run)
+  row_sum_atol: 5.0e-3                 # |sum_p m - 1| per (s,l,h), fp16 storage
+  bf16_topb_frac: 0.05
+  bf16_min_topb_overlap: 0.9           # mean |TopB(traced) & TopB(eager)| / B
+  out: results/smoke_2k.json

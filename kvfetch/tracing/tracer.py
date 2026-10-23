@@ -26,21 +26,27 @@ TRACED_ATTN = "kvtrace_sdpa"
 _ACTIVE: "AttentionTracer | None" = None
 
 
-def traced_sdpa_attention(module, query, key, value, attention_mask, dropout=0.0, scaling=None, **kwargs):
-    tracer = _ACTIVE
-    if tracer is not None:
-        if kwargs.get("sliding_window") is not None:
-            raise NotImplementedError("tracer assumes full attention (sliding_window set)")
-        tracer.observe(module.layer_idx, query, key, scaling)
-    return sdpa_attention_forward(module, query, key, value, attention_mask,
-                                  dropout=dropout, scaling=scaling, **kwargs)
+def active_tracer() -> "AttentionTracer | None":
+    return _ACTIVE
 
 
-def register_traced_attention() -> None:
-    AttentionInterface.register(TRACED_ATTN, traced_sdpa_attention)
+def make_traced(inner):
+    """Wrap an HF attention function so the active tracer observes (query, key) first."""
+    def traced(module, query, key, value, attention_mask, dropout=0.0, scaling=None, **kwargs):
+        tracer = _ACTIVE
+        if tracer is not None:
+            if kwargs.get("sliding_window") is not None:
+                raise NotImplementedError("tracer assumes full attention (sliding_window set)")
+            tracer.observe(module.layer_idx, query, key, scaling)
+        return inner(module, query, key, value, attention_mask, dropout=dropout, scaling=scaling, **kwargs)
+    return traced
+
+
+def register_traced_attention(name: str = TRACED_ATTN, inner=sdpa_attention_forward, mask: str = "sdpa") -> None:
+    AttentionInterface.register(name, make_traced(inner))
     # Without a mask function HF skips mask creation for unknown implementations, and
     # SDPA's is_causal=True is top-left aligned: wrong for chunked prefill.
-    AttentionMaskInterface.register(TRACED_ATTN, ALL_MASK_ATTENTION_FUNCTIONS._global_mapping["sdpa"])
+    AttentionMaskInterface.register(name, ALL_MASK_ATTENTION_FUNCTIONS._global_mapping[mask])
 
 
 def page_reduce(probs: torch.Tensor, page_size: int, n_pages: int) -> torch.Tensor:
