@@ -32,6 +32,7 @@ small_eval:
     k: [1, 4]
     predictors: [last_step, ema]  # naive reference baselines only (not Phase 2)
     topk_coverage_K: [128, 256, 512, 1024]
+  analysis_workers: 16            # CPU processes analyzing traces while the GPU keeps tracing
   max_wall_s: 3600
   trace_dir: traces/small_eval
   out_dir: results/small_eval

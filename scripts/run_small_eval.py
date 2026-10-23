@@ -4,8 +4,10 @@
       [--set small_eval.model=Qwen/Qwen3-4B --set small_eval.context_length=32768]
 """
 import argparse
+import multiprocessing as mp
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -68,6 +70,10 @@ def build_samples(task: dict, tok, cfg: dict, se: dict):
     raise ValueError(task["kind"])
 
 
+def _analyze_path(path: Path, cfg: dict, acfg: dict) -> dict:
+    return analyze_trace(load_trace(path), cfg, acfg)
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     add_config_args(p)
@@ -75,6 +81,8 @@ def main() -> None:
     args = p.parse_args()
     cfg = config_from_args(args)
     se = cfg["small_eval"]
+    # CPU analysis of each trace overlaps GPU tracing of the next ones
+    pool = ProcessPoolExecutor(se["analysis_workers"], mp_context=mp.get_context("spawn"))
     ps = cfg["definitions"]["page_size"]
     tag = f"{se['model'].replace('/', '__')}__{se['context_length']}"
     trace_dir = Path(se["trace_dir"]) / tag
@@ -100,7 +108,7 @@ def main() -> None:
         t0 = time.perf_counter()
         samples = build_samples(task, tok, cfg, se)
         t_build = time.perf_counter() - t0
-        recs, paths = [], []
+        recs, futures = [], []
         t0 = time.perf_counter()
         for s in samples:
             ids = torch.tensor(encode(tok, s.prompt)["input_ids"], device=args.device)
@@ -113,30 +121,34 @@ def main() -> None:
                 extra["query_needle_pages"] = needle_pages(tok, s, ps)
             meta = trace_meta(prov=prov, tracer=tr, res=res, task=task["name"], sample_id=f"{task['name']}-{s.index}", **extra)
             n = len(res.tokens)
-            paths.append(save_trace(trace_dir / task["name"] / f"{s.index:04d}.safetensors", meta=meta,
-                                    mass=tr.mass[:n], obs_mass=tr.obs_numpy(), tokens=np.array(res.tokens),
-                                    prompt_ids=ids.cpu().numpy(), fmt=cfg["trace"]["format"], topk=cfg["trace"]["topk"]))
+            path = save_trace(trace_dir / task["name"] / f"{s.index:04d}.safetensors", meta=meta,
+                              mass=tr.mass[:n], obs_mass=tr.obs_numpy(), tokens=np.array(res.tokens),
+                              prompt_ids=ids.cpu().numpy(), fmt=cfg["trace"]["format"], topk=cfg["trace"]["topk"])
+            futures.append(pool.submit(_analyze_path, path, cfg, se["analysis"]))
             recs.append({"index": s.index, "prompt_tokens": int(ids.numel()), "natural_stop_step": res.natural_stop_step,
                          "score": score, "pred": pred[:200], "prefill_s": res.prefill_s, "decode_s": res.decode_s})
         t_trace = time.perf_counter() - t0
         print(f"[small_eval] {task['name']}: traced {len(samples)} samples in {t_trace:.0f}s", flush=True)
 
+        task_out[task["name"]] = (recs, futures, t_build, t_trace)
+
+    for name, (recs, futures, t_build, t_trace) in list(task_out.items()):
         t0 = time.perf_counter()
-        analyses = [analyze_trace(load_trace(pth), cfg, se["analysis"]) for pth in paths]
-        pooled = pool_results(analyses, cfg, se["analysis"])
-        t_an = time.perf_counter() - t0
+        pooled = pool_results([f.result() for f in futures], cfg, se["analysis"])
+        t_an = time.perf_counter() - t0  # time spent waiting on analysis after tracing finished
         scores = [r["score"] for r in recs if r["score"] is not None]
         stops_at = [r["natural_stop_step"] for r in recs]
-        task_out[task["name"]] = {
+        task_out[name] = {
             "metrics": pooled,
             "task_score": 100 * float(np.mean(scores)) if scores else None,
             "natural_stop_steps": stops_at,
             "samples": recs,
-            "timing": {"build_s": t_build, "trace_s": t_trace, "analysis_s": t_an,
+            "timing": {"build_s": t_build, "trace_s": t_trace, "analysis_wait_s": t_an,
                        "mean_prefill_s": float(np.mean([r["prefill_s"] for r in recs])),
                        "mean_decode_step_ms": 1e3 * float(np.mean([r["decode_s"] / max(1, se["decode_steps"] - 1) for r in recs]))},
         }
-        print(f"[small_eval] {task['name']}: analysis {t_an:.0f}s", flush=True)
+        print(f"[small_eval] {name}: waited {t_an:.0f}s for analysis after tracing", flush=True)
+    pool.shutdown()
 
     timing["total_s"] = time.perf_counter() - t_all
     timing["within_budget"] = timing["total_s"] <= se["max_wall_s"]
