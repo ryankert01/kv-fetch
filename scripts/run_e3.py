@@ -40,7 +40,11 @@ def thinking(cfg: dict) -> dict:
 def parse_run(label: str, cfg: dict) -> SD.Method:
     name, _, budget = label.partition("@")
     e3 = cfg["e3"]
-    spec = cfg["selectors"]["candidates"][e3["ours"]] if name == "ours" else {}
+    variants = e3.get("variants") or {}
+    if name in variants:                     # an ablation of ours: the ours engine with another spec
+        name, spec = "ours", variants[name]
+    else:
+        spec = cfg["selectors"]["candidates"][e3["ours"]] if name == "ours" else {}
     return SD.Method(name, int(budget) if budget else None, spec=spec, window=e3["snapkv_window"])
 
 
@@ -194,7 +198,11 @@ def merge(cfg: dict) -> None:
             c = paired(f"ours@{btok}", other)
             if c:
                 comparisons[f"ours@{btok} - {other}"] = c
-        for m in ("quest", "snapkv", "oracle"):
+        for v in e3.get("variants") or {}:
+            c = paired(f"ours@{btok}", f"{v}@{btok}")
+            if c:
+                comparisons[f"ours@{btok} - {v}@{btok}"] = c
+        for m in ("quest", "snapkv", "oracle", *(e3.get("variants") or {})):
             c = paired(f"{m}@{btok}", "full")
             if c:
                 comparisons[f"{m}@{btok} - full"] = c
