@@ -4,8 +4,9 @@
 
 Needs the replayed keys (scripts/dump_keys.py). Per (trace, layer, budget): missing attention for
 each method, and for token/chunk-level methods how many 16-token pages their selection touches per
-page of budget (1 = page-aligned; transfers get scattered as it grows). Writes one JSON per shard;
---merge combines the shards into results/baselines_<split>.json.
+page of budget (1 = page-aligned; transfers get scattered as it grows). Writes one JSON per trace
+under e2.shard_dir (skipping traces already done or whose keys are not dumped yet); --merge
+combines them into results/baselines_<split>.json.
 """
 import argparse
 import json
@@ -188,7 +189,7 @@ def main() -> None:
     e2 = cfg["e2"]
     shard_dir = Path(e2["shard_dir"])
     if args.merge:
-        rows = [r for f in sorted(shard_dir.glob(f"{args.split}_*.json")) for r in json.load(open(f))["per_sample"]]
+        rows = [json.load(open(f))["result"] for f in sorted((shard_dir / args.split).rglob("*.json"))]
         summary = summarize(rows)
         a = summary["ALL"]
         print(f"split={args.split} traces={len(rows)}")
@@ -208,14 +209,18 @@ def main() -> None:
     i, n = map(int, args.shard.split("/"))
     paths = [pth for pth in sorted(Path(cfg["sweep"]["trace_dir"]).rglob("*.safetensors"))
              if load_meta(pth).get("split") == args.split][i::n]
-    rows = []
+    prov = provenance(cfg, model=cfg["sweep"]["model"], context_length=cfg["sweep"]["max_context"], split=args.split)
     for pth in paths:
+        out = shard_dir / args.split / pth.parent.name / f"{pth.stem}.json"
+        if out.exists():
+            continue
+        if not (Path(e2["keys_dir"]) / pth.parent.name / pth.name).exists():
+            print(f"[e2] {pth.parent.name}/{pth.name}: keys not dumped yet, skipped", flush=True)
+            continue
         with torch.no_grad():
-            rows.append(analyze(pth, cfg, args.device))
+            res = analyze(pth, cfg, args.device)
+        write_json(out, {"provenance": prov, "result": res})
         print(f"[e2] {pth.parent.name}/{pth.name} done", flush=True)
-    write_json(shard_dir / f"{args.split}_{i}of{n}.json",
-               {"provenance": provenance(cfg, model=cfg["sweep"]["model"], context_length=cfg["sweep"]["max_context"],
-                                         split=args.split), "per_sample": rows})
 
 
 if __name__ == "__main__":
