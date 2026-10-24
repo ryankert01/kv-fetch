@@ -78,3 +78,10 @@ selectors:
     gap_closed_min: 0.5
     cost_ratio_max: 1.5
   blas_threads: 4
+
+# scripts/dump_keys.py (EXPERIMENTS.md, E2): full keys for emulating published selectors offline.
+e2:
+  keys_dir: /share3/saves/ryankert_l/kvfetch/keys/reasoning
+  check_steps: 3                     # steps per trace whose mass is recomputed from q and the keys
+  check_atol: 0.05                   # max abs page-mass gap: ~2e-4 replayed on the GPU model that traced,
+                                     # ~1e-2 across models (A6000 vs 6000 Ada); a misaligned step gives > 0.07
