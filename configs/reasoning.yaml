@@ -85,3 +85,10 @@ e2:
   check_steps: 3                     # steps per trace whose mass is recomputed from q and the keys
   check_atol: 0.05                   # max abs page-mass gap: ~2e-4 replayed on the GPU model that traced,
                                      # ~1e-2 across models (A6000 vs 6000 Ada); a misaligned step gives > 0.07
+  budgets_tokens: [512, 1024, 2048]
+  step_chunk: 128                    # steps per GPU batch of exact attention
+  shard_dir: results/reasoning/e2_shards
+  shadowkv: {chunk: 8, outlier_share: 0.05}   # landmark chunk size; budget share kept for outlier chunks
+  infinigen: {partial_ratio: 0.25}   # share of key channels used to speculate attention
+  lessismore: {recent_share: 0.25}   # budget share for the recency window
+  ours: [quest, hyb_last_q75, fused_sum_w25]  # selectors.candidates rerun on the exact attention
