@@ -107,6 +107,16 @@ read per page per step.
   history adds nothing (ours vs ours-nohist +0.0, CI95 [-3.8, 3.8]); the mean-key mix carries the
   gain (ours-nohist vs quest-sum +10.0, CI95 [4.6, 15.8]); vote vs summed shares for Quest bounds
   does not matter (+0.8). The "importance history" part of the method is not supported online.
+- E3 caveats (raised by a mock NeurIPS review, 2026-10-25; overall 2/6). Budgets count attended KV
+  only: page summaries stay on the GPU for every token (48.25 B vs 32 B per token per KV head for
+  Quest), about 1.6K (ours) vs 1.1K (Quest) tokens of KV per layer at 17K context. At equal total
+  GPU memory ours@512 compares with Quest@1K, which wins (40.4% vs 33.3%). The SnapKV-shared variant
+  does not protect the prompt's pages and is a weak eviction baseline (offline it misses only 0.6
+  points more attention than Quest, online it collapses). Not yet run: a per-head oracle (to test
+  whether the 1K gap is the shared-set ceiling), mean_mix values other than 0.5, R-KV / RaaS /
+  LessIsMore online, a 32K generation cap. The 30 problems are the ones whose traces chose the
+  selector in E1/E2b. Truncated-output repetition: scripts/e3_repetition.py
+  (results/e3_repetition_explore.json).
 
 ## Timeline
 

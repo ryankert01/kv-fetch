@@ -140,6 +140,11 @@ e3:
     - [oracle@512, quest@512]
     - [ours-nohist@512, quest-sum@512]
     - [quest-sum@512, quest@512]
+  repetition:                        # scripts/e3_repetition.py (added 2026-10-25, after the results)
+    tail_chars: 6000                 # last characters of each truncated output
+    ngram_chars: 20                  # character n-grams, every position
+    threshold: 0.5                   # looping = more than this share of n-grams already seen in the tail
+    thresholds: [0.25, 0.5, 0.75]    # sensitivity
   out_dir: results/reasoning/e3_shards
   claims_dir: results/reasoning/e3_claims
   gate:                              # EXPERIMENTS.md E3 pilot gate (written before E1)

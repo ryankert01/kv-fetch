@@ -1,0 +1,766 @@
+{
+  "provenance": {
+    "model": "Qwen/Qwen3-4B",
+    "context_length": 17238,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "c8f993407222cab8f6a28bf40cf1f529899bf960",
+      "dirty": true
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/reasoning.yaml",
+    "timestamp": "2026-10-25T04:19:30",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX A6000",
+    "transformers": "4.57.1",
+    "repetition": {
+      "tail_chars": 6000,
+      "ngram_chars": 20,
+      "threshold": 0.5,
+      "thresholds": [
+        0.25,
+        0.5,
+        0.75
+      ]
+    },
+    "main_threshold": "0.5",
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": "aged",
+          "recent_tokens": 128
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "revival": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "dormancy_steps": [
+          4,
+          8,
+          16,
+          32,
+          64
+        ],
+        "dormancy_main": 16,
+        "eviction_budget_fracs": [
+          0.05,
+          0.1
+        ],
+        "q_lags": [
+          1,
+          4,
+          16,
+          64
+        ],
+        "q_pca_var": 0.9
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64,
+        "record_q": true,
+        "key_summary": true,
+        "head_reduce": "kv_mean"
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "LEAD_TIME_MIN": 1,
+        "GRADUAL_SHARE_MIN": 0.25,
+        "GRADUAL_SHARE_DENOMINATOR": "onsets_after_low"
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 32768,
+        "chat_template_kwargs": {
+          "enable_thinking": false,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "sweep": {
+        "model": "Qwen/Qwen3-4B",
+        "max_context": 17408,
+        "max_new_tokens": 16384,
+        "context_margin": 256,
+        "samples_per_task": 16,
+        "layers": [
+          4,
+          18,
+          29,
+          32
+        ],
+        "trace_dir": "/share3/saves/ryankert_l/kvfetch/traces/reasoning",
+        "records_dir": "results/reasoning/records",
+        "claims_dir": "results/reasoning/claims",
+        "shard_size": 2,
+        "tasks": {
+          "aime24": {
+            "loader": "aime",
+            "name": "aime24",
+            "dataset": "HuggingFaceH4___aime_2024/**/*.arrow",
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 30
+          },
+          "aime25": {
+            "loader": "aime",
+            "name": "aime25",
+            "dataset": "math-ai___aime25/**/*.arrow",
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 30
+          },
+          "math500": {
+            "level": 5,
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 16
+          }
+        },
+        "out": "results/sweep/sweep_runs.json"
+      },
+      "signals": {
+        "names": [
+          "attn_last",
+          "attn_ema",
+          "key_mean",
+          "quest",
+          "q_trend"
+        ],
+        "ks": [
+          1,
+          4,
+          16
+        ],
+        "budget_frac": 0.05,
+        "ema_alpha": 0.3,
+        "q_slope_steps": 4
+      },
+      "compare": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048,
+          4096
+        ],
+        "evict_methods": [
+          "streaming",
+          "h2o",
+          "tova",
+          "snapkv",
+          "raas",
+          "lazy",
+          "rkv",
+          "oracle"
+        ],
+        "prefetch_methods": [
+          "on_demand",
+          "stale_q",
+          "q_trend",
+          "oasis_ub"
+        ],
+        "lookahead_steps": [
+          1,
+          4
+        ],
+        "gpu_capacity_mult": 2.0,
+        "snapkv_window": 32,
+        "important_mult": 1.0,
+        "rkv_lambda": 0.5,
+        "q_slope_steps": 4,
+        "blas_threads": 4
+      },
+      "selectors": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "candidates": {
+          "quest": {
+            "quest_share": 1.0
+          },
+          "quest_recent12": {
+            "quest_share": 1.0,
+            "recent_share": 0.125
+          },
+          "quest_recent25": {
+            "quest_share": 1.0,
+            "recent_share": 0.25
+          },
+          "hist_last": {
+            "quest_share": 0.0,
+            "history": "last"
+          },
+          "hist_peak": {
+            "quest_share": 0.0,
+            "history": "peak"
+          },
+          "hyb_last_q75": {
+            "quest_share": 0.75,
+            "history": "last"
+          },
+          "hyb_last_q50": {
+            "quest_share": 0.5,
+            "history": "last"
+          },
+          "hyb_last_q25": {
+            "quest_share": 0.25,
+            "history": "last"
+          },
+          "hyb_peak_q75": {
+            "quest_share": 0.75,
+            "history": "peak"
+          },
+          "hyb_peak_q50": {
+            "quest_share": 0.5,
+            "history": "peak"
+          },
+          "hyb_peak_q25": {
+            "quest_share": 0.25,
+            "history": "peak"
+          },
+          "shared_quest": {
+            "quest_share": 1.0,
+            "shared": true
+          },
+          "fused_sum_w25": {
+            "fuse": "sum",
+            "history_weight": 0.25,
+            "history": "last"
+          },
+          "fused_sum_w50": {
+            "fuse": "sum",
+            "history_weight": 0.5,
+            "history": "last"
+          },
+          "fused_max": {
+            "fuse": "max",
+            "history": "last"
+          },
+          "quest_mean50": {
+            "quest_share": 1.0,
+            "mean_mix": 0.5
+          },
+          "hyb_last_q75_mean50": {
+            "quest_share": 0.75,
+            "history": "last",
+            "mean_mix": 0.5
+          },
+          "fused_sum_w25_mean50": {
+            "fuse": "sum",
+            "history_weight": 0.25,
+            "history": "last",
+            "mean_mix": 0.5
+          }
+        },
+        "upper_bounds": [
+          "true_topB",
+          "shared_topB"
+        ],
+        "summary_bytes": 2,
+        "history_bytes": 4,
+        "gate": {
+          "budget_tokens": 1024,
+          "gap_closed_min": 0.5,
+          "cost_ratio_max": 1.5
+        },
+        "blas_threads": 4
+      },
+      "e2": {
+        "keys_dir": "/share3/saves/ryankert_l/kvfetch/keys/reasoning",
+        "check_steps": 3,
+        "check_atol": 0.05,
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "step_chunk": 128,
+        "shard_dir": "results/reasoning/e2_shards",
+        "shadowkv": {
+          "chunk": 8,
+          "outlier_share": 0.05
+        },
+        "infinigen": {
+          "partial_ratio": 0.25,
+          "history_weights": [
+            0.25,
+            0.5
+          ]
+        },
+        "lessismore": {
+          "recent_share": 0.25
+        },
+        "ours": [
+          "quest",
+          "fused_sum_w25",
+          "hyb_last_q75_mean50",
+          "fused_sum_w25_mean50"
+        ]
+      },
+      "e2b": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "step_chunk": 128,
+        "shard_dir": "results/reasoning/e2b_shards",
+        "infinigen_ratios": [
+          0.125,
+          0.1875,
+          0.25
+        ],
+        "shadowkv_outlier_share": 0.05,
+        "plugin_history_weight": 0.25,
+        "ours": [
+          "fused_sum_w25_mean50"
+        ],
+        "gate": {
+          "budgets_tokens": [
+            512,
+            1024
+          ],
+          "modes": [
+            "vote",
+            "sum"
+          ],
+          "page_baselines": [
+            "quest",
+            "arkvale",
+            "shadowkv_page"
+          ],
+          "reduction_min": 0.2,
+          "equal_bytes_rival": "infinigen_r0.1875",
+          "ours_max_bytes": 48.25
+        }
+      },
+      "e3": {
+        "tasks": [
+          "aime24",
+          "aime25"
+        ],
+        "split": "explore",
+        "samples": 8,
+        "sample_group": 4,
+        "batch_size": 12,
+        "sampling": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "top_k": 20
+        },
+        "seed": 20261024,
+        "ours": "fused_sum_w25_mean50",
+        "snapkv_window": 32,
+        "check_budget_tokens": 1024,
+        "runs": [
+          [
+            "full",
+            "quest@1024",
+            "ours@1024",
+            "snapkv@1024"
+          ],
+          [
+            "quest@512",
+            "ours@512",
+            "snapkv@512"
+          ],
+          [
+            "oracle@1024"
+          ],
+          [
+            "ours-nohist@512",
+            "quest-sum@512",
+            "oracle@512"
+          ]
+        ],
+        "variants": {
+          "ours-nohist": {
+            "fuse": "sum",
+            "history_weight": 0.0,
+            "history": "last",
+            "mean_mix": 0.5
+          },
+          "quest-sum": {
+            "fuse": "sum",
+            "history_weight": 0.0,
+            "history": "last"
+          }
+        },
+        "extra_comparisons": [
+          [
+            "oracle@1024",
+            "quest@1024"
+          ],
+          [
+            "oracle@512",
+            "quest@512"
+          ],
+          [
+            "ours-nohist@512",
+            "quest-sum@512"
+          ],
+          [
+            "quest-sum@512",
+            "quest@512"
+          ]
+        ],
+        "repetition": {
+          "tail_chars": 6000,
+          "ngram_chars": 20,
+          "threshold": 0.5,
+          "thresholds": [
+            0.25,
+            0.5,
+            0.75
+          ]
+        },
+        "out_dir": "results/reasoning/e3_shards",
+        "claims_dir": "results/reasoning/e3_claims",
+        "gate": {
+          "budget_tokens": 1024,
+          "baselines": [
+            "quest",
+            "snapkv"
+          ],
+          "margin_points": 5
+        }
+      }
+    }
+  },
+  "runs": {
+    "full": {
+      "n_samples": 240,
+      "n_truncated": 99,
+      "looping_share_of_truncated": {
+        "0.25": 0.09090909090909091,
+        "0.5": 0.020202020202020204,
+        "0.75": 0.010101010101010102
+      },
+      "looping_share_of_all": {
+        "0.25": 0.0375,
+        "0.5": 0.008333333333333333,
+        "0.75": 0.004166666666666667
+      },
+      "median_repeat_share": {
+        "truncated": 0.1376024076241431,
+        "stopped": 0.0739006855040963
+      }
+    },
+    "quest@1024": {
+      "n_samples": 240,
+      "n_truncated": 121,
+      "looping_share_of_truncated": {
+        "0.25": 0.04132231404958678,
+        "0.5": 0.01652892561983471,
+        "0.75": 0.01652892561983471
+      },
+      "looping_share_of_all": {
+        "0.25": 0.020833333333333332,
+        "0.5": 0.008333333333333333,
+        "0.75": 0.008333333333333333
+      },
+      "median_repeat_share": {
+        "truncated": 0.11419495067714429,
+        "stopped": 0.06620966393579669
+      }
+    },
+    "ours@1024": {
+      "n_samples": 240,
+      "n_truncated": 110,
+      "looping_share_of_truncated": {
+        "0.25": 0.01818181818181818,
+        "0.5": 0.00909090909090909,
+        "0.75": 0.00909090909090909
+      },
+      "looping_share_of_all": {
+        "0.25": 0.008333333333333333,
+        "0.5": 0.004166666666666667,
+        "0.75": 0.004166666666666667
+      },
+      "median_repeat_share": {
+        "truncated": 0.10357799699046982,
+        "stopped": 0.06554087945159673
+      }
+    },
+    "snapkv@1024": {
+      "n_samples": 240,
+      "n_truncated": 113,
+      "looping_share_of_truncated": {
+        "0.25": 0.45132743362831856,
+        "0.5": 0.17699115044247787,
+        "0.75": 0.1592920353982301
+      },
+      "looping_share_of_all": {
+        "0.25": 0.2125,
+        "0.5": 0.08333333333333333,
+        "0.75": 0.075
+      },
+      "median_repeat_share": {
+        "truncated": 0.2278883129911386,
+        "stopped": 0.15281725463969237
+      }
+    },
+    "quest@512": {
+      "n_samples": 240,
+      "n_truncated": 167,
+      "looping_share_of_truncated": {
+        "0.25": 0.03592814371257485,
+        "0.5": 0.029940119760479042,
+        "0.75": 0.029940119760479042
+      },
+      "looping_share_of_all": {
+        "0.25": 0.025,
+        "0.5": 0.020833333333333332,
+        "0.75": 0.020833333333333332
+      },
+      "median_repeat_share": {
+        "truncated": 0.1060023407456947,
+        "stopped": 0.07256311653569637
+      }
+    },
+    "ours@512": {
+      "n_samples": 240,
+      "n_truncated": 143,
+      "looping_share_of_truncated": {
+        "0.25": 0.02097902097902098,
+        "0.5": 0.006993006993006993,
+        "0.75": 0.006993006993006993
+      },
+      "looping_share_of_all": {
+        "0.25": 0.0125,
+        "0.5": 0.004166666666666667,
+        "0.75": 0.004166666666666667
+      },
+      "median_repeat_share": {
+        "truncated": 0.09613776960374519,
+        "stopped": 0.060859388062196956
+      }
+    },
+    "snapkv@512": {
+      "n_samples": 240,
+      "n_truncated": 131,
+      "looping_share_of_truncated": {
+        "0.25": 0.5038167938931297,
+        "0.5": 0.2595419847328244,
+        "0.75": 0.2595419847328244
+      },
+      "looping_share_of_all": {
+        "0.25": 0.275,
+        "0.5": 0.14166666666666666,
+        "0.75": 0.14166666666666666
+      },
+      "median_repeat_share": {
+        "truncated": 0.2556428690854372,
+        "stopped": 0.17689349607089117
+      }
+    },
+    "oracle@1024": {
+      "n_samples": 240,
+      "n_truncated": 109,
+      "looping_share_of_truncated": {
+        "0.25": 0.01834862385321101,
+        "0.5": 0.009174311926605505,
+        "0.75": 0.009174311926605505
+      },
+      "looping_share_of_all": {
+        "0.25": 0.008333333333333333,
+        "0.5": 0.004166666666666667,
+        "0.75": 0.004166666666666667
+      },
+      "median_repeat_share": {
+        "truncated": 0.10382879117204481,
+        "stopped": 0.06236415315164688
+      }
+    },
+    "ours-nohist@512": {
+      "n_samples": 240,
+      "n_truncated": 135,
+      "looping_share_of_truncated": {
+        "0.25": 0.02962962962962963,
+        "0.5": 0.014814814814814815,
+        "0.75": 0.014814814814814815
+      },
+      "looping_share_of_all": {
+        "0.25": 0.016666666666666666,
+        "0.5": 0.008333333333333333,
+        "0.75": 0.008333333333333333
+      },
+      "median_repeat_share": {
+        "truncated": 0.10917906704564453,
+        "stopped": 0.0638689182410968
+      }
+    },
+    "quest-sum@512": {
+      "n_samples": 240,
+      "n_truncated": 166,
+      "looping_share_of_truncated": {
+        "0.25": 0.024096385542168676,
+        "0.5": 0.024096385542168676,
+        "0.75": 0.024096385542168676
+      },
+      "looping_share_of_all": {
+        "0.25": 0.016666666666666666,
+        "0.5": 0.016666666666666666,
+        "0.75": 0.016666666666666666
+      },
+      "median_repeat_share": {
+        "truncated": 0.10658752716936967,
+        "stopped": 0.07624143119879619
+      }
+    },
+    "oracle@512": {
+      "n_samples": 240,
+      "n_truncated": 137,
+      "looping_share_of_truncated": {
+        "0.25": 0.0,
+        "0.5": 0.0,
+        "0.75": 0.0
+      },
+      "looping_share_of_all": {
+        "0.25": 0.0,
+        "0.5": 0.0,
+        "0.75": 0.0
+      },
+      "median_repeat_share": {
+        "truncated": 0.0937970239090453,
+        "stopped": 0.06219695703059689
+      }
+    }
+  }
+}
