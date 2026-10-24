@@ -108,3 +108,24 @@ def test_mean_mix_uses_mean_logits():
     assert sel[:, 0, 3].all()
     assert scoring_bytes({"quest_share": 1.0, "mean_mix": 0.5}, 128, 2, 4) == 768
     assert scoring_bytes({"fuse": "sum"}, 128, 2, 4) == 516
+
+
+def test_static_select_modes():
+    from kvfetch.selectors import static_select
+    score = np.array([[[0.0, 5.0, 1.0, 4.0], [0.0, 1.0, 3.0, 4.0]]], np.float32)   # T=1, S=2
+    elig = np.array([[False, True, True, True]])
+    b = np.array([1])
+    assert static_select(score, elig, b, "per_head")[0].tolist() == [[False, True, False, False],
+                                                                     [False, False, False, True]]
+    vote = static_select(score, elig, b, "vote")
+    assert vote[0, 0].tolist() == [False, True, False, False] and (vote[0, 0] == vote[0, 1]).all()
+    mass = np.array([[[0.0, 0.5, 0.1, 0.4], [0.0, 0.1, 0.4, 0.5]]], np.float32)
+    assert static_select(mass, elig, b, "sum", "mass")[0, 0].tolist() == [False, False, False, True]
+
+
+def test_shared_sum_in_run_selector_picks_one_set():
+    tr = _late_page_trace()
+    tr = {k: (np.concatenate([v, v], 1) if k in ("m", "qb") else v) for k, v in tr.items()}
+    tr["init"] = np.concatenate([tr["init"], tr["init"]], 0)
+    sel = run_selector({"fuse": "sum", "history_weight": 0.25, "shared": "sum"}, b=np.ones(8, int), **tr)
+    assert (sel[:, 0] == sel[:, 1]).all() and (sel.sum(-1) == 1).all() and sel[4:, 0, 2].all()

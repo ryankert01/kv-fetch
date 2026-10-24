@@ -10,8 +10,10 @@ A candidate spec (config ``selectors.candidates``) splits the budget in order:
   recent_share  of b_t: the newest eligible pages (one set for all KV heads),
   quest_share   of the rest: best Quest bound,
   the remainder: best observed history, ``history: last`` (mass when last attended) or ``peak``.
-``shared: true`` picks one set for all KV heads of the layer by per-head nomination counts
-(LessIsMore-style), ties broken by the best per-head score.
+``shared: true`` (or ``vote``) picks one set for all KV heads of the layer by per-head nomination
+counts (LessIsMore-style), ties broken by the best per-head score; ``shared: sum`` takes the pages
+with the largest score summed over heads (for attention-share-like scores, i.e. ``fuse``).
+One shared set is what a vLLM paged kernel can read unchanged: a block holds all KV heads.
 ``fuse: sum|max`` replaces the split for the non-recent budget with one score: the softmax of the
 Quest bounds over allowed pages (a pseudo attention share) combined with the observed history,
 ``(1 - history_weight) * quest + history_weight * history`` or their maximum.
@@ -53,6 +55,50 @@ def _shared_topk(score: np.ndarray, k: int) -> np.ndarray:
     return np.broadcast_to(out, (S, P)).copy()
 
 
+def _sum_topk(score: np.ndarray, k: int) -> np.ndarray:
+    """One set for all rows: the k allowed pages with the largest score summed over rows."""
+    ok = np.isfinite(score)
+    tot = np.where(ok.any(0), np.where(ok, score, 0.0).sum(0), -np.inf)
+    return np.broadcast_to(_topk(tot[None], k)[0], score.shape).copy()
+
+
+_PICK = {False: _topk, True: _shared_topk, "vote": _shared_topk, "sum": _sum_topk}
+
+
+def page_shares(score: np.ndarray, eligible: np.ndarray, kind: str) -> np.ndarray:
+    """[T, S, P] -> per-head attention-share-like scores over eligible pages, zero elsewhere: the
+    softmax of logit-like scores (``kind='logit'``, e.g. Quest bounds) or the normalised mass
+    (``'mass'``, e.g. speculated attention)."""
+    allowed = eligible[:, None, :]
+    if kind == "logit":
+        z = np.where(allowed, score, -np.inf)
+        z = np.exp(z - np.where(allowed.any(-1, keepdims=True), z.max(-1, keepdims=True), 0.0))
+    elif kind == "mass":
+        z = np.where(allowed, score, 0.0)
+    else:
+        raise ValueError(kind)
+    tot = z.sum(-1, keepdims=True)
+    return np.divide(z, tot, out=np.zeros_like(z), where=tot > 0)
+
+
+def static_select(score: np.ndarray, eligible: np.ndarray, b: np.ndarray, mode: str, kind: str = "logit") -> np.ndarray:
+    """Stateless top-b_t selection of [T, S, P] scores (higher is better) per KV head
+    (``per_head``) or as one set for all KV heads: ``vote`` (nomination counts, then best score)
+    or ``sum`` (summed ``page_shares``). Returns bool [T, S, P]."""
+    T, S, P = score.shape
+    if mode == "per_head":
+        return mask_from_ranks(rank_desc(score, eligible), b, eligible)
+    if mode == "sum":
+        key = page_shares(score, eligible, kind).sum(1, keepdims=True)
+    elif mode == "vote":
+        nom = mask_from_ranks(rank_desc(score, eligible), b, eligible).sum(1)                     # [T, P]
+        best_rank = rank_desc(np.where(eligible[:, None, :], score, -np.inf).max(1, keepdims=True), eligible)[:, 0]
+        key = (nom.astype(np.float32) * (P + 1) - best_rank)[:, None, :]
+    else:
+        raise ValueError(mode)
+    return np.broadcast_to(mask_from_ranks(rank_desc(key, eligible), b, eligible), score.shape)
+
+
 def mean_logit(q: np.ndarray, ks: np.ndarray, scaling: float, chunk: int = 256) -> np.ndarray:
     """Query logit on each page's mean key, max over the GQA group: [T, H, d] x [3, S, P, d] -> [T, S, P]."""
     T, H, d = q.shape
@@ -84,7 +130,7 @@ def run_selector(spec: dict, *, m: np.ndarray, qb: np.ndarray, init: np.ndarray,
     fuse, w_hist = spec.get("fuse"), spec.get("history_weight", 0.5)
     if spec.get("mean_mix"):
         qb = (1.0 - spec["mean_mix"]) * qb + spec["mean_mix"] * qm
-    pick = _shared_topk if shared else _topk
+    pick = _PICK[shared]
     hist = init.astype(np.float32).copy()
     tiebreak = _RECENCY_TIEBREAK * np.arange(P, dtype=np.float32) / P
     sel = np.zeros((T, S, P), bool)

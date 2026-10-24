@@ -94,3 +94,21 @@ e2:
     history_weights: [0.25, 0.5]     # + observed token history: (1 - w) * speculated + w * history
   lessismore: {recent_share: 0.25}   # budget share for the recency window
   ours: [quest, fused_sum_w25, hyb_last_q75_mean50, fused_sum_w25_mean50]  # selectors.candidates rerun on the exact attention
+
+# scripts/compare_pages.py (EXPERIMENTS.md, E2b): every method at vLLM block granularity (page_size
+# tokens = one vLLM block), per KV head and as one set per layer shared by all KV heads.
+e2b:
+  budgets_tokens: [512, 1024, 2048]
+  step_chunk: 128                    # steps per GPU batch of exact attention
+  shard_dir: results/reasoning/e2b_shards
+  infinigen_ratios: [0.125, 0.1875, 0.25]   # key channels kept on GPU: 32 / 48 / 64 B per token per KV head (fp16)
+  shadowkv_outlier_share: 0.05       # budget share for outlier pages (lowest key cosine to the page mean)
+  plugin_history_weight: 0.25        # ours:infinigen_r*+hist = (1 - w) * speculated page share + w * observed history
+  ours: [fused_sum_w25_mean50]       # selectors.candidates (E1's best)
+  gate:                              # set on 2026-10-24 after E2, before running E2b
+    budgets_tokens: [512, 1024]
+    modes: [vote, sum]               # one set per layer: vLLM's paged kernels and block transfers unchanged
+    page_baselines: [quest, arkvale, shadowkv_page]
+    reduction_min: 0.2               # ours misses >= 20% less than the best page baseline ...
+    equal_bytes_rival: infinigen_r0.1875   # ... and no more than InfiniGen-page at the same metadata bytes
+    ours_max_bytes: 48.25            # bytes/token/head for "ours" candidates: 48 B of summaries + 4 B history per page

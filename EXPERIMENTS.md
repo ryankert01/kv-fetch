@@ -41,6 +41,7 @@ Why this angle (results/compare_explore.json, explore split, 38 Qwen3-4B thinkin
 |---|---|---|---|
 | E1 | Offline screen of training-free selectors | existing reasoning traces, CPU | at 1K, close at least half of the Quest-to-top-B gap (missing attention at most 6.5%), at no more than 1.5x Quest's scoring cost |
 | E2 | Head-to-head with published selectors | ~20 explore traces re-traced with full keys at the traced layers (about 130 MB each) | at 512 and 1K, 20-30% less missing attention than the best published selector |
+| E2b | Page-level head-to-head at vLLM block granularity (added 2026-10-24, see Status) | E2's replayed keys, GPU | at 512 and 1K, one page set per layer: ours misses at least 20% less than the best of Quest, ArkVale, ShadowKV-page, and no more than InfiniGen-page at the same GPU metadata bytes |
 | E3 | Online accuracy (main result) | sparse decoding in HF, batched; Qwen3-4B main, Qwen3-8B scale check | pilot: at 1K, at least 5 points above the best baseline on AIME (avg@8, paired by problem) |
 | E4 | System cost | analytic model first, then a prototype | GPU memory at equal accuracy; PCIe bytes/step; tokens/s vs batch size |
 | E5 | Mechanism and final numbers | confirm split + held-out benchmarks | revival statistics, eviction ceiling, the blind decision-point thresholds (evaluated once) |
@@ -64,6 +65,21 @@ read per page per step.
 - Budgets 512 / 1K / 2K (4K for reference). Methods: full attention, SnapKV, R-KV, RaaS, Quest,
   LessIsMore, SeerAttention-R (released gates if available), the best E2 baseline, ours.
 - Needs batched decoding (about 12 sequences per 48 GB card at 16K) to fit in days, not weeks.
+
+## Status
+
+- E1 (results/selectors_explore.json): coverage criterion passed (best candidate misses 6.1% at 1K,
+  63% of Quest's gap to true top-B closed); scoring cost 1.51x Quest, just over the 1.5x limit.
+- E2 (results/baselines_explore.json): failed as written. Token-level selectors beat every page
+  selector on coverage, even the page ceiling (InfiniGen best case 3.6% vs true top-B pages 5.0% at
+  1K), but their selections touch about 3x more pages.
+- Decision (user, 2026-10-24): page granularity, so the selector drops into vLLM. A 16-token page is
+  one vLLM block; one page set per layer shared by all KV heads is a sub-block-table that vLLM's
+  paged kernels and block transfers read unchanged (a block holds all KV heads).
+- E2b replaces E2 as the head-to-head: every method selects pages, token methods are adapted
+  (InfiniGen's speculated attention summed per page), per KV head and shared per layer. Its gate
+  narrows E2's comparison class to page-level methods after seeing E2; that is a degree of freedom
+  spent, so the confirm split and the held-out benchmarks remain the real test.
 
 ## Timeline
 
