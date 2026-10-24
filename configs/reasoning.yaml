@@ -89,6 +89,8 @@ e2:
   step_chunk: 128                    # steps per GPU batch of exact attention
   shard_dir: results/reasoning/e2_shards
   shadowkv: {chunk: 8, outlier_share: 0.05}   # landmark chunk size; budget share kept for outlier chunks
-  infinigen: {partial_ratio: 0.25}   # share of key channels used to speculate attention
+  infinigen:
+    partial_ratio: 0.25              # share of key channels used to speculate attention
+    history_weights: [0.25, 0.5]     # + observed token history: (1 - w) * speculated + w * history
   lessismore: {recent_share: 0.25}   # budget share for the recency window
-  ours: [quest, hyb_last_q75, fused_sum_w25]  # selectors.candidates rerun on the exact attention
+  ours: [quest, fused_sum_w25, hyb_last_q75_mean50, fused_sum_w25_mean50]  # selectors.candidates rerun on the exact attention

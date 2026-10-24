@@ -68,7 +68,15 @@ def analyze(path: Path, cfg: dict, device: str) -> dict:
         spread = {m: np.zeros(nb) for m in TOKEN_METHODS}
         m_rec = np.zeros((T, S, P), np.float32)
         qb_rec = np.zeros((T, S, P), np.float32)
+        qm_rec = np.zeros((T, S, P), np.float32)
         cur_sets = torch.zeros((nb, T, N), dtype=torch.bool)
+        # InfiniGen + observed history (token level, stateful): history starts from the prefill
+        # window's page mass spread over each page's tokens, then holds each token's renormalised
+        # attention from the last step it was attended.
+        hws = e2["infinigen"]["history_weights"]
+        init_tok = torch.from_numpy(tr.obs_mass[:, li].astype(np.float32).mean(0) / ps).to(device)[:, tok_page]
+        hist = init_tok[None, None].repeat(nb, len(hws), 1, 1)                     # [nb, nw, S, N]
+        acc_h = np.zeros((nb, len(hws)))
         cs = e2["step_chunk"]
         for a0 in range(0, T, cs):
             sl = slice(a0, min(T, a0 + cs))
@@ -81,6 +89,7 @@ def analyze(path: Path, cfg: dict, device: str) -> dict:
             m_rec[sl] = m_c.cpu().numpy()
             qpg = fit_pages(quest_scores(q[sl], pg, scaling), P)
             qb_rec[sl] = qpg.cpu().numpy()
+            qm_rec[sl] = fit_pages(landmark_scores(q[sl], pg, scaling), P).cpu().numpy()   # mean-key logits
             ark = fit_pages(arkvale_scores(q[sl], pg, scaling), P)
             lm = landmark_scores(q[sl], ch, scaling)
             spec = partial_channel_scores(q[sl], k, chans, scaling)
@@ -112,6 +121,15 @@ def analyze(path: Path, cfg: dict, device: str) -> dict:
                 masks["true_page"] = expand(topk_mask(m_c, bp, allowed_pg[sl]), ps, N)
                 masks["quest"] = expand(topk_mask(qpg, bp, allowed_pg[sl]), ps, N)
                 masks["arkvale"] = expand(topk_mask(ark, bp, allowed_pg[sl]), ps, N)
+                for wi, w in enumerate(hws):
+                    for j in range(c):
+                        f = (1.0 - w) * spec[j] + w * hist[bi, wi]
+                        sel = topk_mask(f[None], bt[j:j + 1], allowed_tok[sl][j:j + 1])[0]
+                        att_j = sel | pinned_tok[sl][j][None, :]
+                        mj = a[j] * att_j
+                        acc_h[bi, wi] += float((mj.sum(-1) / tot[j]).sum())
+                        obs = mj / mj.sum(-1, keepdim=True).clamp(min=torch.finfo(mj.dtype).tiny)
+                        hist[bi, wi] = torch.where(att_j, obs, hist[bi, wi])
                 for name, msk in masks.items():
                     cov = (base + (a * (msk & allowed_tok[sl][:, None, :])).sum(-1)) / tot
                     acc[name][bi] += float(cov.sum())
@@ -128,9 +146,11 @@ def analyze(path: Path, cfg: dict, device: str) -> dict:
                 r[name] = {"missing": 1.0 - acc[name][bi] / (T * S)}
                 if name in spread:
                     r[name]["pages_touched_per_budget_page"] = spread[name][bi] / (T * S)
+            for wi, w in enumerate(hws):
+                r[f"infinigen+hist_w{w:g}"] = {"missing": 1.0 - acc_h[bi, wi] / (T * S)}
             for name in e2["ours"]:
                 sel = run_selector(sc["candidates"][name], m=m_rec, qb=qb_rec, init=init, eligible=elig, exist=exist,
-                                   b=b_pages[bi])
+                                   b=b_pages[bi], qm=qm_rec)
                 r[f"ours:{name}"] = {"missing": 1.0 - coverage(sel | pinned_pg[:, None, :], m_rec)}
             res[str(btok)] = r
         out["layers"][str(layer)] = res
