@@ -135,6 +135,11 @@ e3:
   variants:                          # ablations of ours: same engine, other fused specs (selectors.py keys)
     ours-nohist: {fuse: sum, history_weight: 0.0, history: last, mean_mix: 0.5}   # no observed history
     quest-sum: {fuse: sum, history_weight: 0.0, history: last}                     # Quest bounds, summed shares only
+  extra_comparisons:                 # added 2026-10-25 after seeing the results: headroom over Quest, ablation steps
+    - [oracle@1024, quest@1024]
+    - [oracle@512, quest@512]
+    - [ours-nohist@512, quest-sum@512]
+    - [quest-sum@512, quest@512]
   out_dir: results/reasoning/e3_shards
   claims_dir: results/reasoning/e3_claims
   gate:                              # EXPERIMENTS.md E3 pilot gate (written before E1)

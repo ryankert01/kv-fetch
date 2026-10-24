@@ -206,6 +206,10 @@ def merge(cfg: dict) -> None:
             c = paired(f"{m}@{btok}", "full")
             if c:
                 comparisons[f"{m}@{btok} - full"] = c
+    for a, b in e3.get("extra_comparisons") or []:
+        c = paired(a, b)
+        if c:
+            comparisons[f"{a} - {b}"] = c
     gc = e3["gate"]
     btok = gc["budget_tokens"]
     base = [f"{m}@{btok}" for m in gc["baselines"] if f"{m}@{btok}" in summary]
