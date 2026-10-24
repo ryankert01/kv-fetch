@@ -46,3 +46,35 @@ compare:
   rkv_lambda: 0.5                # R-KV: weight of importance vs (1 - lambda) redundancy
   q_slope_steps: 4               # ours: query slope from q[t] - q[t-4]
   blas_threads: 4                # per analysis worker
+
+# scripts/compare_selectors.py (EXPERIMENTS.md, E1): training-free selectors for tiered KV. Candidates
+# read only the current query (Quest bound) and attention they observed; upper bounds read the truth.
+selectors:
+  budgets_tokens: [512, 1024, 2048]
+  candidates:                        # see kvfetch/selectors.py for the spec keys
+    quest:             {quest_share: 1.0}
+    quest_recent12:    {quest_share: 1.0, recent_share: 0.125}
+    quest_recent25:    {quest_share: 1.0, recent_share: 0.25}
+    hist_last:         {quest_share: 0.0, history: last}
+    hist_peak:         {quest_share: 0.0, history: peak}
+    hyb_last_q75:      {quest_share: 0.75, history: last}
+    hyb_last_q50:      {quest_share: 0.5, history: last}
+    hyb_last_q25:      {quest_share: 0.25, history: last}
+    hyb_peak_q75:      {quest_share: 0.75, history: peak}
+    hyb_peak_q50:      {quest_share: 0.5, history: peak}
+    hyb_peak_q25:      {quest_share: 0.25, history: peak}
+    shared_quest:      {quest_share: 1.0, shared: true}
+    fused_sum_w25:     {fuse: sum, history_weight: 0.25, history: last}
+    fused_sum_w50:     {fuse: sum, history_weight: 0.5, history: last}
+    fused_max:         {fuse: max, history: last}
+    quest_mean50:      {quest_share: 1.0, mean_mix: 0.5}
+    hyb_last_q75_mean50: {quest_share: 0.75, history: last, mean_mix: 0.5}
+    fused_sum_w25_mean50: {fuse: sum, history_weight: 0.25, history: last, mean_mix: 0.5}
+  upper_bounds: [true_topB, shared_topB]
+  summary_bytes: 2                   # fp16 key min/max per page on GPU (Quest)
+  history_bytes: 4                   # one fp32 observed-attention score per page
+  gate:                              # E1 gate: close >= half of Quest's gap to true top-B at <= 1.5x its cost
+    budget_tokens: 1024
+    gap_closed_min: 0.5
+    cost_ratio_max: 1.5
+  blas_threads: 4
