@@ -88,6 +88,14 @@ read per page per step.
   attention cannot show a large margin over Quest; per-head sets fetch 2.0-2.8x whole blocks per
   budget page, so the vLLM-native shared set wins at equal block traffic.
 
+- E3 pilot (started 2026-10-24, scripts/run_e3.py, config `e3:`): AIME24 + AIME25 explore problems
+  (30), avg@8 with Qwen3's thinking-mode sampling, one page set per layer for every method.
+  Baselines for the pilot: Quest (vote) and SnapKV-style eviction (shared); oracle page sets as the
+  ceiling if time allows; R-KV, LessIsMore and the rest wait for the main E3 table. Sparse decoding
+  (kvfetch/sparse_decode.py) keeps the full cache on the GPU (accuracy only, no speed claims), was
+  checked against HF's logits (results/reasoning/e3_checks/logits.txt) and against E2b's offline
+  replay on the engine's own queries and keys (replay.txt: identical Quest sets, ours Jaccard >= 0.998).
+
 ## Timeline
 
 | When | Work |

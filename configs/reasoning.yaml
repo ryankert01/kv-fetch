@@ -112,3 +112,28 @@ e2b:
     reduction_min: 0.2               # ours misses >= 20% less than the best page baseline ...
     equal_bytes_rival: infinigen_r0.1875   # ... and no more than InfiniGen-page at the same metadata bytes
     ours_max_bytes: 48.25            # bytes/token/head for "ours" candidates: 48 B of summaries + 4 B history per page
+
+# scripts/run_e3.py (EXPERIMENTS.md, E3 pilot): online accuracy with page-sparse decoding, one page set
+# per layer for all KV heads (kvfetch/sparse_decode.py). Explore problems only.
+e3:
+  tasks: [aime24, aime25]
+  split: explore
+  samples: 8                         # avg@8 per problem
+  sample_group: 4                    # work unit = (run, 4 samples of every problem): avg@4 lands first
+  batch_size: 12                     # slots per GPU (full KV of 12 x 17K tokens + page summaries fit 48 GB)
+  sampling: {temperature: 0.6, top_p: 0.95, top_k: 20}   # Qwen3 thinking-mode recommendation
+  seed: 20261024                     # per (task, problem, sample): every method draws the same uniforms
+  ours: fused_sum_w25_mean50         # selectors.candidates (E1's best; E2b: 6.5% missing at 1K, shared sum)
+  snapkv_window: 32                  # = compare.snapkv_window
+  check_budget_tokens: 1024          # scripts/check_e3.py replay
+  runs:                              # priority tiers (method@budget; budget = attended tokens per layer incl.
+                                     # sink + recent); within a tier, samples 0-3 of every run come before 4-7
+    - [full, quest@1024, ours@1024, snapkv@1024]
+    - [quest@512, ours@512, snapkv@512]
+    - [oracle@1024]
+  out_dir: results/reasoning/e3_shards
+  claims_dir: results/reasoning/e3_claims
+  gate:                              # EXPERIMENTS.md E3 pilot gate (written before E1)
+    budget_tokens: 1024
+    baselines: [quest, snapkv]
+    margin_points: 5                 # ours >= best baseline + 5 points, AIME avg@8, paired by problem
