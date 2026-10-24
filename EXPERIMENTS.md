@@ -80,6 +80,13 @@ read per page per step.
   (InfiniGen's speculated attention summed per page), per KV head and shared per layer. Its gate
   narrows E2's comparison class to page-level methods after seeing E2; that is a degree of freedom
   spent, so the confirm split and the held-out benchmarks remain the real test.
+- E2b (results/pages_explore.json, 38 traces): failed as written. With one page set per layer, our
+  best misses 16.6% less than the best page baseline (Quest, vote) at 1K and 13.0% at 512 (needed
+  20%); it beats Quest on every trace and is no worse than InfiniGen-page at equal metadata bytes
+  (6.5% vs 6.7% at 1K). The bar was near-unreachable: the shared-set ceiling itself is only 27% (1K)
+  and 21% (512) below Quest, and we close about 65% of that gap. At page granularity, missing
+  attention cannot show a large margin over Quest; per-head sets fetch 2.0-2.8x whole blocks per
+  budget page, so the vLLM-native shared set wins at equal block traffic.
 
 ## Timeline
 
