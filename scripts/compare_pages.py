@@ -33,8 +33,9 @@ from kvfetch.baselines import (arkvale_scores, attention_by_group, landmark_scor
 from kvfetch.config import add_config_args, config_from_args
 from kvfetch.metrics.importance import eligibility_matrix
 from kvfetch.provenance import provenance, write_json
-from kvfetch.selectors import revived_weight, run_selector, scoring_bytes, static_select, upper_bound
-from kvfetch.sim import coverage, existing_pages, mask_from_ranks, rank_desc
+from kvfetch import selectors_gpu as G
+from kvfetch.selectors import scoring_bytes
+from kvfetch.sim import existing_pages
 from kvfetch.tracing.schema import load_meta, load_trace
 
 MODES = ["per_head", "vote", "sum"]
@@ -45,8 +46,9 @@ def fit_pages(score: torch.Tensor, P: int, fill: float = float("-inf")) -> torch
     return torch.nn.functional.pad(score, (0, max(0, P - score.shape[-1])), value=fill)[..., :P]
 
 
-def page_scores(tr, li: int, keys: torch.Tensor, cfg: dict, device: str) -> dict[str, np.ndarray]:
-    """Exact page mass and every method's page scores for one traced layer, each [T, S, P] (fp32)."""
+def page_scores(tr, li: int, keys: torch.Tensor, cfg: dict, device: str) -> dict[str, torch.Tensor]:
+    """Exact page mass and every method's page scores for one traced layer, each [T, S, P] (fp32,
+    on ``device``), and each page's lowest key cosine to its mean (``min_cos`` [S, P])."""
     e2b, ps = cfg["e2b"], cfg["definitions"]["page_size"]
     T, _, S, P = tr.mass.shape
     pl = tr.meta["prompt_len"]
@@ -58,32 +60,34 @@ def page_scores(tr, li: int, keys: torch.Tensor, cfg: dict, device: str) -> dict
     n_keys = torch.arange(T, device=device) + pl
     chans = {r: pick_channels(q[0], k[:, :pl], max(1, int(round(r * d)))) for r in e2b["infinigen_ratios"]}
     names = ["m", "quest", "arkvale", "mean"] + [f"infinigen_r{r:g}" for r in e2b["infinigen_ratios"]]
-    out = {n: np.zeros((T, S, P), np.float32) for n in names}
+    out = {n: torch.empty((T, S, P), device=device) for n in names}
     pad = P * ps - N
     to_pages = lambda x: torch.nn.functional.pad(x, (0, pad)).reshape(*x.shape[:-1], P, ps).sum(-1)
     for a0 in range(0, T, e2b["step_chunk"]):
         sl = slice(a0, min(T, a0 + e2b["step_chunk"]))
-        out["m"][sl] = to_pages(attention_by_group(q[sl], k, n_keys[sl], scaling).mean(2)).cpu().numpy()
-        out["quest"][sl] = fit_pages(quest_scores(q[sl], summ, scaling), P).cpu().numpy()
-        out["arkvale"][sl] = fit_pages(arkvale_scores(q[sl], summ, scaling), P).cpu().numpy()
-        out["mean"][sl] = fit_pages(landmark_scores(q[sl], summ, scaling), P).cpu().numpy()
+        out["m"][sl] = to_pages(attention_by_group(q[sl], k, n_keys[sl], scaling).mean(2))
+        out["quest"][sl] = fit_pages(quest_scores(q[sl], summ, scaling), P)
+        out["arkvale"][sl] = fit_pages(arkvale_scores(q[sl], summ, scaling), P)
+        out["mean"][sl] = fit_pages(landmark_scores(q[sl], summ, scaling), P)
         seen = torch.arange(N, device=device)[None, :] < n_keys[sl, None]          # sink + recent + eligible
         for r, ch in chans.items():
             spec = partial_channel_scores(q[sl], k, ch, scaling).masked_fill(~seen[:, None, None, :], float("-inf"))
-            out[f"infinigen_r{r:g}"][sl] = to_pages(torch.softmax(spec, -1).mean(2)).cpu().numpy()
-    out["min_cos"] = np.broadcast_to(fit_pages(summ["min_cos"], P, 1.0).cpu().numpy()[None], (T, S, P))
+            out[f"infinigen_r{r:g}"][sl] = to_pages(torch.softmax(spec, -1).mean(2))
+    out["min_cos"] = fit_pages(summ["min_cos"], P, 1.0)
     return out
 
 
-def shadowkv_select(sc: dict[str, np.ndarray], elig: np.ndarray, b: np.ndarray, mode: str, share: float) -> np.ndarray:
+def shadowkv_select(sc: dict[str, torch.Tensor], elig: torch.Tensor, b: torch.Tensor, mode: str, share: float) -> torch.Tensor:
     """ShadowKV at page granularity: a share of the budget for outlier pages (lowest key cosine to
     the page mean, shared: lowest over heads), the rest by the page-mean landmark."""
-    n_out = np.round(share * b).astype(int)
+    T, S, P = sc["mean"].shape
+    n_out = torch.round(share * b).long()
     if mode == "per_head":
-        outl = mask_from_ranks(rank_desc(-sc["min_cos"], elig), n_out, elig)
-        return mask_from_ranks(rank_desc(np.where(outl, np.inf, sc["mean"]), elig), b, elig)
-    outl = mask_from_ranks(rank_desc(-sc["min_cos"].min(1, keepdims=True), elig), n_out, elig)[:, 0]   # [T, P]
-    return outl[:, None, :] | static_select(sc["mean"], elig & ~outl, b - n_out, mode)
+        outl = G.mask_from_ranks(G.rank_desc(-sc["min_cos"][None].expand(T, S, P), elig), n_out, elig)
+        return G.mask_from_ranks(G.rank_desc(sc["mean"].masked_fill(outl, float("inf")), elig), b, elig)
+    outl = G.mask_from_ranks(G.rank_desc(-sc["min_cos"].amin(0)[None, None].expand(T, 1, P), elig), n_out, elig)[:, 0]
+    rest = elig & ~outl
+    return outl[:, None, :] | G.select_from_ranks(G.static_ranks(sc["mean"], rest), rest, b - n_out, mode)
 
 
 def metadata_bytes(cfg: dict, d: int) -> dict[str, float]:
@@ -98,6 +102,47 @@ def metadata_bytes(cfg: dict, d: int) -> dict[str, float]:
     return out
 
 
+class Scorer:
+    """Missing attention, revived attention captured and (per-head sets) whole blocks fetched per
+    budget page, for whole selections [T, S, P] or step by step for a batch of K variants."""
+
+    def __init__(self, m: torch.Tensor, rev: torch.Tensor, pinned: torch.Tensor):
+        self.m, self.rev, self.pinned = m, rev, pinned                         # pinned [T, 1, P]
+        self.tot = m.sum(-1)                                                   # [T, S]
+        self.valid = self.tot > 0
+        self.rev_tot = float(rev.sum())
+
+    def _finish(self, cov: torch.Tensor, n: torch.Tensor, rev: torch.Tensor, blocks: torch.Tensor | None, T: int) -> list[dict]:
+        out = []
+        for i in range(cov.shape[0]):
+            v = {"missing": 1.0 - float(cov[i] / n),
+                 "revived_captured": float(rev[i]) / self.rev_tot if self.rev_tot > 0 else float("nan")}
+            if blocks is not None:
+                v["blocks_per_budget_page"] = float(blocks[i]) / T
+            out.append(v)
+        return out
+
+    def whole(self, sel: torch.Tensor, b: torch.Tensor, per_head: bool) -> dict:
+        att = sel | self.pinned
+        frac = torch.where(self.valid, (self.m * att).sum(-1) / self.tot.clamp(min=torch.finfo(self.m.dtype).tiny), 0.0)
+        blocks = (sel.any(1).sum(-1) / b.clamp(min=1)).sum()[None] if per_head else None
+        return self._finish(frac.sum()[None], self.valid.sum(), (self.rev * att).sum()[None], blocks, sel.shape[0])[0]
+
+    def steps(self, gen, b: torch.Tensor, per_head: bool) -> list[dict]:
+        K, T = b.shape
+        cov = torch.zeros(K, device=self.m.device, dtype=torch.float64)
+        rev = torch.zeros_like(cov)
+        blocks = torch.zeros_like(cov)
+        tiny = torch.finfo(self.m.dtype).tiny
+        for t, chosen in gen:
+            att = chosen | self.pinned[t][None]
+            cov += torch.where(self.valid[t], (self.m[t] * att).sum(-1) / self.tot[t].clamp(min=tiny), 0.0).sum(-1)
+            rev += (self.rev[t] * att).sum((1, 2))
+            if per_head:
+                blocks += chosen.any(1).sum(-1) / b[:, t].clamp(min=1)
+        return self._finish(cov, self.valid.sum(), rev, blocks if per_head else None, T)
+
+
 def analyze(path: Path, cfg: dict, device: str) -> dict:
     e2b, defs, cands = cfg["e2b"], cfg["definitions"], cfg["selectors"]["candidates"]
     ps = defs["page_size"]
@@ -106,53 +151,51 @@ def analyze(path: Path, cfg: dict, device: str) -> dict:
     keys_all = load_file(str(Path(cfg["e2"]["keys_dir"]) / path.parent.name / path.name))["keys"]
     T, _, S, P = tr.mass.shape
     pl = meta["prompt_len"]
-    elig = eligibility_matrix(pl, T, P, ps, defs["pinned"])
-    exist = existing_pages(pl, T, P, ps)
+    elig_np = eligibility_matrix(pl, T, P, ps, defs["pinned"])
+    exist_np = existing_pages(pl, T, P, ps)
+    elig, exist = torch.from_numpy(elig_np).to(device), torch.from_numpy(exist_np).to(device)
     pinned = (exist & ~elig)[:, None, :]
+    budgets = {str(btok): torch.from_numpy(np.maximum(0, btok // ps - (exist_np & ~elig_np).sum(-1))).to(device)
+               for btok in e2b["budgets_tokens"]}
+    ratios = [f"infinigen_r{x:g}" for x in e2b["infinigen_ratios"]]
     out = {"task": meta["task"], "sample_id": meta["sample_id"], "n_steps": T, "score": meta.get("score"),
            "head_dim": int(tr.extra["q"].shape[-1]), "layers": {}}
     for li, layer in enumerate(meta["layers"]):
-        with torch.no_grad():
-            sc = page_scores(tr, li, keys_all[li], cfg, device)
-        torch.cuda.empty_cache()
+        sc = page_scores(tr, li, keys_all[li], cfg, device)
         m = sc["m"]
-        init = tr.obs_mass[:, li].astype(np.float32).mean(0)
-        rev = revived_weight(m, elig, cfg["revival"])
-        rev_tot = float(rev.sum())
-        res = {}
-        for btok in e2b["budgets_tokens"]:
-            b = np.maximum(0, btok // ps - pinned[:, 0].sum(-1))
-            r = {}
-
-            def record(name: str, sel: np.ndarray, per_head: bool) -> None:
-                att = sel | pinned
-                v = {"missing": 1.0 - coverage(att, m),
-                     "revived_captured": float((rev * att).sum() / rev_tot) if rev_tot > 0 else float("nan")}
-                if per_head:
-                    v["blocks_per_budget_page"] = float((sel.any(1).sum(-1) / np.maximum(b, 1)).mean())
-                r[name] = v
-
-            record("true_page|per_head", upper_bound("true_topB", m=m, eligible=elig, b=b), True)
-            record("true_page|sum", upper_bound("shared_topB", m=m, eligible=elig, b=b), False)
+        score = Scorer(m, G.revived_weight(m, elig, cfg["revival"]), pinned)
+        res = {btok: {} for btok in budgets}
+        for btok, b in budgets.items():
+            res[btok]["true_page|per_head"] = score.whole(G.mask_from_ranks(G.rank_desc(m, elig), b, elig), b, True)
+            res[btok]["true_page|sum"] = score.whole(
+                G.mask_from_ranks(G.rank_desc(m.sum(1, keepdim=True), elig), b, elig).expand(T, S, P), b, False)
+        for name, kind in [("quest", "logit"), ("arkvale", "logit")] + [(r, "mass") for r in ratios]:
+            ranks = G.static_ranks(sc[name], elig, kind)
+            for btok, b in budgets.items():
+                for mode in MODES:
+                    res[btok][f"{name}|{mode}"] = score.whole(G.select_from_ranks(ranks, elig, b, mode), b, mode == "per_head")
+            del ranks
+        for btok, b in budgets.items():
             for mode in MODES:
-                for name, kind in [("quest", "logit"), ("arkvale", "logit")] + \
-                                  [(f"infinigen_r{x:g}", "mass") for x in e2b["infinigen_ratios"]]:
-                    record(f"{name}|{mode}", static_select(sc[name], elig, b, mode, kind), mode == "per_head")
-                record(f"shadowkv_page|{mode}", shadowkv_select(sc, elig, b, mode, e2b["shadowkv_outlier_share"]),
-                       mode == "per_head")
-                shared = {"per_head": False}.get(mode, mode)
-                for name in e2b["ours"]:
-                    record(f"ours:{name}|{mode}", run_selector({**cands[name], "shared": shared}, m=m, qb=sc["quest"],
-                                                               init=init, eligible=elig, exist=exist, b=b, qm=sc["mean"]),
-                           mode == "per_head")
-                for x in e2b["infinigen_ratios"]:
-                    spec = {"fuse": "sum", "history_weight": e2b["plugin_history_weight"], "history": "last", "shared": shared}
-                    log_spec = np.log(np.maximum(sc[f"infinigen_r{x:g}"], np.finfo(np.float32).tiny))
-                    record(f"ours:infinigen_r{x:g}+hist|{mode}",
-                           run_selector(spec, m=m, qb=log_spec, init=init, eligible=elig, exist=exist, b=b),
-                           mode == "per_head")
-            res[str(btok)] = r
+                res[btok][f"shadowkv_page|{mode}"] = score.whole(
+                    shadowkv_select(sc, elig, b, mode, e2b["shadowkv_outlier_share"]), b, mode == "per_head")
+        # Stateful selectors: every (variant, budget) in one GPU step loop per placement mode.
+        tiny = torch.finfo(torch.float32).tiny
+        sources = torch.stack([sc["quest"]] + [torch.log(sc[r].clamp(min=tiny)) for r in ratios])
+        plugin = {"fuse": "sum", "history_weight": e2b["plugin_history_weight"], "history": "last"}
+        variants = [(f"ours:{n}", cands[n], 0) for n in e2b["ours"]] + \
+                   [(f"ours:{r}+hist", plugin, 1 + i) for i, r in enumerate(ratios)]
+        runs = [(name, spec, s, btok) for name, spec, s in variants for btok in budgets]
+        bk = torch.stack([budgets[btok] for *_, btok in runs])
+        init = torch.from_numpy(tr.obs_mass[:, li].astype(np.float32).mean(0)).to(device)
+        for mode in MODES:
+            gen = G.replay([spec for _, spec, _, _ in runs], sources, [s for _, _, s, _ in runs], bk, m=m, init=init,
+                           eligible=elig, exist=exist, shared={"per_head": False}.get(mode, mode), qm=sc["mean"])
+            for (name, _, _, btok), v in zip(runs, score.steps(gen, bk, mode == "per_head")):
+                res[btok][f"{name}|{mode}"] = v
         out["layers"][str(layer)] = res
+        del sc, m, score, sources
+        torch.cuda.empty_cache()
         print(f"[e2b] {path.parent.name}/{path.name} layer {layer} done", flush=True)
     return out
 
@@ -212,7 +255,9 @@ def _run_shard(args_tuple) -> None:
         if not (Path(cfg["e2"]["keys_dir"]) / pth.parent.name / pth.name).exists():
             print(f"[e2b] {pth.parent.name}/{pth.name}: keys not dumped yet, skipped", flush=True)
             continue
-        write_json(out, {"provenance": prov, "result": analyze(pth, cfg, device)})
+        with torch.no_grad():
+            res = analyze(pth, cfg, device)
+        write_json(out, {"provenance": prov, "result": res})
 
 
 def main() -> None:
