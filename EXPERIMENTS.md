@@ -95,6 +95,18 @@ read per page per step.
   (kvfetch/sparse_decode.py) keeps the full cache on the GPU (accuracy only, no speed claims), was
   checked against HF's logits (results/reasoning/e3_checks/logits.txt) and against E2b's offline
   replay on the engine's own queries and keys (replay.txt: identical Quest sets, ours Jaccard >= 0.998).
+- E3 pilot (results/e3_explore.json, 30 problems, avg@8, 16K generation cap): failed as written. At
+  1K ours 43.8% vs Quest 40.4% (+3.3 points, CI95 [0.0, 6.7]; needed +5), full attention 48.3%,
+  SnapKV-shared 8.3%. The bar was out of reach for any shared selector: the oracle page set scores
+  44.2%, only +3.8 over Quest, and ours is within 0.4 of it. At 512 the selector matters: ours 33.3%
+  vs Quest 22.5% (+10.8, CI95 [5.0, 17.5], 12 wins / 1 loss), oracle 38.3%, SnapKV-shared 0.8%.
+  Most of the loss is truncation at 16K (Quest@512 70% vs full 41%); accuracy on finished samples is
+  73-80% for every non-SnapKV run. Truncated Quest/ours outputs are not verbatim loops (1-3%, as
+  full); SnapKV's often are (26% at 512).
+- E3 ablations (added after seeing the 1K and 512 results, so exploratory): at 512 the observed
+  history adds nothing (ours vs ours-nohist +0.0, CI95 [-3.8, 3.8]); the mean-key mix carries the
+  gain (ours-nohist vs quest-sum +10.0, CI95 [4.6, 15.8]); vote vs summed shares for Quest bounds
+  does not matter (+0.8). The "importance history" part of the method is not supported online.
 
 ## Timeline
 

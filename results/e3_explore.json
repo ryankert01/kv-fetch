@@ -1,0 +1,2309 @@
+{
+  "provenance": {
+    "model": "Qwen/Qwen3-4B",
+    "context_length": 17238,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "488f5becd68c98f6f0a1bb93cf2c944ca65262db",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/reasoning.yaml",
+    "timestamp": "2026-10-25T04:07:19",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": "NVIDIA RTX A6000",
+    "transformers": "4.57.1",
+    "runs_git": [
+      "{\"commit\": \"9989f19dd929d45fe0d6873548292bb96ffc7833\", \"dirty\": false}",
+      "{\"commit\": \"b78601fa3e5a92fd3acf4e2821c3d70f54aed0c9\", \"dirty\": false}"
+    ],
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20
+    },
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": "aged",
+          "recent_tokens": 128
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "revival": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "dormancy_steps": [
+          4,
+          8,
+          16,
+          32,
+          64
+        ],
+        "dormancy_main": 16,
+        "eviction_budget_fracs": [
+          0.05,
+          0.1
+        ],
+        "q_lags": [
+          1,
+          4,
+          16,
+          64
+        ],
+        "q_pca_var": 0.9
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64,
+        "record_q": true,
+        "key_summary": true,
+        "head_reduce": "kv_mean"
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "LEAD_TIME_MIN": 1,
+        "GRADUAL_SHARE_MIN": 0.25,
+        "GRADUAL_SHARE_DENOMINATOR": "onsets_after_low"
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 32768,
+        "chat_template_kwargs": {
+          "enable_thinking": true,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "sweep": {
+        "model": "Qwen/Qwen3-4B",
+        "max_context": 17408,
+        "max_new_tokens": 16384,
+        "context_margin": 256,
+        "samples_per_task": 16,
+        "layers": [
+          4,
+          18,
+          29,
+          32
+        ],
+        "trace_dir": "/share3/saves/ryankert_l/kvfetch/traces/reasoning",
+        "records_dir": "results/reasoning/records",
+        "claims_dir": "results/reasoning/claims",
+        "shard_size": 2,
+        "tasks": {
+          "aime24": {
+            "loader": "aime",
+            "name": "aime24",
+            "dataset": "HuggingFaceH4___aime_2024/**/*.arrow",
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 30
+          },
+          "aime25": {
+            "loader": "aime",
+            "name": "aime25",
+            "dataset": "math-ai___aime25/**/*.arrow",
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 30
+          },
+          "math500": {
+            "level": 5,
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 16
+          }
+        },
+        "out": "results/sweep/sweep_runs.json"
+      },
+      "signals": {
+        "names": [
+          "attn_last",
+          "attn_ema",
+          "key_mean",
+          "quest",
+          "q_trend"
+        ],
+        "ks": [
+          1,
+          4,
+          16
+        ],
+        "budget_frac": 0.05,
+        "ema_alpha": 0.3,
+        "q_slope_steps": 4
+      },
+      "compare": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048,
+          4096
+        ],
+        "evict_methods": [
+          "streaming",
+          "h2o",
+          "tova",
+          "snapkv",
+          "raas",
+          "lazy",
+          "rkv",
+          "oracle"
+        ],
+        "prefetch_methods": [
+          "on_demand",
+          "stale_q",
+          "q_trend",
+          "oasis_ub"
+        ],
+        "lookahead_steps": [
+          1,
+          4
+        ],
+        "gpu_capacity_mult": 2.0,
+        "snapkv_window": 32,
+        "important_mult": 1.0,
+        "rkv_lambda": 0.5,
+        "q_slope_steps": 4,
+        "blas_threads": 4
+      },
+      "selectors": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "candidates": {
+          "quest": {
+            "quest_share": 1.0
+          },
+          "quest_recent12": {
+            "quest_share": 1.0,
+            "recent_share": 0.125
+          },
+          "quest_recent25": {
+            "quest_share": 1.0,
+            "recent_share": 0.25
+          },
+          "hist_last": {
+            "quest_share": 0.0,
+            "history": "last"
+          },
+          "hist_peak": {
+            "quest_share": 0.0,
+            "history": "peak"
+          },
+          "hyb_last_q75": {
+            "quest_share": 0.75,
+            "history": "last"
+          },
+          "hyb_last_q50": {
+            "quest_share": 0.5,
+            "history": "last"
+          },
+          "hyb_last_q25": {
+            "quest_share": 0.25,
+            "history": "last"
+          },
+          "hyb_peak_q75": {
+            "quest_share": 0.75,
+            "history": "peak"
+          },
+          "hyb_peak_q50": {
+            "quest_share": 0.5,
+            "history": "peak"
+          },
+          "hyb_peak_q25": {
+            "quest_share": 0.25,
+            "history": "peak"
+          },
+          "shared_quest": {
+            "quest_share": 1.0,
+            "shared": true
+          },
+          "fused_sum_w25": {
+            "fuse": "sum",
+            "history_weight": 0.25,
+            "history": "last"
+          },
+          "fused_sum_w50": {
+            "fuse": "sum",
+            "history_weight": 0.5,
+            "history": "last"
+          },
+          "fused_max": {
+            "fuse": "max",
+            "history": "last"
+          },
+          "quest_mean50": {
+            "quest_share": 1.0,
+            "mean_mix": 0.5
+          },
+          "hyb_last_q75_mean50": {
+            "quest_share": 0.75,
+            "history": "last",
+            "mean_mix": 0.5
+          },
+          "fused_sum_w25_mean50": {
+            "fuse": "sum",
+            "history_weight": 0.25,
+            "history": "last",
+            "mean_mix": 0.5
+          }
+        },
+        "upper_bounds": [
+          "true_topB",
+          "shared_topB"
+        ],
+        "summary_bytes": 2,
+        "history_bytes": 4,
+        "gate": {
+          "budget_tokens": 1024,
+          "gap_closed_min": 0.5,
+          "cost_ratio_max": 1.5
+        },
+        "blas_threads": 4
+      },
+      "e2": {
+        "keys_dir": "/share3/saves/ryankert_l/kvfetch/keys/reasoning",
+        "check_steps": 3,
+        "check_atol": 0.05,
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "step_chunk": 128,
+        "shard_dir": "results/reasoning/e2_shards",
+        "shadowkv": {
+          "chunk": 8,
+          "outlier_share": 0.05
+        },
+        "infinigen": {
+          "partial_ratio": 0.25,
+          "history_weights": [
+            0.25,
+            0.5
+          ]
+        },
+        "lessismore": {
+          "recent_share": 0.25
+        },
+        "ours": [
+          "quest",
+          "fused_sum_w25",
+          "hyb_last_q75_mean50",
+          "fused_sum_w25_mean50"
+        ]
+      },
+      "e2b": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "step_chunk": 128,
+        "shard_dir": "results/reasoning/e2b_shards",
+        "infinigen_ratios": [
+          0.125,
+          0.1875,
+          0.25
+        ],
+        "shadowkv_outlier_share": 0.05,
+        "plugin_history_weight": 0.25,
+        "ours": [
+          "fused_sum_w25_mean50"
+        ],
+        "gate": {
+          "budgets_tokens": [
+            512,
+            1024
+          ],
+          "modes": [
+            "vote",
+            "sum"
+          ],
+          "page_baselines": [
+            "quest",
+            "arkvale",
+            "shadowkv_page"
+          ],
+          "reduction_min": 0.2,
+          "equal_bytes_rival": "infinigen_r0.1875",
+          "ours_max_bytes": 48.25
+        }
+      },
+      "e3": {
+        "tasks": [
+          "aime24",
+          "aime25"
+        ],
+        "split": "explore",
+        "samples": 8,
+        "sample_group": 4,
+        "batch_size": 12,
+        "sampling": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "top_k": 20
+        },
+        "seed": 20261024,
+        "ours": "fused_sum_w25_mean50",
+        "snapkv_window": 32,
+        "check_budget_tokens": 1024,
+        "runs": [
+          [
+            "full",
+            "quest@1024",
+            "ours@1024",
+            "snapkv@1024"
+          ],
+          [
+            "quest@512",
+            "ours@512",
+            "snapkv@512"
+          ],
+          [
+            "oracle@1024"
+          ],
+          [
+            "ours-nohist@512",
+            "quest-sum@512",
+            "oracle@512"
+          ]
+        ],
+        "variants": {
+          "ours-nohist": {
+            "fuse": "sum",
+            "history_weight": 0.0,
+            "history": "last",
+            "mean_mix": 0.5
+          },
+          "quest-sum": {
+            "fuse": "sum",
+            "history_weight": 0.0,
+            "history": "last"
+          }
+        },
+        "extra_comparisons": [
+          [
+            "oracle@1024",
+            "quest@1024"
+          ],
+          [
+            "oracle@512",
+            "quest@512"
+          ],
+          [
+            "ours-nohist@512",
+            "quest-sum@512"
+          ],
+          [
+            "quest-sum@512",
+            "quest@512"
+          ]
+        ],
+        "out_dir": "results/reasoning/e3_shards",
+        "claims_dir": "results/reasoning/e3_claims",
+        "gate": {
+          "budget_tokens": 1024,
+          "baselines": [
+            "quest",
+            "snapkv"
+          ],
+          "margin_points": 5
+        }
+      }
+    }
+  },
+  "summary": {
+    "full": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.48333333333333334,
+      "acc_by_task": {
+        "aime24": 0.4666666666666667,
+        "aime25": 0.5
+      },
+      "mean_gen_tokens": 12385.204166666666,
+      "truncated": 0.4125,
+      "acc_if_stopped": 0.7943262411347518
+    },
+    "quest@1024": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.4041666666666667,
+      "acc_by_task": {
+        "aime24": 0.375,
+        "aime25": 0.43333333333333335
+      },
+      "mean_gen_tokens": 13044.083333333334,
+      "truncated": 0.5041666666666667,
+      "acc_if_stopped": 0.7478991596638656
+    },
+    "ours@1024": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.4375,
+      "acc_by_task": {
+        "aime24": 0.38333333333333336,
+        "aime25": 0.49166666666666664
+      },
+      "mean_gen_tokens": 12819.916666666666,
+      "truncated": 0.4583333333333333,
+      "acc_if_stopped": 0.7615384615384615
+    },
+    "snapkv@1024": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.08333333333333333,
+      "acc_by_task": {
+        "aime24": 0.08333333333333333,
+        "aime25": 0.08333333333333333
+      },
+      "mean_gen_tokens": 13167.3,
+      "truncated": 0.4708333333333333,
+      "acc_if_stopped": 0.14173228346456693
+    },
+    "quest@512": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.225,
+      "acc_by_task": {
+        "aime24": 0.23333333333333334,
+        "aime25": 0.21666666666666667
+      },
+      "mean_gen_tokens": 14148.841666666667,
+      "truncated": 0.6958333333333333,
+      "acc_if_stopped": 0.726027397260274
+    },
+    "ours@512": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.3333333333333333,
+      "acc_by_task": {
+        "aime24": 0.325,
+        "aime25": 0.3416666666666667
+      },
+      "mean_gen_tokens": 13693.975,
+      "truncated": 0.5958333333333333,
+      "acc_if_stopped": 0.7525773195876289
+    },
+    "snapkv@512": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.008333333333333333,
+      "acc_by_task": {
+        "aime24": 0.0,
+        "aime25": 0.016666666666666666
+      },
+      "mean_gen_tokens": 13413.154166666667,
+      "truncated": 0.5458333333333333,
+      "acc_if_stopped": 0.01834862385321101
+    },
+    "oracle@1024": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.44166666666666665,
+      "acc_by_task": {
+        "aime24": 0.44166666666666665,
+        "aime25": 0.44166666666666665
+      },
+      "mean_gen_tokens": 12667.416666666666,
+      "truncated": 0.45416666666666666,
+      "acc_if_stopped": 0.7862595419847328
+    },
+    "ours-nohist@512": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.3333333333333333,
+      "acc_by_task": {
+        "aime24": 0.3333333333333333,
+        "aime25": 0.3333333333333333
+      },
+      "mean_gen_tokens": 13476.604166666666,
+      "truncated": 0.5625,
+      "acc_if_stopped": 0.7428571428571429
+    },
+    "quest-sum@512": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.23333333333333334,
+      "acc_by_task": {
+        "aime24": 0.225,
+        "aime25": 0.24166666666666667
+      },
+      "mean_gen_tokens": 14494.7,
+      "truncated": 0.6916666666666667,
+      "acc_if_stopped": 0.7162162162162162
+    },
+    "oracle@512": {
+      "n_problems": 30,
+      "n_samples": 240,
+      "samples_per_problem": [
+        8,
+        8
+      ],
+      "acc": 0.38333333333333336,
+      "acc_by_task": {
+        "aime24": 0.35833333333333334,
+        "aime25": 0.4083333333333333
+      },
+      "mean_gen_tokens": 13543.895833333334,
+      "truncated": 0.5708333333333333,
+      "acc_if_stopped": 0.7961165048543689
+    }
+  },
+  "comparisons": {
+    "ours@512 - full": {
+      "diff_points": -15.0,
+      "ci95_points": [
+        -25.416666666666664,
+        -5.416666666666667
+      ],
+      "n_problems": 30,
+      "wins": 2,
+      "losses": 13
+    },
+    "ours@512 - quest@512": {
+      "diff_points": 10.833333333333334,
+      "ci95_points": [
+        5.0,
+        17.5
+      ],
+      "n_problems": 30,
+      "wins": 12,
+      "losses": 1
+    },
+    "ours@512 - snapkv@512": {
+      "diff_points": 32.5,
+      "ci95_points": [
+        19.166666666666668,
+        46.25
+      ],
+      "n_problems": 30,
+      "wins": 17,
+      "losses": 0
+    },
+    "ours@512 - oracle@512": {
+      "diff_points": -5.0,
+      "ci95_points": [
+        -11.666666666666666,
+        0.4166666666666667
+      ],
+      "n_problems": 30,
+      "wins": 2,
+      "losses": 9
+    },
+    "ours@512 - ours-nohist@512": {
+      "diff_points": 0.0,
+      "ci95_points": [
+        -3.75,
+        3.75
+      ],
+      "n_problems": 30,
+      "wins": 5,
+      "losses": 5
+    },
+    "ours@512 - quest-sum@512": {
+      "diff_points": 10.0,
+      "ci95_points": [
+        5.0,
+        15.833333333333332
+      ],
+      "n_problems": 30,
+      "wins": 12,
+      "losses": 0
+    },
+    "quest@512 - full": {
+      "diff_points": -25.833333333333336,
+      "ci95_points": [
+        -37.5,
+        -15.416666666666668
+      ],
+      "n_problems": 30,
+      "wins": 0,
+      "losses": 16
+    },
+    "snapkv@512 - full": {
+      "diff_points": -47.5,
+      "ci95_points": [
+        -61.66666666666667,
+        -33.33333333333333
+      ],
+      "n_problems": 30,
+      "wins": 0,
+      "losses": 21
+    },
+    "oracle@512 - full": {
+      "diff_points": -10.0,
+      "ci95_points": [
+        -15.833333333333332,
+        -4.156250000000152
+      ],
+      "n_problems": 30,
+      "wins": 1,
+      "losses": 13
+    },
+    "ours-nohist@512 - full": {
+      "diff_points": -15.0,
+      "ci95_points": [
+        -24.583333333333332,
+        -6.25
+      ],
+      "n_problems": 30,
+      "wins": 2,
+      "losses": 13
+    },
+    "quest-sum@512 - full": {
+      "diff_points": -25.0,
+      "ci95_points": [
+        -36.25,
+        -14.583333333333334
+      ],
+      "n_problems": 30,
+      "wins": 1,
+      "losses": 16
+    },
+    "ours@1024 - full": {
+      "diff_points": -4.583333333333333,
+      "ci95_points": [
+        -10.416666666666668,
+        1.6666666666666667
+      ],
+      "n_problems": 30,
+      "wins": 4,
+      "losses": 12
+    },
+    "ours@1024 - quest@1024": {
+      "diff_points": 3.3333333333333335,
+      "ci95_points": [
+        0.0,
+        6.666666666666667
+      ],
+      "n_problems": 30,
+      "wins": 8,
+      "losses": 3
+    },
+    "ours@1024 - snapkv@1024": {
+      "diff_points": 35.41666666666667,
+      "ci95_points": [
+        23.75,
+        47.083333333333336
+      ],
+      "n_problems": 30,
+      "wins": 20,
+      "losses": 0
+    },
+    "ours@1024 - oracle@1024": {
+      "diff_points": -0.4166666666666667,
+      "ci95_points": [
+        -4.166666666666666,
+        3.3333333333333335
+      ],
+      "n_problems": 30,
+      "wins": 5,
+      "losses": 6
+    },
+    "quest@1024 - full": {
+      "diff_points": -7.916666666666666,
+      "ci95_points": [
+        -14.583333333333334,
+        -1.25
+      ],
+      "n_problems": 30,
+      "wins": 3,
+      "losses": 13
+    },
+    "snapkv@1024 - full": {
+      "diff_points": -40.0,
+      "ci95_points": [
+        -52.083333333333336,
+        -27.916666666666668
+      ],
+      "n_problems": 30,
+      "wins": 0,
+      "losses": 21
+    },
+    "oracle@1024 - full": {
+      "diff_points": -4.166666666666666,
+      "ci95_points": [
+        -10.416666666666668,
+        2.083333333333333
+      ],
+      "n_problems": 30,
+      "wins": 4,
+      "losses": 11
+    },
+    "oracle@1024 - quest@1024": {
+      "diff_points": 3.75,
+      "ci95_points": [
+        -0.4166666666666667,
+        7.916666666666666
+      ],
+      "n_problems": 30,
+      "wins": 10,
+      "losses": 5
+    },
+    "oracle@512 - quest@512": {
+      "diff_points": 15.833333333333332,
+      "ci95_points": [
+        8.75,
+        23.333333333333332
+      ],
+      "n_problems": 30,
+      "wins": 14,
+      "losses": 0
+    },
+    "ours-nohist@512 - quest-sum@512": {
+      "diff_points": 10.0,
+      "ci95_points": [
+        4.583333333333333,
+        15.833333333333332
+      ],
+      "n_problems": 30,
+      "wins": 11,
+      "losses": 0
+    },
+    "quest-sum@512 - quest@512": {
+      "diff_points": 0.8333333333333334,
+      "ci95_points": [
+        -2.083333333333333,
+        3.75
+      ],
+      "n_problems": 30,
+      "wins": 5,
+      "losses": 3
+    }
+  },
+  "gate": {
+    "best_baseline": "quest@1024",
+    "margin_points": 3.3333333333333335,
+    "ci95_points": [
+      0.0,
+      6.666666666666667
+    ],
+    "required_points": 5,
+    "passed": false,
+    "complete_avg_at": 8
+  },
+  "per_problem": {
+    "full": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.5,
+        "n": 8
+      }
+    },
+    "quest@1024": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.25,
+        "n": 8
+      }
+    },
+    "ours@1024": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.25,
+        "n": 8
+      }
+    },
+    "snapkv@1024": {
+      "aime24/0": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.0,
+        "n": 8
+      }
+    },
+    "quest@512": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.0,
+        "n": 8
+      }
+    },
+    "ours@512": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.0,
+        "n": 8
+      }
+    },
+    "snapkv@512": {
+      "aime24/0": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.0,
+        "n": 8
+      }
+    },
+    "oracle@1024": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.125,
+        "n": 8
+      }
+    },
+    "ours-nohist@512": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.0,
+        "n": 8
+      }
+    },
+    "quest-sum@512": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 0.875,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.125,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.0,
+        "n": 8
+      }
+    },
+    "oracle@512": {
+      "aime24/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/2": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/4": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/6": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/8": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/10": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/12": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime24/14": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/16": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime24/18": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/20": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime24/22": {
+        "acc": 0.375,
+        "n": 8
+      },
+      "aime24/24": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/26": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime24/28": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/0": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/2": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/4": {
+        "acc": 0.5,
+        "n": 8
+      },
+      "aime25/6": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/8": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/10": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/12": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/14": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/16": {
+        "acc": 1.0,
+        "n": 8
+      },
+      "aime25/18": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/20": {
+        "acc": 0.625,
+        "n": 8
+      },
+      "aime25/22": {
+        "acc": 0.0,
+        "n": 8
+      },
+      "aime25/24": {
+        "acc": 0.75,
+        "n": 8
+      },
+      "aime25/26": {
+        "acc": 0.25,
+        "n": 8
+      },
+      "aime25/28": {
+        "acc": 0.25,
+        "n": 8
+      }
+    }
+  }
+}
