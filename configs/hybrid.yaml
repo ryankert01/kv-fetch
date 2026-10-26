@@ -43,6 +43,14 @@ hybrid:
   h2:
     metadata_max_share: 0.02         # GPU metadata <= 2% of KV bytes
     within_points: 0.5               # missing attention within 0.5 points of full-precision ours at 512
+    engine_specs:                    # H2 candidate -> the engine method behind "ours" in H3 (sparse_decode.py)
+      mean16: {method: ours, bound_fmt: none, mean_fmt: fp16}
+      mean8: {method: ours, bound_fmt: none, mean_fmt: fp8}
+      meanc: {method: ours, bound_fmt: none, mean_fmt: chan}
+      quest4: {method: quest, bound_fmt: int4}
+      quest4p2: {method: quest, bound_fmt: int4p2}
+      lite: {method: ours, bound_fmt: int4p2, mean_fmt: chan}
+    chosen: null                     # set from results/h1_explore.json (h2_choice) before the ours runs
 
   # H3 (scripts/run_h3.py): online accuracy
   h3:
@@ -54,7 +62,7 @@ hybrid:
     max_new_tokens:
       qwen35_4b: 32768               # model card: 32K for most queries (81,920 for competitions: too costly)
       qwen3_4b: 16384                # = E3
-    batch_size: {qwen35_4b: 16, qwen3_4b: 12}
+    batch_size: {qwen35_4b: 24, qwen3_4b: 12}   # qwen35: ~38 GB at 32K (dry run: 16 slots 28 GB)
     runs:                            # priority tiers per model (method@attended budget); "ours" waits for H2
       qwen35_4b:
         - [full, quest@512, snapkv@512, oracle@512]
@@ -73,3 +81,15 @@ hybrid:
     hb_gate:                         # H-b online: loss of snapkv@1024 vs full, qwen35 <= half of qwen3's
       budget_tokens: 1024
       max_loss_ratio: 0.5
+
+  # H4 (scripts/h4_costs.py): measured inputs of the tiered-KV cost model
+  h4:
+    batches: [1, 8, 32, 64]
+    contexts: [8192, 16384, 32768]
+    kv_bytes_per_token: 32768        # Qwen3.5-4B: 8 layers x 4 KV heads x 256 x (K, V) x 2 B
+    max_kv_gib: 30                   # skip (batch, context) whose full KV exceeds this on the GPU
+    iters: 50
+    page_bytes: 65536                # one 16-token page of one attention layer (all KV heads, K and V)
+    host_pool_mib: 2048
+    copy_mib: [1, 4, 16, 64]
+    cpu_threads: 8

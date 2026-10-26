@@ -1,0 +1,7 @@
+model Qwen/Qwen3.5-4B
+full         greedy: lengths [10, 300, 58, 300, 300, 10]; graphs on vs off first diff [None, None, None, None, None, None]; vs HF greedy first diff [None, 104, None, 83, None, None]
+full         sampled: lengths [11, 120, 300, 300, 293, 10]; graphs on vs off first diff [None, None, None, None, None, None]
+quest@512    greedy: lengths [10, 300, 58, 300, 300, 10]; graphs on vs off first diff [None, None, None, None, None, None]
+quest@512    sampled: lengths [11, 120, 300, 162, 279, 10]; graphs on vs off first diff [None, None, None, None, None, None]
+snapkv@512   greedy: lengths [10, 300, 58, 300, 300, 10]; graphs on vs off first diff [None, None, None, None, None, None]
+snapkv@512   sampled: lengths [11, 120, 300, 162, 201, 10]; graphs on vs off first diff [None, None, None, None, None, None]

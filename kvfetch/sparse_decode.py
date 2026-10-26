@@ -36,7 +36,6 @@ from kvfetch.selectors import _RECENCY_TIEBREAK
 SPARSE_ATTN = "kvfetch_sparse"
 METHODS = ("full", "quest", "ours", "snapkv", "oracle")
 _NEG = float("-inf")
-_PROTECT = 1e6
 _ENGINE: "SparseEngine | None" = None
 
 
@@ -149,7 +148,12 @@ class SparseEngine:
             shape = (L, B, S, P + 1, d)
             self.kmin = torch.zeros(shape, dtype=dt, device=self.dev)       # min / max of bf16 keys: exact
             self.kmaxs = torch.zeros(shape, dtype=dt, device=self.dev)
-            self.kmean = torch.zeros(shape, device=self.dev) if method.spec.get("mean_mix") else None
+            sp = method.spec
+            self.bound_fmt, self.mean_fmt = sp.get("bound_fmt", "bf16"), sp.get("mean_fmt", "fp32")
+            need_mean = bool(sp.get("mean_mix")) or self.bound_fmt == "none"
+            self.kmean = torch.zeros(shape, device=self.dev) if need_mean else None
+            if self.mean_fmt == "chan":           # fp16 mean on the d / 4 channels with the largest |q| |k| over the prompt
+                self.chan = torch.zeros((L, B, S, d // 4), dtype=torch.long, device=self.dev)
         if method.name == "ours":
             sp = method.spec
             if not sp.get("fuse") or sp.get("recent_share") or sp.get("history", "last") != "last":
@@ -161,8 +165,6 @@ class SparseEngine:
             self.wsum = torch.zeros((L, B, S, P + 1), device=self.dev)
             self.kept = torch.zeros((L, B, P + 1), dtype=torch.bool, device=self.dev)
             self.evicted = torch.zeros_like(self.kept)
-            self.fresh = torch.zeros(B, dtype=torch.bool, device=self.dev)    # first decode step after prefill
-            self.prev_hi = torch.zeros(B, dtype=torch.long, device=self.dev)
             self.kept_order = torch.arange(P + 1, device=self.dev, dtype=torch.float32) * 1e-7   # kept pages first
             self.prompt_pages = torch.zeros(B, dtype=torch.long, device=self.dev)    # protect_prompt
         self.ptr = torch.zeros((), dtype=torch.long, device=self.dev)    # decode steps run (snapkv window slot)
@@ -245,8 +247,6 @@ class SparseEngine:
             self.wsum[:, b] = 0
             self.kept[:, b] = False
             self.evicted[:, b] = False
-            self.fresh[b] = True
-            self.prev_hi[b] = 0
             self.prompt_pages[b] = 0
 
     def begin_prefill(self, b: int) -> None:
@@ -280,9 +280,6 @@ class SparseEngine:
 
     def end_step(self, active: torch.Tensor) -> None:
         self.lens += active.long()
-        if self.m.name == "snapkv":
-            self.prev_hi.copy_(torch.where(active, self.plan["hi"], self.prev_hi))   # in place: CUDA graphs
-            self.fresh &= ~active
         self.ptr += 1
         self.mode = None
 
@@ -324,6 +321,10 @@ class SparseEngine:
 
     def _prefill(self, li, q, K, V, scaling):
         out = F.scaled_dot_product_attention(q, K, V, is_causal=True, scale=scaling, enable_gqa=True)
+        if self.summ and self.mean_fmt == "chan":
+            n = K.shape[2]
+            imp = q[0, :, n - 1].float().abs().view(self.S, self.g, self.d).mean(1) * K[0, :, :n].float().abs().mean(1)
+            self.chan[li, self.slot] = torch.topk(imp, self.d // 4, dim=-1).indices
         if self.m.name in ("ours", "snapkv"):
             # attention of the last obs_window prompt queries, as the tracer's prefill window
             n, b = K.shape[2], self.slot
@@ -357,8 +358,7 @@ class SparseEngine:
             m = torch.softmax(s, -1).mean(2).view(self.B, self.S, lc // self.ps, self.ps).sum(-1)
             key = F.pad(m.sum(1), (0, P + 1 - m.shape[-1])).masked_fill(~elig, _NEG)
             return self._take(key.topk(kmax, -1).indices, k_sel)
-        bound = (_qk(qg.clamp(min=0), self.kmaxs[li], scaling)
-                 + _qk(qg.clamp(max=0), self.kmin[li], scaling)).amax(2)                 # [B, S, P+1]
+        bound = self._bound(li, qg, scaling)                                              # [B, S, P+1]
         if name == "quest":
             sc = bound.masked_fill(~elig[:, None, :], _NEG)
             top = sc.topk(kmax, -1).indices                                                 # per-head nominations
@@ -373,27 +373,71 @@ class SparseEngine:
         sp = self.m.spec                                                                    # ours
         qb = bound
         mm = sp.get("mean_mix") or 0.0
-        if mm:
-            qb = (1.0 - mm) * qb + mm * torch.einsum("bsgd,bspd->bsgp", qg.float(), self.kmean[li]).amax(2) * scaling
+        if self.bound_fmt == "none":
+            qb = self._mean_logit(li, qg, scaling)
+        elif mm:
+            qb = (1.0 - mm) * qb + mm * self._mean_logit(li, qg, scaling)
         qs = torch.softmax(qb.masked_fill(~elig[:, None, :], _NEG), -1).nan_to_num(0.0)
         hist, w = self.hist[li], sp.get("history_weight", 0.5)
         f = torch.maximum(qs, hist) if sp["fuse"] == "max" else (1.0 - w) * qs + w * hist
         key = (f + self.tiebreak).sum(1).masked_fill(~elig, _NEG)
         return self._take(key.topk(kmax, -1).indices, k_sel)
 
+    def _bound(self, li, qg, scaling):
+        """Quest bound per KV head [B, S, P+1] from min / max summaries stored as bf16 (exact for bf16
+        keys), int4 with one fp16 scale per (head, page), or int4 over 2-page units (H2 formats;
+        rounded outward so they stay bounds)."""
+        if self.bound_fmt == "none":
+            return None
+        kmin, kmax = self.kmin[li], self.kmaxs[li]
+        if self.bound_fmt == "int4p2":
+            P1 = kmin.shape[2]
+            pad = (0, 0, 0, P1 % 2)
+            kmin = F.pad(kmin.float(), pad, value=float("inf")).view(self.B, self.S, -1, 2, self.d).amin(3)
+            kmax = F.pad(kmax.float(), pad, value=float("-inf")).view(self.B, self.S, -1, 2, self.d).amax(3)
+        if self.bound_fmt in ("int4", "int4p2"):
+            sc = torch.maximum(kmin.float().abs(), kmax.float().abs()).amax(-1, keepdim=True).clamp(min=1e-8) / 7
+            sc = sc.half().float()
+            kmin = (torch.floor(kmin.float() / sc).clamp(-8, 7) * sc).to(qg.dtype)
+            kmax = (torch.ceil(kmax.float() / sc).clamp(-8, 7) * sc).to(qg.dtype)
+        elif self.bound_fmt != "bf16":
+            raise ValueError(self.bound_fmt)
+        b = (_qk(qg.clamp(min=0), kmax, scaling) + _qk(qg.clamp(max=0), kmin, scaling)).amax(2)
+        if self.bound_fmt == "int4p2":
+            b = b.repeat_interleave(2, -1)[..., :self.P + 1]
+        return b
+
+    def _mean_logit(self, li, qg, scaling):
+        """Mean-key logit per KV head [B, S, P+1], max over the group: fp32, fp16 or fp8 (e4m3) means,
+        or fp16 means on the slot's d / 4 prompt-chosen channels."""
+        km = self.kmean[li]
+        if self.mean_fmt == "fp16":
+            km = km.half().float()
+        elif self.mean_fmt == "fp8":
+            km = km.to(torch.float8_e4m3fn).float()
+        elif self.mean_fmt == "chan":
+            ch = self.chan[li]                                                       # [B, S, c]
+            qs = torch.gather(qg.float(), 3, ch[:, :, None, :].expand(-1, -1, self.g, -1))
+            ms = torch.gather(km.half().float(), 3, ch[:, :, None, :].expand(-1, -1, km.shape[2], -1))
+            return torch.einsum("bsgc,bspc->bsgp", qs, ms).amax(2) * scaling
+        elif self.mean_fmt != "fp32":
+            raise ValueError(self.mean_fmt)
+        return torch.einsum("bsgd,bspd->bsgp", qg.float(), km).amax(2) * scaling
+
     def _take(self, idx: torch.Tensor, k: torch.Tensor) -> torch.Tensor:
         return torch.where(torch.arange(idx.shape[1], device=self.dev) < k[:, None], idx, self.P)
 
     def _snapkv(self, li, elig, b) -> torch.Tensor:
         """Permanent eviction (sim.simulate_evict, one set per layer): pages join when they age into
-        eligibility; at those steps the lowest-scoring kept pages beyond the budget are dropped."""
+        eligibility; whenever the kept pages exceed this step's budget the lowest-scoring ones are
+        dropped. (Until 2026-10-26, H0 audit: trimmed only when a page joined, so on the steps where a
+        new recent page opened the set ran one page over budget: ~3% more tokens at 512 in E3.)"""
         kept, evicted = self.kept[li], self.evicted[li]
-        event = self.fresh | (self.plan["hi"] > self.prev_hi)
         kept |= elig & ~evicted
-        excess = torch.where(event, kept.sum(1) - b, 0).clamp(min=0)
+        excess = (kept.sum(1) - b).clamp(min=0)
         prio = self.wsum[li].sum(1)
-        if self.m.protect_prompt:                       # generated pages go first (window sums <= window * S)
-            prio = prio + _PROTECT * (self.page_ar < self.prompt_pages[:, None])
+        if self.m.protect_prompt:                       # generated pages go first: window sums <= window * S
+            prio = prio + (self.m.window * self.S + 1.0) * (self.page_ar < self.prompt_pages[:, None])
         prio = prio.masked_fill(~kept, float("inf"))
         order = torch.argsort(prio, dim=-1, stable=True)
         rank = torch.empty_like(order).scatter_(-1, order, self.page_ar.expand_as(order))

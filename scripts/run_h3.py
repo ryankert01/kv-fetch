@@ -39,9 +39,17 @@ def ours_spec(cfg: dict) -> dict:
 
 
 def parse_run(label: str, cfg: dict) -> SD.Method:
+    """method@budget; "ours" is H2's chosen summary format (hybrid.h2.chosen -> engine_specs)."""
     name, _, budget = label.partition("@")
-    h3 = cfg["hybrid"]["h3"]
-    return SD.Method(name, int(budget) if budget else None, spec=ours_spec(cfg) if name == "ours" else {},
+    h2, h3 = cfg["hybrid"]["h2"], cfg["hybrid"]["h3"]
+    spec = {}
+    if name == "ours":
+        if not h2.get("chosen"):
+            raise SystemExit("ours runs need hybrid.h2.chosen (H2's pick)")
+        es = dict(h2["engine_specs"][h2["chosen"]])
+        name = es.pop("method")
+        spec = {**ours_spec(cfg), **es} if name == "ours" else es
+    return SD.Method(name, int(budget) if budget else None, spec=spec,
                      window=h3["snapkv_window"], protect_prompt=h3["snapkv_protect_prompt"])
 
 
@@ -97,7 +105,7 @@ def work(cfg: dict, args) -> None:
             n_tok[0] += len(toks)
             write_json(out_path(cfg, args.model, label, task, index, k), {
                 "model_key": args.model, "task": task, "index": index, "sample": k, "run": label,
-                "method": method.name, "budget_tokens": method.budget_tokens, "prompt_tokens": len(job.prompt_ids),
+                "method": method.name, "spec": method.spec, "budget_tokens": method.budget_tokens, "prompt_tokens": len(job.prompt_ids),
                 "n_gen": len(toks), "stopped": stopped, "score": sc, "answer": refs[(task, index)][0][0],
                 "text": text, "token_ids": [int(t) for t in toks], "provenance": prov})
             dt = time.perf_counter() - t0
@@ -194,30 +202,44 @@ def merge(cfg: dict) -> None:
         for k, c in comparisons.items():
             print(f"{k:28s} {c['diff_points']:+6.1f} pts  CI95 [{c['ci95_points'][0]:+.1f}, {c['ci95_points'][1]:+.1f}]  "
                   f"wins {c['wins']} losses {c['losses']} of {c['n_problems']}")
+    def complete(s: dict, labels: list[str]) -> bool:
+        """Every run has every problem (as many as any run of the model) with all its samples."""
+        n = max(v["n_problems"] for v in s.values())
+        return all(l in s and s[l]["n_problems"] == n and s[l]["samples_per_problem"][0] >= h3["samples"] for l in labels)
+
     m35 = out["models"].get("qwen35_4b")
     gc = h3["gate"]
     if m35:
         s, btok = m35["summary"], gc["budget_tokens"]
         base = [f"{m}@{btok}" for m in gc["baselines"] if f"{m}@{btok}" in s]
         if f"ours@{btok}" in s and base:
-            best = max(base, key=lambda l: s[l]["acc"])
-            c = paired(bys["qwen35_4b"], f"ours@{btok}", best)
-            complete = all(s[l]["samples_per_problem"][0] >= h3["samples"] for l in base + [f"ours@{btok}"])
+            diffs = {b: paired(bys["qwen35_4b"], f"ours@{btok}", b) for b in base}
+            best = min(base, key=lambda b: diffs[b]["diff_points"])                    # the strongest, paired
+            c = diffs[best]
+            from h1_screen import H2_BYTES
+            h2 = cfg["hybrid"]["h2"]
+            share = H2_BYTES[h2["chosen"]](256, cfg["definitions"]["page_size"]) / (2 * 256 * 2)
+            done = complete(s, base + [f"ours@{btok}"])
+            margin_ok, meta_ok = c["diff_points"] >= gc["margin_points"], share <= h2["metadata_max_share"]
             out["gate"] = {"best_baseline": best, "margin_points": c["diff_points"], "ci95_points": c["ci95_points"],
-                           "required_points": gc["margin_points"], "passed": c["diff_points"] >= gc["margin_points"],
-                           "complete_avg_at": h3["samples"] if complete else None}
-            print(f"\nH3 GATE @{btok}: ours - {best} = {c['diff_points']:+.1f} pts (need >= {gc['margin_points']}) -> "
-                  f"{'PASS' if out['gate']['passed'] else 'FAIL'}{'' if complete else ' (incomplete)'}")
+                           "required_points": gc["margin_points"], "ours_format": h2["chosen"], "metadata_share": share,
+                           "max_metadata_share": h2["metadata_max_share"], "complete": done,
+                           "passed": bool(done and margin_ok and meta_ok)}
+            print(f"\nH3 GATE @{btok}: ours ({h2['chosen']}, metadata {100 * share:.2f}% of KV) - {best} = "
+                  f"{c['diff_points']:+.1f} pts (need >= {gc['margin_points']}) -> "
+                  f"{'PASS' if out['gate']['passed'] else 'FAIL'}{'' if done else ' (incomplete: not decided)'}")
     hb = h3["hb_gate"]
     lab = f"snapkv@{hb['budget_tokens']}"
     losses = {m: v["comparisons"].get(f"{lab} - full") for m, v in out["models"].items()}
     if all(losses.get(m) for m in ("qwen35_4b", "qwen3_4b")):
         l35, l3 = -losses["qwen35_4b"]["diff_points"], -losses["qwen3_4b"]["diff_points"]
         ratio = l35 / l3 if l3 > 0 else float("inf")
-        out["hb_gate"] = {"loss_points": {"qwen35_4b": l35, "qwen3_4b": l3}, "ratio": ratio,
-                          "max_ratio": hb["max_loss_ratio"], "passed": ratio <= hb["max_loss_ratio"]}
+        done = all(complete(out["models"][m]["summary"], ["full", lab]) for m in ("qwen35_4b", "qwen3_4b"))
+        out["hb_gate"] = {"loss_points": {"qwen35_4b": l35, "qwen3_4b": l3}, "ratio": ratio, "complete": done,
+                          "max_ratio": hb["max_loss_ratio"], "passed": bool(done and ratio <= hb["max_loss_ratio"])}
         print(f"H-b GATE: {lab} loss vs full: qwen35 {l35:.1f} pts, qwen3 {l3:.1f} pts, ratio {ratio:.2f} "
-              f"(need <= {hb['max_loss_ratio']}) -> {'PASS' if out['hb_gate']['passed'] else 'FAIL'}")
+              f"(need <= {hb['max_loss_ratio']}) -> {'PASS' if out['hb_gate']['passed'] else 'FAIL'}"
+              f"{'' if done else ' (incomplete: not decided)'}")
     write_json(Path(cfg["paths"]["results_dir"]) / f"h3_{h3['split']}.json",
                {"provenance": provenance(cfg, model=[m["name"] for m in cfg["hybrid"]["models"].values()],
                                          context_length=None, h3=h3), **out})

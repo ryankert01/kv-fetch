@@ -1,6 +1,0 @@
-full           batch 1  mean|dlogit|/max/argmax agree: 0.0291/3.03/1.000  0.0242/0.94/1.000  0.0252/1.28/0.997
-full           batch 4  mean|dlogit|/max/argmax agree: 0.0307/5.23/1.000  0.0271/1.86/1.000  0.0250/0.94/0.997
-quest@464      batch 4  mean|dlogit|/max/argmax agree: 0.0316/4.33/1.000  0.0274/2.02/0.990  0.0252/1.31/0.997
-ours@464       batch 4  mean|dlogit|/max/argmax agree: 0.0310/4.36/1.000  0.0267/2.02/0.993  0.0246/0.75/0.997
-snapkv@464     batch 4  mean|dlogit|/max/argmax agree: 0.0310/4.73/0.997  0.0274/2.02/1.000  0.0253/1.19/0.993
-oracle@464     batch 4  mean|dlogit|/max/argmax agree: 0.0309/4.47/1.000  0.0267/2.02/0.993  0.0240/0.69/0.993

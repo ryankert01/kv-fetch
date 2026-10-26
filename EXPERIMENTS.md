@@ -175,3 +175,16 @@ Unchanged rules: explore split only; the confirm split and held-out benchmarks (
 GPQA-Diamond) wait for E5; never GPU 0; every result records model, context, page size, w and commit.
 Audits (independent agents, no access to my conclusions) review the engine before H3 runs, the H1/H2
 analysis code before its numbers are used, and every reported number against the result files.
+
+## Hybrid status
+
+- H0 (2026-10-26): kvfetch/sparse_decode.py serves hybrid models (KV for the 8 attention layers only,
+  per-slot GDN conv/recurrent state through HF's linear-attention cache protocol, presence penalty,
+  prompt-protected SnapKV, H2 summary formats). Checks (results/hybrid/h0_checks/, both models under
+  .venv-hybrid): every method with a budget above the context gives HF's logits (mean |dlogit| 0.023-0.032
+  Qwen3.5, 0.048-0.060 Qwen3-4B; max up to 5.3, within HF's own eager-vs-SDPA spread of ~6 on Qwen3.5)
+  with slots retiring and refilling mid-decode; CUDA graphs on vs off give identical tokens (full, quest,
+  snapkv; greedy and sampled). An independent audit found no blocker; it found that SnapKV-style
+  eviction trimmed only when a page joined, so on most steps it attended one page over budget (~3% more
+  tokens at 512, ~1.5% at 1K). This was also in E3 (SnapKV collapsed there regardless); fixed (trim every
+  step), in the offline replica too. Old and new engines give bit-identical tokens on Qwen3-4B otherwise.

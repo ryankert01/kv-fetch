@@ -128,6 +128,8 @@ def check_replay(cfg, args, device):
     btok = cfg["e3"]["check_budget_tokens"]
     spec = cfg["selectors"]["candidates"][cfg["e3"]["ours"]]
     layers = meta["layers"]
+    if getattr(model.config, "layer_types", None):    # engine state below is indexed by model layer
+        raise SystemExit("replay check: Qwen3-style models only (every layer full attention)")
     for method in methods(cfg, btok)[:2]:
         eng = make_engine(model, cfg, method, 1, pl + T + 1, device, shadow=True)
         eng.record = {layer: [] for layer in layers}
