@@ -199,3 +199,23 @@ analysis code before its numbers are used, and every reported number against the
   run adds a budget-above-context row (the sparse path's numerical floor). After the fixes every
   offline replica selects the engine's pages on every step (scripts/check_h1_replicas.py,
   results/hybrid/h1_checks/replicas.txt: 90 of 90 method x seed x prompt-length cases, 0 steps differ).
+- H1 + H2 (2026-10-26, results/h1_explore.json, complete: 30 problems x 8 attention layers per model,
+  each problem cut to the shorter model's length, mean 11,917 generated tokens):
+  - Gate (i) FAILED, H-a refuted: the oracle shared set at 512 misses 22.7% of attention on Qwen3.5-4B vs
+    11.6% on Qwen3-4B, and each of Qwen3.5's 8 attention layers misses more than its Qwen3-4B counterpart
+    (18-34% vs 5-20%). Attention in the hybrid's attention layers is less concentrated, not more.
+    Gate (ii) passed: Quest's gap to the oracle is 28.7% of Quest's miss on Qwen3.5 vs 19.0%. By the plan
+    ("not (i): report and rethink") the selector track's premise fails; H3 continues as scheduled to
+    measure what this means online.
+  - The selector ranking flips between the models: on Qwen3.5 mean-key logits (25.5%) beat Quest bounds
+    (31.8%) and the E3 mix (26.2%); on Qwen3-4B mean-key is worst (19.5%) and the mix (13.1%) beats Quest (14.3%).
+  - H-c FAILED: the query predicted from 3 layers earlier costs +6.7 points (ours) / +6.8 (Quest) on
+    Qwen3.5 (Qwen3-4B: +3.8 / +3.7); even one GDN layer of lookahead costs +3.4 (Qwen3-4B: +0.2).
+  - H-d FAILED: the GDN prior (beta, weight 0.5 chosen on aime24) lowers aime25 missing attention by 0.3%
+    (needed 5%); its Spearman correlation with page mass is 0.09 (beta) / -0.01 (forgot).
+  - H2: mean8 chosen (fp8 mean keys, 1.56% of KV): 24.5% vs the mix's 25.2% on aime24 (aime25 26.6 vs
+    27.2). It is ShadowKV-style landmark scoring in fp8 with summed head shares: little novelty alone.
+  - H-b offline (teacher-forced fidelity, 10 sequences <= 8K tokens): Qwen3.5's oracle@512 gives
+    next-token KL 0.011 at 22.9% missing; Qwen3-4B 0.035 at 14.1% (0.108 at 26.1%, oracle@256). Per unit
+    of missing attention the hybrid's output moves 5-10x less. H3's online test decides H-b.
+  - Page churn at 512: 6.6 new pages per step per layer (Qwen3.5, mean8) vs 5.3 (Qwen3-4B, mix).

@@ -1,0 +1,3033 @@
+{
+  "provenance": {
+    "model": [
+      "Qwen/Qwen3.5-4B",
+      "Qwen/Qwen3-4B"
+    ],
+    "context_length": null,
+    "page_size": 16,
+    "w": 8,
+    "git": {
+      "commit": "5ae4a8fffec1e58008ce77052b1d1b1ca284c503",
+      "dirty": false
+    },
+    "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/hybrid.yaml",
+    "timestamp": "2026-10-26T14:15:42",
+    "host": "gpuserv4",
+    "torch": "2.8.0+cu128",
+    "gpu": null,
+    "transformers": "5.19.0",
+    "h1": {
+      "sequences": {
+        "qwen35_4b": "results/hybrid/h3_shards/qwen35_4b/full",
+        "qwen3_4b": "results/reasoning/e3_shards/full"
+      },
+      "sample": 0,
+      "max_gen_tokens": 16384,
+      "budgets_tokens": [
+        256,
+        512,
+        1024
+      ],
+      "step_chunk": 128,
+      "lookahead_layers": [
+        1,
+        2,
+        3
+      ],
+      "ours": {
+        "mean_mix": 0.5
+      },
+      "gdn_prior_weights": [
+        0.1,
+        0.25,
+        0.5
+      ],
+      "fidelity": {
+        "n_sequences": 10,
+        "max_gen_tokens": 8192,
+        "query_chunk": 1024
+      },
+      "shard_dir": "results/hybrid/h1_shards",
+      "gate": {
+        "budget_tokens": 512,
+        "lookahead_max_points": 1.0,
+        "gdn_prior_min_reduction": 0.05
+      }
+    },
+    "resolved_config": {
+      "definitions": {
+        "page_size": 16,
+        "w": 8,
+        "budget_fracs": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "budget_rounding": "ceil",
+        "k_grid": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "pinned": {
+          "sink_pages": 1,
+          "recent_prompt_pages": 0,
+          "decode_region": "aged",
+          "recent_tokens": 128
+        },
+        "head_views": [
+          "query",
+          "kv_mean"
+        ]
+      },
+      "trajectory": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "floor_ratio": 0.1,
+        "smooth_ema_alpha": null,
+        "stable_high_min_frac": 0.9,
+        "min_initial_low_steps": 4,
+        "sudden_max_rise_steps": 2,
+        "oscillating_min_transitions": 4
+      },
+      "lead_time": {
+        "budget_frac": 0.05,
+        "truth": "m",
+        "mode": "first",
+        "required_lead": 0
+      },
+      "revival": {
+        "budget_frac": 0.05,
+        "exit_ratio": 0.5,
+        "dormancy_steps": [
+          4,
+          8,
+          16,
+          32,
+          64
+        ],
+        "dormancy_main": 16,
+        "eviction_budget_fracs": [
+          0.05,
+          0.1
+        ],
+        "q_lags": [
+          1,
+          4,
+          16,
+          64
+        ],
+        "q_pca_var": 0.9
+      },
+      "trace": {
+        "format": "full",
+        "topk": 512,
+        "mass_dtype": "float16",
+        "prefill_obs_window": 32,
+        "flush_every": 64,
+        "record_q": true,
+        "key_summary": true,
+        "head_reduce": "kv_mean"
+      },
+      "reference_predictors": {
+        "ema_alpha": 0.3
+      },
+      "decision_point": {
+        "LEAD_TIME_MIN": 1,
+        "GRADUAL_SHARE_MIN": 0.25,
+        "GRADUAL_SHARE_DENOMINATOR": "onsets_after_low"
+      },
+      "models": {
+        "local_files_only": true,
+        "dtype": "bfloat16",
+        "attn_implementation": "sdpa",
+        "prefill_chunk_size": 32768,
+        "chat_template_kwargs": {
+          "enable_thinking": true,
+          "date_string": "26 Jul 2024"
+        }
+      },
+      "paths": {
+        "trace_dir": "traces",
+        "results_dir": "results"
+      },
+      "data": {
+        "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+        "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+      },
+      "ruler": {
+        "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+        "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+        "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+        "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+        "num_depths": 40,
+        "number_digits": 7,
+        "tokens_to_generate": 128,
+        "incremental": {
+          "essay": 500,
+          "noise": 25,
+          "needle": 25
+        },
+        "shuffle_seed": 42,
+        "tasks": {
+          "niah_single_1": {
+            "type_haystack": "noise",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_2": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_single_3": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_1": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 4,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_2": {
+            "type_haystack": "needle",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multikey_3": {
+            "type_haystack": "needle",
+            "type_needle_k": "uuids",
+            "type_needle_v": "uuids",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 1
+          },
+          "niah_multivalue": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 4,
+            "num_needle_q": 1
+          },
+          "niah_multiquery": {
+            "type_haystack": "essay",
+            "type_needle_k": "words",
+            "type_needle_v": "numbers",
+            "num_needle_k": 1,
+            "num_needle_v": 1,
+            "num_needle_q": 4
+          }
+        }
+      },
+      "longgen": {
+        "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+        "answer_prefix": "",
+        "min_book_tokens_slack": 1.05
+      },
+      "sweep": {
+        "model": "Qwen/Qwen3-4B",
+        "max_context": 17408,
+        "max_new_tokens": 16384,
+        "context_margin": 256,
+        "samples_per_task": 16,
+        "layers": [
+          4,
+          18,
+          29,
+          32
+        ],
+        "trace_dir": "/share3/saves/ryankert_l/kvfetch/traces/reasoning",
+        "records_dir": "results/reasoning/records",
+        "claims_dir": "results/reasoning/claims",
+        "shard_size": 2,
+        "tasks": {
+          "aime24": {
+            "loader": "aime",
+            "name": "aime24",
+            "dataset": "HuggingFaceH4___aime_2024/**/*.arrow",
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 30
+          },
+          "aime25": {
+            "loader": "aime",
+            "name": "aime25",
+            "dataset": "math-ai___aime25/**/*.arrow",
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 30
+          },
+          "math500": {
+            "level": 5,
+            "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+            "n": 16
+          }
+        },
+        "out": "results/sweep/sweep_runs.json"
+      },
+      "signals": {
+        "names": [
+          "attn_last",
+          "attn_ema",
+          "key_mean",
+          "quest",
+          "q_trend"
+        ],
+        "ks": [
+          1,
+          4,
+          16
+        ],
+        "budget_frac": 0.05,
+        "ema_alpha": 0.3,
+        "q_slope_steps": 4
+      },
+      "compare": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048,
+          4096
+        ],
+        "evict_methods": [
+          "streaming",
+          "h2o",
+          "tova",
+          "snapkv",
+          "raas",
+          "lazy",
+          "rkv",
+          "oracle"
+        ],
+        "prefetch_methods": [
+          "on_demand",
+          "stale_q",
+          "q_trend",
+          "oasis_ub"
+        ],
+        "lookahead_steps": [
+          1,
+          4
+        ],
+        "gpu_capacity_mult": 2.0,
+        "snapkv_window": 32,
+        "important_mult": 1.0,
+        "rkv_lambda": 0.5,
+        "q_slope_steps": 4,
+        "blas_threads": 4
+      },
+      "selectors": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "candidates": {
+          "quest": {
+            "quest_share": 1.0
+          },
+          "quest_recent12": {
+            "quest_share": 1.0,
+            "recent_share": 0.125
+          },
+          "quest_recent25": {
+            "quest_share": 1.0,
+            "recent_share": 0.25
+          },
+          "hist_last": {
+            "quest_share": 0.0,
+            "history": "last"
+          },
+          "hist_peak": {
+            "quest_share": 0.0,
+            "history": "peak"
+          },
+          "hyb_last_q75": {
+            "quest_share": 0.75,
+            "history": "last"
+          },
+          "hyb_last_q50": {
+            "quest_share": 0.5,
+            "history": "last"
+          },
+          "hyb_last_q25": {
+            "quest_share": 0.25,
+            "history": "last"
+          },
+          "hyb_peak_q75": {
+            "quest_share": 0.75,
+            "history": "peak"
+          },
+          "hyb_peak_q50": {
+            "quest_share": 0.5,
+            "history": "peak"
+          },
+          "hyb_peak_q25": {
+            "quest_share": 0.25,
+            "history": "peak"
+          },
+          "shared_quest": {
+            "quest_share": 1.0,
+            "shared": true
+          },
+          "fused_sum_w25": {
+            "fuse": "sum",
+            "history_weight": 0.25,
+            "history": "last"
+          },
+          "fused_sum_w50": {
+            "fuse": "sum",
+            "history_weight": 0.5,
+            "history": "last"
+          },
+          "fused_max": {
+            "fuse": "max",
+            "history": "last"
+          },
+          "quest_mean50": {
+            "quest_share": 1.0,
+            "mean_mix": 0.5
+          },
+          "hyb_last_q75_mean50": {
+            "quest_share": 0.75,
+            "history": "last",
+            "mean_mix": 0.5
+          },
+          "fused_sum_w25_mean50": {
+            "fuse": "sum",
+            "history_weight": 0.25,
+            "history": "last",
+            "mean_mix": 0.5
+          }
+        },
+        "upper_bounds": [
+          "true_topB",
+          "shared_topB"
+        ],
+        "summary_bytes": 2,
+        "history_bytes": 4,
+        "gate": {
+          "budget_tokens": 1024,
+          "gap_closed_min": 0.5,
+          "cost_ratio_max": 1.5
+        },
+        "blas_threads": 4
+      },
+      "e2": {
+        "keys_dir": "/share3/saves/ryankert_l/kvfetch/keys/reasoning",
+        "check_steps": 3,
+        "check_atol": 0.05,
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "step_chunk": 128,
+        "shard_dir": "results/reasoning/e2_shards",
+        "shadowkv": {
+          "chunk": 8,
+          "outlier_share": 0.05
+        },
+        "infinigen": {
+          "partial_ratio": 0.25,
+          "history_weights": [
+            0.25,
+            0.5
+          ]
+        },
+        "lessismore": {
+          "recent_share": 0.25
+        },
+        "ours": [
+          "quest",
+          "fused_sum_w25",
+          "hyb_last_q75_mean50",
+          "fused_sum_w25_mean50"
+        ]
+      },
+      "e2b": {
+        "budgets_tokens": [
+          512,
+          1024,
+          2048
+        ],
+        "step_chunk": 128,
+        "shard_dir": "results/reasoning/e2b_shards",
+        "infinigen_ratios": [
+          0.125,
+          0.1875,
+          0.25
+        ],
+        "shadowkv_outlier_share": 0.05,
+        "plugin_history_weight": 0.25,
+        "ours": [
+          "fused_sum_w25_mean50"
+        ],
+        "gate": {
+          "budgets_tokens": [
+            512,
+            1024
+          ],
+          "modes": [
+            "vote",
+            "sum"
+          ],
+          "page_baselines": [
+            "quest",
+            "arkvale",
+            "shadowkv_page"
+          ],
+          "reduction_min": 0.2,
+          "equal_bytes_rival": "infinigen_r0.1875",
+          "ours_max_bytes": 48.25
+        }
+      },
+      "e3": {
+        "tasks": [
+          "aime24",
+          "aime25"
+        ],
+        "split": "explore",
+        "samples": 8,
+        "sample_group": 4,
+        "batch_size": 12,
+        "sampling": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "top_k": 20
+        },
+        "seed": 20261024,
+        "ours": "fused_sum_w25_mean50",
+        "snapkv_window": 32,
+        "check_budget_tokens": 1024,
+        "runs": [
+          [
+            "full",
+            "quest@1024",
+            "ours@1024",
+            "snapkv@1024"
+          ],
+          [
+            "quest@512",
+            "ours@512",
+            "snapkv@512"
+          ],
+          [
+            "oracle@1024"
+          ],
+          [
+            "ours-nohist@512",
+            "quest-sum@512",
+            "oracle@512"
+          ]
+        ],
+        "variants": {
+          "ours-nohist": {
+            "fuse": "sum",
+            "history_weight": 0.0,
+            "history": "last",
+            "mean_mix": 0.5
+          },
+          "quest-sum": {
+            "fuse": "sum",
+            "history_weight": 0.0,
+            "history": "last"
+          }
+        },
+        "extra_comparisons": [
+          [
+            "oracle@1024",
+            "quest@1024"
+          ],
+          [
+            "oracle@512",
+            "quest@512"
+          ],
+          [
+            "ours-nohist@512",
+            "quest-sum@512"
+          ],
+          [
+            "quest-sum@512",
+            "quest@512"
+          ]
+        ],
+        "repetition": {
+          "tail_chars": 6000,
+          "ngram_chars": 20,
+          "threshold": 0.5,
+          "thresholds": [
+            0.25,
+            0.5,
+            0.75
+          ]
+        },
+        "out_dir": "results/reasoning/e3_shards",
+        "claims_dir": "results/reasoning/e3_claims",
+        "gate": {
+          "budget_tokens": 1024,
+          "baselines": [
+            "quest",
+            "snapkv"
+          ],
+          "margin_points": 5
+        }
+      },
+      "hybrid": {
+        "models": {
+          "qwen35_4b": {
+            "name": "Qwen/Qwen3.5-4B",
+            "layers": [
+              3,
+              7,
+              11,
+              15,
+              19,
+              23,
+              27,
+              31
+            ],
+            "sampling": {
+              "temperature": 1.0,
+              "top_p": 0.95,
+              "top_k": 20,
+              "presence_penalty": 1.5
+            }
+          },
+          "qwen3_4b": {
+            "name": "Qwen/Qwen3-4B",
+            "layers": [
+              3,
+              8,
+              12,
+              17,
+              21,
+              26,
+              30,
+              35
+            ],
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "presence_penalty": 0.0
+            }
+          }
+        },
+        "h1": {
+          "sequences": {
+            "qwen35_4b": "results/hybrid/h3_shards/qwen35_4b/full",
+            "qwen3_4b": "results/reasoning/e3_shards/full"
+          },
+          "sample": 0,
+          "max_gen_tokens": 16384,
+          "budgets_tokens": [
+            256,
+            512,
+            1024
+          ],
+          "step_chunk": 128,
+          "lookahead_layers": [
+            1,
+            2,
+            3
+          ],
+          "ours": {
+            "mean_mix": 0.5
+          },
+          "gdn_prior_weights": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "fidelity": {
+            "n_sequences": 10,
+            "max_gen_tokens": 8192,
+            "query_chunk": 1024
+          },
+          "shard_dir": "results/hybrid/h1_shards",
+          "gate": {
+            "budget_tokens": 512,
+            "lookahead_max_points": 1.0,
+            "gdn_prior_min_reduction": 0.05
+          }
+        },
+        "h2": {
+          "metadata_max_share": 0.02,
+          "within_points": 0.5,
+          "engine_specs": {
+            "mean16": {
+              "method": "ours",
+              "bound_fmt": "none",
+              "mean_fmt": "fp16"
+            },
+            "mean8": {
+              "method": "ours",
+              "bound_fmt": "none",
+              "mean_fmt": "fp8"
+            },
+            "meanc": {
+              "method": "ours",
+              "bound_fmt": "none",
+              "mean_fmt": "chan"
+            },
+            "quest4": {
+              "method": "quest",
+              "bound_fmt": "int4"
+            },
+            "quest4p2": {
+              "method": "quest",
+              "bound_fmt": "int4p2"
+            },
+            "lite": {
+              "method": "ours",
+              "bound_fmt": "int4p2",
+              "mean_fmt": "chan"
+            }
+          },
+          "chosen": "mean8"
+        },
+        "h3": {
+          "tasks": [
+            "aime24",
+            "aime25"
+          ],
+          "split": "explore",
+          "samples": 8,
+          "sample_group": 4,
+          "seed": 20261026,
+          "max_new_tokens": {
+            "qwen35_4b": 32768,
+            "qwen3_4b": 16384
+          },
+          "batch_size": {
+            "qwen35_4b": 24,
+            "qwen3_4b": 12
+          },
+          "runs": {
+            "qwen35_4b": [
+              [
+                "full",
+                "quest@512",
+                "snapkv@512",
+                "oracle@512"
+              ],
+              [
+                "ours@512",
+                "ours@1024"
+              ],
+              [
+                "quest@1024",
+                "snapkv@1024",
+                "oracle@1024"
+              ]
+            ],
+            "qwen3_4b": [
+              [
+                "full",
+                "snapkv@1024",
+                "snapkv@512"
+              ]
+            ]
+          },
+          "snapkv_window": 32,
+          "snapkv_protect_prompt": true,
+          "out_dir": "results/hybrid/h3_shards",
+          "claims_dir": "results/hybrid/h3_claims",
+          "gate": {
+            "budget_tokens": 512,
+            "baselines": [
+              "quest",
+              "snapkv"
+            ],
+            "margin_points": 5
+          },
+          "hb_gate": {
+            "budget_tokens": 1024,
+            "max_loss_ratio": 0.5
+          }
+        },
+        "h4": {
+          "batches": [
+            1,
+            8,
+            32,
+            64,
+            128,
+            160
+          ],
+          "contexts": [
+            8192,
+            16384,
+            32768
+          ],
+          "budget_tokens": 512,
+          "kv_bytes_per_token": 32768,
+          "max_kv_gib": 30,
+          "iters": 50,
+          "page_bytes": 65536,
+          "host_pool_mib": 2048,
+          "cache_flush_mib": 512,
+          "copy_mib": [
+            1,
+            4,
+            16,
+            64
+          ],
+          "fetch_pages": [
+            1,
+            4,
+            16,
+            64,
+            256,
+            1024,
+            4096
+          ],
+          "gather_block": 1024,
+          "zero_copy_programs": 16,
+          "overlap_batches": [
+            8,
+            32,
+            160
+          ],
+          "lookahead_multiples": [
+            1,
+            2
+          ],
+          "cpu_threads": 8,
+          "gate": {
+            "min_ratio": 0.9,
+            "calibration_tol": 0.15
+          },
+          "residency": {
+            "model": "qwen35_4b",
+            "sequences": "results/hybrid/h3_shards/qwen35_4b/full",
+            "every": 3,
+            "cross_check": {
+              "sequences": "results/hybrid/h3_shards/qwen35_4b/ours_512",
+              "every": 10
+            },
+            "max_gen_tokens": 32768,
+            "cache_multiples": [
+              1,
+              2,
+              4
+            ],
+            "prefetch": {
+              "lookahead": 3,
+              "cache_plus": [
+                [
+                  2,
+                  1
+                ],
+                [
+                  4,
+                  2
+                ]
+              ]
+            },
+            "lag1_cache_multiples": [
+              1,
+              2
+            ],
+            "step_chunk": 512,
+            "q_self_err_max": 0.01,
+            "shard_dir": "results/hybrid/h4_shards",
+            "mc_samples": 400,
+            "mc_seed": 20261026,
+            "gpu_mem_gib": 48,
+            "reserve_gib": 4,
+            "host_kv_gib": 160
+          }
+        }
+      }
+    }
+  },
+  "screen": {
+    "qwen35_4b": {
+      "n_sequences": 30,
+      "retokenized": 0,
+      "mean_gen_tokens": 11917.233333333334,
+      "missing": {
+        "256": {
+          "oracle|sum": 0.3674069667855899,
+          "oracle|per_head": 0.35095589558283485,
+          "quest|vote": 0.4546484312663476,
+          "quest|sum": 0.45197397309044995,
+          "mean|sum": 0.3954170532524586,
+          "ours|sum": 0.4026093610872825,
+          "mean16|sum": 0.3954169936478138,
+          "mean8|sum": 0.3954748830447594,
+          "quest4|vote": 0.47541408650577066,
+          "meanc|sum": 0.4362518450866143,
+          "quest4p2|vote": 0.49342992852131523,
+          "lite|sum": 0.4536097311725219,
+          "ours48|sum": 0.41274275990823905,
+          "quest@la1|vote": 0.48389525078237056,
+          "ours@la1|sum": 0.42945085776348907,
+          "quest@la2|vote": 0.4883126482367516,
+          "ours@la2|sum": 0.4375323457022508,
+          "quest@la3|vote": 0.49490800959368547,
+          "ours@la3|sum": 0.4497855644673109,
+          "snapkv|evict": 0.5319124162197113,
+          "ours+beta0.1|sum": 0.4025556743144989,
+          "ours+beta0.25|sum": 0.4024493043621381,
+          "ours+beta0.5|sum": 0.40215794928371906,
+          "ours+forgot0.1|sum": 0.40256369213263193,
+          "ours+forgot0.25|sum": 0.40246735513210297,
+          "ours+forgot0.5|sum": 0.40222026656071347
+        },
+        "512": {
+          "oracle|sum": 0.22682948932051658,
+          "oracle|per_head": 0.21054119542241095,
+          "quest|vote": 0.31803677678108216,
+          "quest|sum": 0.315459955856204,
+          "mean|sum": 0.25540177201231323,
+          "ours|sum": 0.2620414838194847,
+          "mean16|sum": 0.25540202781558036,
+          "mean8|sum": 0.2554471393426259,
+          "quest4|vote": 0.3469029241551956,
+          "meanc|sum": 0.3021605722606182,
+          "quest4p2|vote": 0.3689007940391699,
+          "lite|sum": 0.3142781723290682,
+          "ours48|sum": 0.2730402909219265,
+          "quest@la1|vote": 0.3631314272681872,
+          "ours@la1|sum": 0.29621261470019816,
+          "quest@la2|vote": 0.3716227748741706,
+          "ours@la2|sum": 0.30763545632362366,
+          "quest@la3|vote": 0.38620487886170546,
+          "ours@la3|sum": 0.32943550969163576,
+          "snapkv|evict": 0.41419552490115163,
+          "ours+beta0.1|sum": 0.26190368086099625,
+          "ours+beta0.25|sum": 0.2616603871186574,
+          "ours+beta0.5|sum": 0.2611109713713328,
+          "ours+forgot0.1|sum": 0.2619270943105221,
+          "ours+forgot0.25|sum": 0.2617276151974996,
+          "ours+forgot0.5|sum": 0.2613060466945171
+        },
+        "1024": {
+          "oracle|sum": 0.12888911068439485,
+          "oracle|per_head": 0.11668382808566094,
+          "quest|vote": 0.19906004692117374,
+          "quest|sum": 0.19620502665638923,
+          "mean|sum": 0.15110802923639616,
+          "ours|sum": 0.1556203859547774,
+          "mean16|sum": 0.15110792169968287,
+          "mean8|sum": 0.15113993287086486,
+          "quest4|vote": 0.2246171010037263,
+          "meanc|sum": 0.18829273333152136,
+          "quest4p2|vote": 0.24419171685973803,
+          "lite|sum": 0.19683654780189197,
+          "ours48|sum": 0.164561344931523,
+          "quest@la1|vote": 0.24331896776954334,
+          "ours@la1|sum": 0.18603898957371712,
+          "quest@la2|vote": 0.25332227994998296,
+          "ours@la2|sum": 0.19727064296603203,
+          "quest@la3|vote": 0.27310726965467136,
+          "ours@la3|sum": 0.22342653771241505,
+          "snapkv|evict": 0.2960913704087337,
+          "ours+beta0.1|sum": 0.15543824980656307,
+          "ours+beta0.25|sum": 0.15517600576082866,
+          "ours+beta0.5|sum": 0.15491265704234441,
+          "ours+forgot0.1|sum": 0.15548315395911536,
+          "ours+forgot0.25|sum": 0.15530366053183872,
+          "ours+forgot0.5|sum": 0.15529078841209412
+        }
+      },
+      "missing_by_task": {
+        "aime24": {
+          "256": {
+            "oracle|sum": 0.35849933003385864,
+            "oracle|per_head": 0.3421665571630001,
+            "quest|vote": 0.44581258768836657,
+            "quest|sum": 0.44318605214357376,
+            "mean|sum": 0.3861765503883362,
+            "ours|sum": 0.3936926305294037,
+            "mean16|sum": 0.38617628837625184,
+            "mean8|sum": 0.38624206533034644,
+            "quest4|vote": 0.4664752706885338,
+            "meanc|sum": 0.42681611279646553,
+            "quest4p2|vote": 0.4847767412662506,
+            "lite|sum": 0.4445869078238805,
+            "ours48|sum": 0.40379212399323783,
+            "quest@la1|vote": 0.47438314830263456,
+            "ours@la1|sum": 0.419877586265405,
+            "quest@la2|vote": 0.47872566680113476,
+            "ours@la2|sum": 0.4278644986450672,
+            "quest@la3|vote": 0.48530042842030524,
+            "ours@la3|sum": 0.44005371779203417,
+            "snapkv|evict": 0.5229267562429111,
+            "ours+beta0.1|sum": 0.393635335812966,
+            "ours+beta0.25|sum": 0.39352282260855037,
+            "ours+beta0.5|sum": 0.39321750154097873,
+            "ours+forgot0.1|sum": 0.39364295651515324,
+            "ours+forgot0.25|sum": 0.39353841841220855,
+            "ours+forgot0.5|sum": 0.39327176635464034
+          },
+          "512": {
+            "oracle|sum": 0.2171752780675888,
+            "oracle|per_head": 0.20134600351254145,
+            "quest|vote": 0.307050396502018,
+            "quest|sum": 0.3044662930071354,
+            "mean|sum": 0.244790655374527,
+            "ours|sum": 0.2517436221241951,
+            "mean16|sum": 0.24479057490825654,
+            "mean8|sum": 0.24484600673119228,
+            "quest4|vote": 0.3357334901889165,
+            "meanc|sum": 0.29050358235836027,
+            "quest4p2|vote": 0.3577961186567942,
+            "lite|sum": 0.3033207500974337,
+            "ours48|sum": 0.2627623880902926,
+            "quest@la1|vote": 0.35040775338808694,
+            "ours@la1|sum": 0.28456808552145957,
+            "quest@la2|vote": 0.3587098685403665,
+            "ours@la2|sum": 0.2956963884333769,
+            "quest@la3|vote": 0.37310766726732253,
+            "ours@la3|sum": 0.31712625697255137,
+            "snapkv|evict": 0.3959721550345421,
+            "ours+beta0.1|sum": 0.25159888664881386,
+            "ours+beta0.25|sum": 0.2513411775231361,
+            "ours+beta0.5|sum": 0.2507508397102356,
+            "ours+forgot0.1|sum": 0.2516215647260348,
+            "ours+forgot0.25|sum": 0.25140813489754993,
+            "ours+forgot0.5|sum": 0.2509466802080472
+          },
+          "1024": {
+            "oracle|sum": 0.12019553830226262,
+            "oracle|per_head": 0.10868984361489614,
+            "quest|vote": 0.18749945908784865,
+            "quest|sum": 0.18463036715984343,
+            "mean|sum": 0.14100565314292907,
+            "ours|sum": 0.14566730310519535,
+            "mean16|sum": 0.141005502641201,
+            "mean8|sum": 0.14104356467723847,
+            "quest4|vote": 0.2126878321170807,
+            "meanc|sum": 0.17639344334602355,
+            "quest4p2|vote": 0.23162644008795422,
+            "lite|sum": 0.18532391488552094,
+            "ours48|sum": 0.15452593117952346,
+            "quest@la1|vote": 0.22933358003695806,
+            "ours@la1|sum": 0.17430623571077983,
+            "quest@la2|vote": 0.23898699382940927,
+            "ours@la2|sum": 0.18504990339279176,
+            "quest@la3|vote": 0.25832030226786934,
+            "ours@la3|sum": 0.21047063147028286,
+            "snapkv|evict": 0.2736763204137484,
+            "ours+beta0.1|sum": 0.14547522018353146,
+            "ours+beta0.25|sum": 0.14519752711057662,
+            "ours+beta0.5|sum": 0.14495660612980524,
+            "ours+forgot0.1|sum": 0.1455230236053467,
+            "ours+forgot0.25|sum": 0.14533195594946544,
+            "ours+forgot0.5|sum": 0.1453639601667722
+          }
+        },
+        "aime25": {
+          "256": {
+            "oracle|sum": 0.3763146035373211,
+            "oracle|per_head": 0.35974523400266967,
+            "quest|vote": 0.4634842748443286,
+            "quest|sum": 0.4607618940373262,
+            "mean|sum": 0.40465755611658094,
+            "ours|sum": 0.4115260916451613,
+            "mean16|sum": 0.40465769891937575,
+            "mean8|sum": 0.40470770075917245,
+            "quest4|vote": 0.4843529023230076,
+            "meanc|sum": 0.445687577376763,
+            "quest4p2|vote": 0.5020831157763799,
+            "lite|sum": 0.4626325545211633,
+            "ours48|sum": 0.4216933958232403,
+            "quest@la1|vote": 0.49340735326210655,
+            "ours@la1|sum": 0.43902412926157314,
+            "quest@la2|vote": 0.4978996296723684,
+            "ours@la2|sum": 0.4472001927594344,
+            "quest@la3|vote": 0.5045155907670656,
+            "ours@la3|sum": 0.45951741114258765,
+            "snapkv|evict": 0.5408980761965115,
+            "ours+beta0.1|sum": 0.4114760128160318,
+            "ours+beta0.25|sum": 0.41137578611572584,
+            "ours+beta0.5|sum": 0.4110983970264594,
+            "ours+forgot0.1|sum": 0.4114844277501106,
+            "ours+forgot0.25|sum": 0.4113962918519974,
+            "ours+forgot0.5|sum": 0.4111687667667866
+          },
+          "512": {
+            "oracle|sum": 0.23648370057344437,
+            "oracle|per_head": 0.2197363873322805,
+            "quest|vote": 0.32902315706014634,
+            "quest|sum": 0.3264536187052727,
+            "mean|sum": 0.2660128886500994,
+            "ours|sum": 0.27233934551477434,
+            "mean16|sum": 0.2660134807229042,
+            "mean8|sum": 0.2660482719540596,
+            "quest4|vote": 0.3580723581214746,
+            "meanc|sum": 0.31381756216287615,
+            "quest4p2|vote": 0.38000546942154567,
+            "lite|sum": 0.32523559456070267,
+            "ours48|sum": 0.2833181937535604,
+            "quest@la1|vote": 0.37585510114828746,
+            "ours@la1|sum": 0.30785714387893676,
+            "quest@la2|vote": 0.38453568120797477,
+            "ours@la2|sum": 0.3195745242138704,
+            "quest@la3|vote": 0.3993020904560884,
+            "ours@la3|sum": 0.3417447624107202,
+            "snapkv|evict": 0.43241889476776124,
+            "ours+beta0.1|sum": 0.27220847507317864,
+            "ours+beta0.25|sum": 0.2719795967141787,
+            "ours+beta0.5|sum": 0.27147110303243,
+            "ours+forgot0.1|sum": 0.27223262389500935,
+            "ours+forgot0.25|sum": 0.27204709549744927,
+            "ours+forgot0.5|sum": 0.271665413180987
+          },
+          "1024": {
+            "oracle|sum": 0.13758268306652705,
+            "oracle|per_head": 0.12467781255642572,
+            "quest|vote": 0.2106206347544988,
+            "quest|sum": 0.20777968615293502,
+            "mean|sum": 0.16121040532986322,
+            "ours|sum": 0.16557346880435944,
+            "mean16|sum": 0.16121034075816473,
+            "mean8|sum": 0.16123630106449127,
+            "quest4|vote": 0.23654636989037195,
+            "meanc|sum": 0.20019202331701916,
+            "quest4p2|vote": 0.2567569936315219,
+            "lite|sum": 0.208349180718263,
+            "ours48|sum": 0.17459675868352253,
+            "quest@la1|vote": 0.2573043555021286,
+            "ours@la1|sum": 0.1977717434366544,
+            "quest@la2|vote": 0.26765756607055663,
+            "ours@la2|sum": 0.2094913825392723,
+            "quest@la3|vote": 0.2878942370414734,
+            "ours@la3|sum": 0.23638244395454724,
+            "snapkv|evict": 0.31850642040371896,
+            "ours+beta0.1|sum": 0.16540127942959468,
+            "ours+beta0.25|sum": 0.1651544844110807,
+            "ours+beta0.5|sum": 0.16486870795488356,
+            "ours+forgot0.1|sum": 0.16544328431288402,
+            "ours+forgot0.25|sum": 0.16527536511421204,
+            "ours+forgot0.5|sum": 0.16521761665741602
+          }
+        }
+      },
+      "missing_by_layer": {
+        "256": {
+          "oracle|sum": {
+            "3": 0.46888305246829987,
+            "7": 0.3386610170205434,
+            "11": 0.36143157482147215,
+            "15": 0.3556330561637878,
+            "19": 0.31644989252090455,
+            "23": 0.3524068752924601,
+            "27": 0.3867362191279729,
+            "31": 0.35905404686927794
+          },
+          "oracle|per_head": {
+            "3": 0.4471592982610067,
+            "7": 0.3154323180516561,
+            "11": 0.34275723099708555,
+            "15": 0.33755531708399455,
+            "19": 0.2995344638824463,
+            "23": 0.3414619346459707,
+            "27": 0.37734116514523824,
+            "31": 0.34640543659528095
+          },
+          "quest|vote": {
+            "3": 0.5204056809345882,
+            "7": 0.4126114467779795,
+            "11": 0.45648226936658226,
+            "15": 0.45481393337249754,
+            "19": 0.4289718339840571,
+            "23": 0.45978210071722664,
+            "27": 0.4732020636399587,
+            "31": 0.43091812133789065
+          },
+          "quest|sum": {
+            "3": 0.5173200001319249,
+            "7": 0.409623725215594,
+            "11": 0.4534565885861715,
+            "15": 0.4524736414353053,
+            "19": 0.4266594847043355,
+            "23": 0.45778345863024394,
+            "27": 0.47158265113830566,
+            "31": 0.42689223488171896
+          },
+          "mean|sum": {
+            "3": 0.4874144852161407,
+            "7": 0.3615644693374634,
+            "11": 0.3887375315030416,
+            "15": 0.37733039756615955,
+            "19": 0.3415802379449209,
+            "23": 0.37871281305948895,
+            "27": 0.4449022283156713,
+            "31": 0.38309426307678224
+          },
+          "ours|sum": {
+            "3": 0.4930134246746699,
+            "7": 0.36956774195035297,
+            "11": 0.3970910837252935,
+            "15": 0.38776159286499023,
+            "19": 0.3556108415126801,
+            "23": 0.3919254630804062,
+            "27": 0.43829225897789004,
+            "31": 0.3876124819119771
+          },
+          "mean16|sum": {
+            "3": 0.4874148080746333,
+            "7": 0.361564431587855,
+            "11": 0.3887358109156291,
+            "15": 0.37732945481936137,
+            "19": 0.3415822168191274,
+            "23": 0.3787134200334549,
+            "27": 0.44490050673484804,
+            "31": 0.3830953001976013
+          },
+          "mean8|sum": {
+            "3": 0.4874726523955663,
+            "7": 0.3616492450237274,
+            "11": 0.3887908508380254,
+            "15": 0.3774363080660502,
+            "19": 0.34165736436843874,
+            "23": 0.37876806656519574,
+            "27": 0.44492016931374867,
+            "31": 0.383104407787323
+          },
+          "quest4|vote": {
+            "3": 0.5353998819986979,
+            "7": 0.4446723461151123,
+            "11": 0.48239053388436637,
+            "15": 0.48705514470736183,
+            "19": 0.44912153085072837,
+            "23": 0.4782472163438797,
+            "27": 0.4782942632834117,
+            "31": 0.4481317748626073
+          },
+          "meanc|sum": {
+            "3": 0.5281948357820511,
+            "7": 0.41037771105766296,
+            "11": 0.4307950327793757,
+            "15": 0.4132574051618576,
+            "19": 0.389116632938385,
+            "23": 0.41522497137387593,
+            "27": 0.47082447409629824,
+            "31": 0.4322236975034078
+          },
+          "quest4p2|vote": {
+            "3": 0.5468079855044683,
+            "7": 0.45884990990161895,
+            "11": 0.5054954806963603,
+            "15": 0.5077272077401479,
+            "19": 0.4696621974309286,
+            "23": 0.49224894245465595,
+            "27": 0.5023071130116781,
+            "31": 0.4643405914306641
+          },
+          "lite|sum": {
+            "3": 0.5299499173959096,
+            "7": 0.42334148089090984,
+            "11": 0.44943239688873293,
+            "15": 0.439590177933375,
+            "19": 0.41768263578414916,
+            "23": 0.4447171131769816,
+            "27": 0.47746095558007556,
+            "31": 0.4467031717300415
+          },
+          "ours48|sum": {
+            "3": 0.5013082524140676,
+            "7": 0.38918942014376323,
+            "11": 0.4110350469748179,
+            "15": 0.4022622376680374,
+            "19": 0.3677503168582916,
+            "23": 0.402033535639445,
+            "27": 0.4298308889071147,
+            "31": 0.39853238066037494
+          },
+          "quest@la1|vote": {
+            "3": 0.5450547615687052,
+            "7": 0.4542471845944723,
+            "11": 0.5071701993544896,
+            "15": 0.5054898659388224,
+            "19": 0.4612823565800985,
+            "23": 0.47993695437908174,
+            "27": 0.4763455390930176,
+            "31": 0.4416351447502772
+          },
+          "ours@la1|sum": {
+            "3": 0.5205611974000931,
+            "7": 0.4152537246545156,
+            "11": 0.4447340240081151,
+            "15": 0.4298493484656016,
+            "19": 0.3846697111924489,
+            "23": 0.4050459663073222,
+            "27": 0.44157091081142424,
+            "31": 0.39392197926839195
+          },
+          "quest@la2|vote": {
+            "3": 0.5529862781365712,
+            "7": 0.4652082751194636,
+            "11": 0.5168848117192586,
+            "15": 0.5070354988177618,
+            "19": 0.4686152736345927,
+            "23": 0.4794301758209864,
+            "27": 0.478435010711352,
+            "31": 0.4379058619340261
+          },
+          "ours@la2|sum": {
+            "3": 0.533690466483434,
+            "7": 0.4307277282079061,
+            "11": 0.4602876802285512,
+            "15": 0.43421321908632915,
+            "19": 0.39581377307573956,
+            "23": 0.40551820198694866,
+            "27": 0.44421531558036803,
+            "31": 0.39579238096872965
+          },
+          "quest@la3|vote": {
+            "3": 0.5820677946011226,
+            "7": 0.4690162122249603,
+            "11": 0.5291806558767954,
+            "15": 0.5182308624188106,
+            "19": 0.471728844443957,
+            "23": 0.4702892353137334,
+            "27": 0.48305306434631345,
+            "31": 0.435697407523791
+          },
+          "ours@la3|sum": {
+            "3": 0.5804589768250783,
+            "7": 0.43918025195598603,
+            "11": 0.48238859673341117,
+            "15": 0.44626972476641336,
+            "19": 0.4028709749380747,
+            "23": 0.4018785516421,
+            "27": 0.4485209931929906,
+            "31": 0.396716445684433
+          },
+          "snapkv|evict": {
+            "3": 0.5680132190386454,
+            "7": 0.4948135127623876,
+            "11": 0.5602716932694117,
+            "15": 0.5755101919174195,
+            "19": 0.5181549747784933,
+            "23": 0.5309368679920833,
+            "27": 0.5204806764920552,
+            "31": 0.48711819350719454
+          },
+          "ours+beta0.1|sum": {
+            "3": 0.49300419688224795,
+            "7": 0.3695609052975973,
+            "11": 0.3970429599285126,
+            "15": 0.38771606783072154,
+            "19": 0.35552650888760884,
+            "23": 0.3918664515018463,
+            "27": 0.4381828119357427,
+            "31": 0.3875454922517141
+          },
+          "ours+beta0.25|sum": {
+            "3": 0.49299359222253164,
+            "7": 0.36954136888186134,
+            "11": 0.3969631910324097,
+            "15": 0.38759787678718566,
+            "19": 0.3553712904453278,
+            "23": 0.39173611203829445,
+            "27": 0.4379720161358515,
+            "31": 0.3874189873536428
+          },
+          "ours+beta0.5|sum": {
+            "3": 0.49294604460398356,
+            "7": 0.369502991437912,
+            "11": 0.39671945174535117,
+            "15": 0.3872966249783834,
+            "19": 0.3549452761809031,
+            "23": 0.3914133052031199,
+            "27": 0.43737474381923674,
+            "31": 0.38706515630086263
+          },
+          "ours+forgot0.1|sum": {
+            "3": 0.4930087725321452,
+            "7": 0.36956634322802223,
+            "11": 0.39706020752588905,
+            "15": 0.38772327502568565,
+            "19": 0.3555358131726583,
+            "23": 0.3918685644865036,
+            "27": 0.43818356891473137,
+            "31": 0.3875629921754201
+          },
+          "ours+forgot0.25|sum": {
+            "3": 0.4930037438869476,
+            "7": 0.36955809195836387,
+            "11": 0.3969973882039388,
+            "15": 0.3876115679740906,
+            "19": 0.355393256743749,
+            "23": 0.3917539566755295,
+            "27": 0.4379543532927831,
+            "31": 0.3874664823214213
+          },
+          "ours+forgot0.5|sum": {
+            "3": 0.4929852972428004,
+            "7": 0.3695428729057312,
+            "11": 0.39683742026487984,
+            "15": 0.3873603860537211,
+            "19": 0.35501885612805684,
+            "23": 0.39145595133304595,
+            "27": 0.4373523046573003,
+            "31": 0.3872090439001719
+          }
+        },
+        "512": {
+          "oracle|sum": {
+            "3": 0.33758796056111656,
+            "7": 0.20444381833076478,
+            "11": 0.20154550870259602,
+            "15": 0.19583849509557089,
+            "19": 0.1804253856341044,
+            "23": 0.20573890606562298,
+            "27": 0.2500002384185791,
+            "31": 0.239055601755778
+          },
+          "oracle|per_head": {
+            "3": 0.3122699817021688,
+            "7": 0.18220816651980082,
+            "11": 0.1848709980646769,
+            "15": 0.18008542855580648,
+            "19": 0.16432631611824036,
+            "23": 0.19544145862261456,
+            "27": 0.23963229060173036,
+            "31": 0.22549492319424946
+          },
+          "quest|vote": {
+            "3": 0.4071668446063995,
+            "7": 0.28581692775090534,
+            "11": 0.3032590905825297,
+            "15": 0.2924770692984263,
+            "19": 0.29156793157259625,
+            "23": 0.3124217311541239,
+            "27": 0.332068943977356,
+            "31": 0.3195156753063202
+          },
+          "quest|sum": {
+            "3": 0.40319619874159496,
+            "7": 0.28366697430610655,
+            "11": 0.30051094889640806,
+            "15": 0.29074691732724506,
+            "19": 0.28934441407521566,
+            "23": 0.31005528569221497,
+            "27": 0.33069314757982887,
+            "31": 0.3154657602310181
+          },
+          "mean|sum": {
+            "3": 0.36026836236317955,
+            "7": 0.22811024785041809,
+            "11": 0.22943812012672424,
+            "15": 0.21735313733418782,
+            "19": 0.20521282752354938,
+            "23": 0.23464463154474893,
+            "27": 0.30389878352483113,
+            "31": 0.2642880658308665
+          },
+          "ours|sum": {
+            "3": 0.36816749572753904,
+            "7": 0.2365767459074656,
+            "11": 0.2376046895980835,
+            "15": 0.22657103538513185,
+            "19": 0.21807206471761068,
+            "23": 0.24426055550575257,
+            "27": 0.29526012738545737,
+            "31": 0.2698191563288371
+          },
+          "mean16|sum": {
+            "3": 0.36026834646860756,
+            "7": 0.22811125914255778,
+            "11": 0.22943865656852722,
+            "15": 0.21735416253407797,
+            "19": 0.2052122950553894,
+            "23": 0.2346444030602773,
+            "27": 0.3038996378580729,
+            "31": 0.26428746183713275
+          },
+          "mean8|sum": {
+            "3": 0.36033172607421876,
+            "7": 0.22816742261250814,
+            "11": 0.2294925590356191,
+            "15": 0.2174178421497345,
+            "19": 0.20526758035024006,
+            "23": 0.23468589186668395,
+            "27": 0.30389975706736244,
+            "31": 0.2643143355846405
+          },
+          "quest4|vote": {
+            "3": 0.42875442604223885,
+            "7": 0.33076443870862327,
+            "11": 0.3364973028500875,
+            "15": 0.33253461718559263,
+            "19": 0.3172991156578064,
+            "23": 0.3397228181362152,
+            "27": 0.3535440405209859,
+            "31": 0.3361066341400146
+          },
+          "meanc|sum": {
+            "3": 0.41527238686879475,
+            "7": 0.2812579850355784,
+            "11": 0.2744534949461619,
+            "15": 0.25422638257344565,
+            "19": 0.25295395255088804,
+            "23": 0.26908846497535704,
+            "27": 0.34618927240371705,
+            "31": 0.32384263873100283
+          },
+          "quest4p2|vote": {
+            "3": 0.44270277122656504,
+            "7": 0.34768598675727846,
+            "11": 0.36124983231226604,
+            "15": 0.3554837753375371,
+            "19": 0.3401960551738739,
+            "23": 0.3604409575462341,
+            "27": 0.38165608048439026,
+            "31": 0.36179089347521465
+          },
+          "lite|sum": {
+            "3": 0.41368166704972587,
+            "7": 0.2935500661532084,
+            "11": 0.2887500603993734,
+            "15": 0.2742581029733022,
+            "19": 0.2744572063287099,
+            "23": 0.2979858458042145,
+            "27": 0.3440760533014933,
+            "31": 0.32746637662251793
+          },
+          "ours48|sum": {
+            "3": 0.37922486464182537,
+            "7": 0.2580082337061564,
+            "11": 0.2511097311973572,
+            "15": 0.24024010101954144,
+            "19": 0.2298008382320404,
+            "23": 0.25381768544514977,
+            "27": 0.2944093187650045,
+            "31": 0.277711554368337
+          },
+          "quest@la1|vote": {
+            "3": 0.44742848674456276,
+            "7": 0.3537720819314321,
+            "11": 0.3873485326766968,
+            "15": 0.36807655493418373,
+            "19": 0.3393849273522695,
+            "23": 0.339080947637558,
+            "27": 0.33605135877927145,
+            "31": 0.3339085280895233
+          },
+          "ours@la1|sum": {
+            "3": 0.40914008716742195,
+            "7": 0.29774821599324547,
+            "11": 0.3011742115020752,
+            "15": 0.2789800504843394,
+            "19": 0.2513789137204488,
+            "23": 0.25572240352630615,
+            "27": 0.29900404810905457,
+            "31": 0.27655298709869386
+          },
+          "quest@la2|vote": {
+            "3": 0.4621957341829936,
+            "7": 0.3737098634243011,
+            "11": 0.4051565279563268,
+            "15": 0.3712591787179311,
+            "19": 0.35019026199976605,
+            "23": 0.33965647021929424,
+            "27": 0.33832527001698814,
+            "31": 0.33248889247576396
+          },
+          "ours@la2|sum": {
+            "3": 0.4299858589967092,
+            "7": 0.3211932599544525,
+            "11": 0.3226668119430542,
+            "15": 0.2846667965253194,
+            "19": 0.26283393303553265,
+            "23": 0.2569684565067291,
+            "27": 0.30187795758247377,
+            "31": 0.2808905760447184
+          },
+          "quest@la3|vote": {
+            "3": 0.5293624083201091,
+            "7": 0.38228297034899394,
+            "11": 0.4306833287080129,
+            "15": 0.3897491087516149,
+            "19": 0.3563295225302378,
+            "23": 0.3273268580436707,
+            "27": 0.3437532842159271,
+            "31": 0.3301515499750773
+          },
+          "ours@la3|sum": {
+            "3": 0.5272660831610362,
+            "7": 0.3360734005769094,
+            "11": 0.35708853602409363,
+            "15": 0.2999098281065623,
+            "19": 0.27171886364618936,
+            "23": 0.2545589546362559,
+            "27": 0.3067054510116577,
+            "31": 0.2821629603703817
+          },
+          "snapkv|evict": {
+            "3": 0.4503664761781693,
+            "7": 0.3786271880070368,
+            "11": 0.4275969326496124,
+            "15": 0.4415589332580566,
+            "19": 0.4006280263264974,
+            "23": 0.4111319243907928,
+            "27": 0.41095444758733113,
+            "31": 0.3927002708117167
+          },
+          "ours+beta0.1|sum": {
+            "3": 0.3681409498055776,
+            "7": 0.2365466097990672,
+            "11": 0.23747398853302001,
+            "15": 0.2264306962490082,
+            "19": 0.21788626909255981,
+            "23": 0.2440859834353129,
+            "27": 0.29500249624252317,
+            "31": 0.2696624537309011
+          },
+          "ours+beta0.25|sum": {
+            "3": 0.36809008320172626,
+            "7": 0.23650481700897216,
+            "11": 0.2372487485408783,
+            "15": 0.2261977215607961,
+            "19": 0.2175487021605174,
+            "23": 0.2437742034594218,
+            "27": 0.2945477644602458,
+            "31": 0.2693710565567017
+          },
+          "ours+beta0.5|sum": {
+            "3": 0.367960786819458,
+            "7": 0.2364471137523651,
+            "11": 0.23682294090588887,
+            "15": 0.22575936516125997,
+            "19": 0.216796878973643,
+            "23": 0.24312097430229188,
+            "27": 0.2933696866035461,
+            "31": 0.2686100244522095
+          },
+          "ours+forgot0.1|sum": {
+            "3": 0.3681579271952311,
+            "7": 0.23655845920244853,
+            "11": 0.23751365343729655,
+            "15": 0.22645201086997985,
+            "19": 0.21791064540545146,
+            "23": 0.24410518407821655,
+            "27": 0.2950108786424001,
+            "31": 0.26970799565315245
+          },
+          "ours+forgot0.25|sum": {
+            "3": 0.3681491553783417,
+            "7": 0.2365384300549825,
+            "11": 0.2373658279577891,
+            "15": 0.22626656889915467,
+            "19": 0.2176308314005534,
+            "23": 0.24382296800613404,
+            "27": 0.29455724557240803,
+            "31": 0.26948989431063336
+          },
+          "ours+forgot0.5|sum": {
+            "3": 0.3681567132472992,
+            "7": 0.23654256661732992,
+            "11": 0.23716416358947753,
+            "15": 0.2259851276874542,
+            "19": 0.21703375180562337,
+            "23": 0.24323388934135437,
+            "27": 0.2933810830116272,
+            "31": 0.26895107825597125
+          }
+        },
+        "1024": {
+          "oracle|sum": {
+            "3": 0.21962271332740785,
+            "7": 0.11089394887288412,
+            "11": 0.10000543196996053,
+            "15": 0.09764403303464254,
+            "19": 0.09599097569783528,
+            "23": 0.1104765554269155,
+            "27": 0.14991045196851094,
+            "31": 0.14656877517700195
+          },
+          "oracle|per_head": {
+            "3": 0.1977495590845744,
+            "7": 0.09539907375971476,
+            "11": 0.08939517736434936,
+            "15": 0.08739555478096009,
+            "19": 0.08424954017003378,
+            "23": 0.10300275286038717,
+            "27": 0.14142947793006896,
+            "31": 0.13484948873519897
+          },
+          "quest|vote": {
+            "3": 0.28902617692947385,
+            "7": 0.17560619910558065,
+            "11": 0.1747985084851583,
+            "15": 0.16384807626406353,
+            "19": 0.174984472990036,
+            "23": 0.18681340018908182,
+            "27": 0.2116434375445048,
+            "31": 0.2157601038614909
+          },
+          "quest|sum": {
+            "3": 0.28429281115531924,
+            "7": 0.17316803534825642,
+            "11": 0.17207650939623514,
+            "15": 0.1621530036131541,
+            "19": 0.1721868375937144,
+            "23": 0.18462504148483277,
+            "27": 0.21010074416796368,
+            "31": 0.2110372304916382
+          },
+          "mean|sum": {
+            "3": 0.24083998799324036,
+            "7": 0.12874839703241983,
+            "11": 0.12042506535847981,
+            "15": 0.11366538206736247,
+            "19": 0.11490383545557657,
+            "23": 0.13365039626757305,
+            "27": 0.18984014789263406,
+            "31": 0.16679102182388306
+          },
+          "ours|sum": {
+            "3": 0.24884191354115803,
+            "7": 0.13537328441937765,
+            "11": 0.12581068476041157,
+            "15": 0.11917770703633626,
+            "19": 0.12304407159487406,
+            "23": 0.13837873140970866,
+            "27": 0.18235494693120322,
+            "31": 0.17198174794514973
+          },
+          "mean16|sum": {
+            "3": 0.24083981116612752,
+            "7": 0.12874822020530702,
+            "11": 0.12042547663052877,
+            "15": 0.11366591254870097,
+            "19": 0.11490407983462016,
+            "23": 0.13364975055058798,
+            "27": 0.18983928163846334,
+            "31": 0.16679084102312725
+          },
+          "mean8|sum": {
+            "3": 0.24089418848355612,
+            "7": 0.12878995935122173,
+            "11": 0.12045658230781556,
+            "15": 0.11370254755020141,
+            "19": 0.11494245926539103,
+            "23": 0.1336651345094045,
+            "27": 0.18984906474749247,
+            "31": 0.16681952675183614
+          },
+          "quest4|vote": {
+            "3": 0.3105277220408122,
+            "7": 0.21527407169342042,
+            "11": 0.203119828303655,
+            "15": 0.1965675910313924,
+            "19": 0.19558881719907126,
+            "23": 0.21245363156000774,
+            "27": 0.2358833392461141,
+            "31": 0.22752180695533752
+          },
+          "meanc|sum": {
+            "3": 0.28992244402567546,
+            "7": 0.16843520402908324,
+            "11": 0.15304017265637715,
+            "15": 0.13966960310935975,
+            "19": 0.15054641763369242,
+            "23": 0.15756922761599224,
+            "27": 0.22942941983540852,
+            "31": 0.21772937774658202
+          },
+          "quest4p2|vote": {
+            "3": 0.3243785540262858,
+            "7": 0.23232657114664715,
+            "11": 0.22325860659281413,
+            "15": 0.2149720509847005,
+            "19": 0.21633083025614422,
+            "23": 0.23195009430249533,
+            "27": 0.2597432573636373,
+            "31": 0.25057377020517985
+          },
+          "lite|sum": {
+            "3": 0.29249807198842365,
+            "7": 0.18080650965372722,
+            "11": 0.16300313075383505,
+            "15": 0.1520638863245646,
+            "19": 0.16397578318913777,
+            "23": 0.17950294812520345,
+            "27": 0.22674504319826763,
+            "31": 0.21609700918197633
+          },
+          "ours48|sum": {
+            "3": 0.2596376200517019,
+            "7": 0.15177506407101948,
+            "11": 0.13527952829996745,
+            "15": 0.12865605155626933,
+            "19": 0.13170106410980226,
+            "23": 0.14567760825157167,
+            "27": 0.18602577050526936,
+            "31": 0.17773805260658265
+          },
+          "quest@la1|vote": {
+            "3": 0.33288846015930174,
+            "7": 0.24591398239135742,
+            "11": 0.2607870101928711,
+            "15": 0.23475555380185445,
+            "19": 0.21991021037101746,
+            "23": 0.20873709718386332,
+            "27": 0.21498276789983115,
+            "31": 0.22857666015625
+          },
+          "ours@la1|sum": {
+            "3": 0.29074075222015383,
+            "7": 0.19099268317222595,
+            "11": 0.18226003646850586,
+            "15": 0.1641085902849833,
+            "19": 0.15028734207153321,
+            "23": 0.14646552006403604,
+            "27": 0.1856188416481018,
+            "31": 0.17783815066019695
+          },
+          "quest@la2|vote": {
+            "3": 0.3513706604639689,
+            "7": 0.26941301027933756,
+            "11": 0.2810675303141276,
+            "15": 0.2387885014216105,
+            "19": 0.23011804223060608,
+            "23": 0.20985368490219117,
+            "27": 0.2167652646700541,
+            "31": 0.22920154531796774
+          },
+          "ours@la2|sum": {
+            "3": 0.3144109388192495,
+            "7": 0.21512112617492676,
+            "11": 0.20192689895629884,
+            "15": 0.16917956074078877,
+            "19": 0.15917828679084778,
+            "23": 0.14774956901868183,
+            "27": 0.1879540701707204,
+            "31": 0.18264469305674236
+          },
+          "quest@la3|vote": {
+            "3": 0.4478156328201294,
+            "7": 0.2808843990166982,
+            "11": 0.3129520833492279,
+            "15": 0.25760786135991415,
+            "19": 0.23748902877171835,
+            "23": 0.19971595803896586,
+            "27": 0.22101452549298603,
+            "31": 0.2273786683877309
+          },
+          "ours@la3|sum": {
+            "3": 0.446826962629954,
+            "7": 0.23185969193776448,
+            "11": 0.23712310989697774,
+            "15": 0.18254941304524738,
+            "19": 0.16721476316452027,
+            "23": 0.14642094175020853,
+            "27": 0.19174861907958984,
+            "31": 0.18366880019505818
+          },
+          "snapkv|evict": {
+            "3": 0.32438115278879803,
+            "7": 0.26726322770118716,
+            "11": 0.29979758461316425,
+            "15": 0.30973192552725476,
+            "19": 0.2880105803410212,
+            "23": 0.29471849898497265,
+            "27": 0.29667073289553325,
+            "31": 0.2881572604179382
+          },
+          "ours+beta0.1|sum": {
+            "3": 0.24879991213480632,
+            "7": 0.13533172011375427,
+            "11": 0.1256301005681356,
+            "15": 0.11900282303492228,
+            "19": 0.12280865708986918,
+            "23": 0.13812918663024903,
+            "27": 0.18204501271247864,
+            "31": 0.17175858616828918
+          },
+          "ours+beta0.25|sum": {
+            "3": 0.2487254997094472,
+            "7": 0.13527809381484984,
+            "11": 0.125392480691274,
+            "15": 0.11883017818133036,
+            "19": 0.12247583071390787,
+            "23": 0.1377874215443929,
+            "27": 0.18156031370162964,
+            "31": 0.17135822772979736
+          },
+          "ours+beta0.5|sum": {
+            "3": 0.24854268630345663,
+            "7": 0.13529277046521504,
+            "11": 0.12531541387240092,
+            "15": 0.1190629263718923,
+            "19": 0.12213858564694723,
+            "23": 0.13764328956604005,
+            "27": 0.18078551093737286,
+            "31": 0.1705200731754303
+          },
+          "ours+forgot0.1|sum": {
+            "3": 0.24884130557378134,
+            "7": 0.13534880677858988,
+            "11": 0.12569983005523683,
+            "15": 0.11904483834902445,
+            "19": 0.12285675406455994,
+            "23": 0.13816366593043009,
+            "27": 0.18208152850468953,
+            "31": 0.1718285024166107
+          },
+          "ours+forgot0.25|sum": {
+            "3": 0.24885501861572265,
+            "7": 0.13533374865849812,
+            "11": 0.12559315363566081,
+            "15": 0.11895774006843567,
+            "19": 0.12261712551116943,
+            "23": 0.13787076671918233,
+            "27": 0.1816465417544047,
+            "31": 0.17155518929163616
+          },
+          "ours+forgot0.5|sum": {
+            "3": 0.24899094303448996,
+            "7": 0.1354396124680837,
+            "11": 0.12588435411453247,
+            "15": 0.11945198973019917,
+            "19": 0.1225615402062734,
+            "23": 0.13786322871843973,
+            "27": 0.18105919559796652,
+            "31": 0.17107544342676798
+          }
+        }
+      },
+      "churn_512": {
+        "oracle|sum": 6.832178392012914,
+        "quest|vote": 6.7129634141922,
+        "mean|sum": 6.660614552100499,
+        "ours|sum": 6.6242827067772545,
+        "mean16|sum": 6.660646593570709,
+        "mean8|sum": 6.661975778142611,
+        "quest4|vote": 6.678547580043475,
+        "meanc|sum": 7.124328207969666,
+        "quest4p2|vote": 6.808605256676674,
+        "lite|sum": 6.213617306947708,
+        "ours48|sum": 6.560867596666018,
+        "quest@la1|vote": 7.7915731251239775,
+        "ours@la1|sum": 8.339407759904862,
+        "quest@la2|vote": 7.789086582263311,
+        "ours@la2|sum": 8.295697269837062,
+        "quest@la3|vote": 8.144647612174351,
+        "ours@la3|sum": 9.007468726237615
+      },
+      "prior_spearman": {
+        "beta": 0.08581296400429737,
+        "forgot": -0.006298374351346949
+      },
+      "max_q_self_err": 0.0,
+      "head_dim": 256,
+      "complete": true,
+      "metadata_share": {
+        "quest": 0.0625,
+        "ours": 0.09375,
+        "mean": 0.03125,
+        "mean16": 0.03125,
+        "mean8": 0.015625,
+        "quest4": 0.0157470703125,
+        "meanc": 0.0078125,
+        "quest4p2": 0.00787353515625,
+        "lite": 0.01568603515625,
+        "ours48": 0.0313720703125
+      }
+    },
+    "qwen3_4b": {
+      "n_sequences": 30,
+      "retokenized": 30,
+      "mean_gen_tokens": 11917.233333333334,
+      "missing": {
+        "256": {
+          "oracle|sum": 0.1868355803191662,
+          "oracle|per_head": 0.17535175556937854,
+          "quest|vote": 0.20969458383818468,
+          "quest|sum": 0.21085334333280722,
+          "mean|sum": 0.25393976929287115,
+          "ours|sum": 0.20569053093592327,
+          "mean16|sum": 0.25394024898608525,
+          "mean8|sum": 0.2540389952560266,
+          "quest4|vote": 0.21599018039802712,
+          "meanc|sum": 0.2565642596532901,
+          "quest4p2|vote": 0.23748808366556962,
+          "lite|sum": 0.2266900745530923,
+          "ours48|sum": 0.20581797969837984,
+          "quest@la1|vote": 0.21113715531925362,
+          "ours@la1|sum": 0.20794054890672367,
+          "quest@la2|vote": 0.21283163018524648,
+          "ours@la2|sum": 0.21028451398015022,
+          "quest@la3|vote": 0.2321801196783781,
+          "ours@la3|sum": 0.23098751281698546,
+          "snapkv|evict": 0.27798180704315506
+        },
+        "512": {
+          "oracle|sum": 0.11584911197423935,
+          "oracle|per_head": 0.10293402845660846,
+          "quest|vote": 0.1430925580362479,
+          "quest|sum": 0.14434018234411874,
+          "mean|sum": 0.19503170289099217,
+          "ours|sum": 0.1312029058734576,
+          "mean16|sum": 0.19503155015408993,
+          "mean8|sum": 0.19513783417642117,
+          "quest4|vote": 0.15726151963075002,
+          "meanc|sum": 0.19751062256594498,
+          "quest4p2|vote": 0.1711787405113379,
+          "lite|sum": 0.1535865751405557,
+          "ours48|sum": 0.13751310457785923,
+          "quest@la1|vote": 0.14540477767586707,
+          "ours@la1|sum": 0.13354241127769154,
+          "quest@la2|vote": 0.14778244793415068,
+          "ours@la2|sum": 0.13637833669781685,
+          "quest@la3|vote": 0.17963534022370975,
+          "ours@la3|sum": 0.1694725014269352,
+          "snapkv|evict": 0.16971449504295985
+        },
+        "1024": {
+          "oracle|sum": 0.06930890803535779,
+          "oracle|per_head": 0.058236217002073924,
+          "quest|vote": 0.09388479913274447,
+          "quest|sum": 0.0943466251095136,
+          "mean|sum": 0.1399572382370631,
+          "ours|sum": 0.08031285057465236,
+          "mean16|sum": 0.1399570258955161,
+          "mean8|sum": 0.14008913760383923,
+          "quest4|vote": 0.11017598062753678,
+          "meanc|sum": 0.1414089505871137,
+          "quest4p2|vote": 0.1170378344754378,
+          "lite|sum": 0.09832539980610212,
+          "ours48|sum": 0.08877269849181176,
+          "quest@la1|vote": 0.09634245509902636,
+          "ours@la1|sum": 0.08247062092026075,
+          "quest@la2|vote": 0.0984682542582353,
+          "ours@la2|sum": 0.08467306072513263,
+          "quest@la3|vote": 0.12596552595496177,
+          "ours@la3|sum": 0.1155409427980582,
+          "snapkv|evict": 0.10991891324520112
+        }
+      },
+      "missing_by_task": {
+        "aime24": {
+          "256": {
+            "oracle|sum": 0.17965231239795684,
+            "oracle|per_head": 0.16835040102402368,
+            "quest|vote": 0.2014730952680111,
+            "quest|sum": 0.20264681950211524,
+            "mean|sum": 0.2442597803970178,
+            "ours|sum": 0.19701593617598215,
+            "mean16|sum": 0.24425983900825182,
+            "mean8|sum": 0.24438896477222444,
+            "quest4|vote": 0.20798393736282986,
+            "meanc|sum": 0.24636349106828373,
+            "quest4p2|vote": 0.22886789292097093,
+            "lite|sum": 0.21808070863286655,
+            "ours48|sum": 0.19767352466781934,
+            "quest@la1|vote": 0.20289688582221668,
+            "ours@la1|sum": 0.19919001857439678,
+            "quest@la2|vote": 0.20460844735304515,
+            "ours@la2|sum": 0.20130973706642788,
+            "quest@la3|vote": 0.22385656982660293,
+            "ours@la3|sum": 0.22213833928108215,
+            "snapkv|evict": 0.2657696418464184
+          },
+          "512": {
+            "oracle|sum": 0.10993206351995469,
+            "oracle|per_head": 0.09732811599969864,
+            "quest|vote": 0.1359226698676745,
+            "quest|sum": 0.13712191979090374,
+            "mean|sum": 0.1848635919392109,
+            "ours|sum": 0.12434495290120443,
+            "mean16|sum": 0.18486333812276523,
+            "mean8|sum": 0.1849842667579651,
+            "quest4|vote": 0.1495998015006383,
+            "meanc|sum": 0.18654390399654705,
+            "quest4p2|vote": 0.16291414697964987,
+            "lite|sum": 0.14621410568555196,
+            "ours48|sum": 0.1308273747563362,
+            "quest@la1|vote": 0.13811842103799185,
+            "ours@la1|sum": 0.12662411431471507,
+            "quest@la2|vote": 0.14047936548789342,
+            "ours@la2|sum": 0.12925984213749567,
+            "quest@la3|vote": 0.17035249372323355,
+            "ours@la3|sum": 0.16147168278694152,
+            "snapkv|evict": 0.15707652072111766
+          },
+          "1024": {
+            "oracle|sum": 0.06437637706597646,
+            "oracle|per_head": 0.05373093088467916,
+            "quest|vote": 0.087395312388738,
+            "quest|sum": 0.08777713527282079,
+            "mean|sum": 0.1292378822962443,
+            "ours|sum": 0.07479114979505538,
+            "mean16|sum": 0.1292371948560079,
+            "mean8|sum": 0.12940346946318945,
+            "quest4|vote": 0.10287195096413294,
+            "meanc|sum": 0.12965455055236816,
+            "quest4p2|vote": 0.10947526345650355,
+            "lite|sum": 0.0919707864522934,
+            "ours48|sum": 0.08297781199216843,
+            "quest@la1|vote": 0.0896401305993398,
+            "ours@la1|sum": 0.07678344796101252,
+            "quest@la2|vote": 0.09170094430446625,
+            "ours@la2|sum": 0.07887893517812093,
+            "quest@la3|vote": 0.1167252853512764,
+            "ours@la3|sum": 0.10772453993558884,
+            "snapkv|evict": 0.09914233088493347
+          }
+        },
+        "aime25": {
+          "256": {
+            "oracle|sum": 0.19401884824037552,
+            "oracle|per_head": 0.18235311011473337,
+            "quest|vote": 0.21791607240835825,
+            "quest|sum": 0.2190598671634992,
+            "mean|sum": 0.2636197581887245,
+            "ours|sum": 0.21436512569586436,
+            "mean16|sum": 0.2636206589639187,
+            "mean8|sum": 0.2636890257398287,
+            "quest4|vote": 0.22399642343322437,
+            "meanc|sum": 0.2667650282382965,
+            "quest4p2|vote": 0.24610827441016833,
+            "lite|sum": 0.2352994404733181,
+            "ours48|sum": 0.21396243472894033,
+            "quest@la1|vote": 0.21937742481629055,
+            "ours@la1|sum": 0.21669107923905054,
+            "quest@la2|vote": 0.22105481301744778,
+            "ours@la2|sum": 0.21925929089387258,
+            "quest@la3|vote": 0.24050366953015329,
+            "ours@la3|sum": 0.23983668635288874,
+            "snapkv|evict": 0.2901939722398917
+          },
+          "512": {
+            "oracle|sum": 0.12176616042852402,
+            "oracle|per_head": 0.10853994091351828,
+            "quest|vote": 0.15026244620482127,
+            "quest|sum": 0.15155844489733378,
+            "mean|sum": 0.20519981384277344,
+            "ours|sum": 0.13806085884571076,
+            "mean16|sum": 0.20519976218541464,
+            "mean8|sum": 0.20529140159487724,
+            "quest4|vote": 0.1649232377608617,
+            "meanc|sum": 0.20847734113534291,
+            "quest4p2|vote": 0.17944333404302598,
+            "lite|sum": 0.16095904459555943,
+            "ours48|sum": 0.14419883439938228,
+            "quest@la1|vote": 0.15269113431374232,
+            "ours@la1|sum": 0.14046070824066798,
+            "quest@la2|vote": 0.15508553038040798,
+            "ours@la2|sum": 0.14349683125813803,
+            "quest@la3|vote": 0.18891818672418595,
+            "ours@la3|sum": 0.17747332006692887,
+            "snapkv|evict": 0.18235246936480204
+          },
+          "1024": {
+            "oracle|sum": 0.07424143900473913,
+            "oracle|per_head": 0.06274150311946869,
+            "quest|vote": 0.10037428587675094,
+            "quest|sum": 0.1009161149462064,
+            "mean|sum": 0.15067659417788187,
+            "ours|sum": 0.08583455135424932,
+            "mean16|sum": 0.15067685693502425,
+            "mean8|sum": 0.15077480574448904,
+            "quest4|vote": 0.1174800102909406,
+            "meanc|sum": 0.15316335062185923,
+            "quest4p2|vote": 0.12460040549437205,
+            "lite|sum": 0.10468001315991084,
+            "ours48|sum": 0.09456758499145508,
+            "quest@la1|vote": 0.10304477959871292,
+            "ours@la1|sum": 0.08815779387950898,
+            "quest@la2|vote": 0.10523556421200435,
+            "ours@la2|sum": 0.09046718627214431,
+            "quest@la3|vote": 0.13520576655864716,
+            "ours@la3|sum": 0.12335734566052754,
+            "snapkv|evict": 0.12069549560546874
+          }
+        }
+      },
+      "missing_by_layer": {
+        "256": {
+          "oracle|sum": {
+            "3": 0.38030742009480795,
+            "8": 0.12254462639490764,
+            "12": 0.18152578671773276,
+            "17": 0.271015743414561,
+            "21": 0.2080574055512746,
+            "26": 0.1535199264685313,
+            "30": 0.07512375315030416,
+            "35": 0.10258998076121012
+          },
+          "oracle|per_head": {
+            "3": 0.36543359359105426,
+            "8": 0.11290112733840943,
+            "12": 0.16858193079630535,
+            "17": 0.2479597826798757,
+            "21": 0.19342698454856871,
+            "26": 0.14632710814476013,
+            "30": 0.06899121801058451,
+            "35": 0.09919229944547017
+          },
+          "quest|vote": {
+            "3": 0.4133141408363978,
+            "8": 0.13694188396135967,
+            "12": 0.20343849460283916,
+            "17": 0.31057130098342894,
+            "21": 0.24385148882865906,
+            "26": 0.17121659318606058,
+            "30": 0.08596434394518535,
+            "35": 0.11225842436154683
+          },
+          "quest|sum": {
+            "3": 0.41031424701213837,
+            "8": 0.13729453881581624,
+            "12": 0.2041560749212901,
+            "17": 0.3104851504166921,
+            "21": 0.2527136186758677,
+            "26": 0.17229504982630411,
+            "30": 0.08688647349675496,
+            "35": 0.1126815934975942
+          },
+          "mean|sum": {
+            "3": 0.5402167787154516,
+            "8": 0.12867829600969952,
+            "12": 0.18816154599189758,
+            "17": 0.30328638553619386,
+            "21": 0.26172269384066266,
+            "26": 0.2912712355454763,
+            "30": 0.2130861202875773,
+            "35": 0.10509509841601054
+          },
+          "ours|sum": {
+            "3": 0.416557518641154,
+            "8": 0.12966772317886352,
+            "12": 0.19018743832906088,
+            "17": 0.29271671374638875,
+            "21": 0.23720900217692056,
+            "26": 0.1732202668984731,
+            "30": 0.09777817130088806,
+            "35": 0.10818741321563721
+          },
+          "mean16|sum": {
+            "3": 0.5402194102605183,
+            "8": 0.12867859601974488,
+            "12": 0.18816103537877402,
+            "17": 0.3032869855562846,
+            "21": 0.2617228408654531,
+            "26": 0.2912709871927897,
+            "30": 0.21308698654174804,
+            "35": 0.10509515007336935
+          },
+          "mean8|sum": {
+            "3": 0.540366158882777,
+            "8": 0.12878655989964802,
+            "12": 0.18828942775726318,
+            "17": 0.30339900056521096,
+            "21": 0.26188615560531614,
+            "26": 0.2913196166356405,
+            "30": 0.21311438481012981,
+            "35": 0.10515065789222718
+          },
+          "quest4|vote": {
+            "3": 0.3990479399760564,
+            "8": 0.15612245798110963,
+            "12": 0.22063878178596497,
+            "17": 0.31534023880958556,
+            "21": 0.25566298762957257,
+            "26": 0.1742960234483083,
+            "30": 0.09002542893091837,
+            "35": 0.11678758462270102
+          },
+          "meanc|sum": {
+            "3": 0.513372340798378,
+            "8": 0.136863374710083,
+            "12": 0.1942754864692688,
+            "17": 0.3156107783317566,
+            "21": 0.26961923241615293,
+            "26": 0.2965422928333282,
+            "30": 0.21774756908416748,
+            "35": 0.10848300258318583
+          },
+          "quest4p2|vote": {
+            "3": 0.48201519151528677,
+            "8": 0.15655933221181234,
+            "12": 0.2235447565714518,
+            "17": 0.3395063201586405,
+            "21": 0.2795568346977234,
+            "26": 0.19714165925979615,
+            "30": 0.10506505767504375,
+            "35": 0.11651551723480225
+          },
+          "lite|sum": {
+            "3": 0.45164244771003725,
+            "8": 0.15037629008293152,
+            "12": 0.21047890384991963,
+            "17": 0.32118215958277385,
+            "21": 0.26522552172342934,
+            "26": 0.19241630832354228,
+            "30": 0.10734336773554484,
+            "35": 0.11485559741655986
+          },
+          "ours48|sum": {
+            "3": 0.39932588835557303,
+            "8": 0.14633427659670512,
+            "12": 0.20196211338043213,
+            "17": 0.2920367320378621,
+            "21": 0.23596680363019307,
+            "26": 0.16656191349029542,
+            "30": 0.09047025442123413,
+            "35": 0.11388585567474366
+          },
+          "quest@la1|vote": {
+            "3": 0.41485396126906077,
+            "8": 0.13896753390630087,
+            "12": 0.2054483711719513,
+            "17": 0.3147265354792277,
+            "21": 0.2461571415265401,
+            "26": 0.17080029845237732,
+            "30": 0.08576753139495849,
+            "35": 0.11237586935361227
+          },
+          "ours@la1|sum": {
+            "3": 0.41801681915918987,
+            "8": 0.1321697692076365,
+            "12": 0.1921974837779999,
+            "17": 0.29544485211372373,
+            "21": 0.24026584426561992,
+            "26": 0.1755786339441935,
+            "30": 0.10164341727892558,
+            "35": 0.10820757150650025
+          },
+          "quest@la2|vote": {
+            "3": 0.4192089448372523,
+            "8": 0.14003888964653016,
+            "12": 0.20733816822369894,
+            "17": 0.31660239497820536,
+            "21": 0.25043829480806984,
+            "26": 0.17061979174613953,
+            "30": 0.08572606245676677,
+            "35": 0.11268049478530884
+          },
+          "ours@la2|sum": {
+            "3": 0.4241814335187276,
+            "8": 0.13353529969851177,
+            "12": 0.19394056995709738,
+            "17": 0.29656608899434406,
+            "21": 0.2407007892926534,
+            "26": 0.1829555292924245,
+            "30": 0.10171914299329123,
+            "35": 0.10867725809415181
+          },
+          "quest@la3|vote": {
+            "3": 0.5602683554093043,
+            "8": 0.1402301808198293,
+            "12": 0.20887083212534588,
+            "17": 0.3233643074830373,
+            "21": 0.25530063509941103,
+            "26": 0.17093467315038044,
+            "30": 0.08587575356165568,
+            "35": 0.11259621977806092
+          },
+          "ours@la3|sum": {
+            "3": 0.572941513856252,
+            "8": 0.13444163997968037,
+            "12": 0.19559309482574463,
+            "17": 0.3030525585015615,
+            "21": 0.24398985107739765,
+            "26": 0.18525167902310688,
+            "30": 0.10407223502794902,
+            "35": 0.10855753024419149
+          },
+          "snapkv|evict": {
+            "3": 0.5157853464285532,
+            "8": 0.1590302566687266,
+            "12": 0.22864256501197816,
+            "17": 0.3749557316303253,
+            "21": 0.3352505207061768,
+            "26": 0.29820024967193604,
+            "30": 0.19596100250879925,
+            "35": 0.11602878371874491
+          }
+        },
+        "512": {
+          "oracle|sum": {
+            "3": 0.20147879123687745,
+            "8": 0.0832658588886261,
+            "12": 0.12455831964810689,
+            "17": 0.16935253143310547,
+            "21": 0.12004223465919495,
+            "26": 0.10153512756029764,
+            "30": 0.04965655604998271,
+            "35": 0.0769034763177236
+          },
+          "oracle|per_head": {
+            "3": 0.18120145201683044,
+            "8": 0.07171192566553751,
+            "12": 0.10923998554547627,
+            "17": 0.14854054053624471,
+            "21": 0.1064934770266215,
+            "26": 0.09213032722473144,
+            "30": 0.041739851236343384,
+            "35": 0.07241466840108236
+          },
+          "quest|vote": {
+            "3": 0.22520902752876282,
+            "8": 0.10081252654393515,
+            "12": 0.152118714650472,
+            "17": 0.2208234985669454,
+            "21": 0.1602609395980835,
+            "26": 0.12623563011487324,
+            "30": 0.06608195106188457,
+            "35": 0.09319817622502645
+          },
+          "quest|sum": {
+            "3": 0.22428647677103677,
+            "8": 0.10138068000475565,
+            "12": 0.15263727108637493,
+            "17": 0.22098727623621622,
+            "21": 0.1702994962533315,
+            "26": 0.12804083228111268,
+            "30": 0.06400444308916728,
+            "35": 0.093084983030955
+          },
+          "mean|sum": {
+            "3": 0.43498123784859977,
+            "8": 0.09053091804186503,
+            "12": 0.1327790955702464,
+            "17": 0.21212280790011087,
+            "21": 0.1843049168586731,
+            "26": 0.24013729492823283,
+            "30": 0.18548746506373087,
+            "35": 0.07990988691647848
+          },
+          "ours|sum": {
+            "3": 0.22916857997576395,
+            "8": 0.09168204267819723,
+            "12": 0.13490067521731058,
+            "17": 0.19202845295270285,
+            "21": 0.14403246839841208,
+            "26": 0.11365174055099488,
+            "30": 0.05964048504829407,
+            "35": 0.0845188021659851
+          },
+          "mean16|sum": {
+            "3": 0.4349792152643204,
+            "8": 0.09053072532018026,
+            "12": 0.13277896642684936,
+            "17": 0.21212369998296102,
+            "21": 0.1843049148718516,
+            "26": 0.24013798236846923,
+            "30": 0.18548704385757447,
+            "35": 0.0799098531405131
+          },
+          "mean8|sum": {
+            "3": 0.4351457426945368,
+            "8": 0.09064953525861104,
+            "12": 0.132924356063207,
+            "17": 0.21222883264223735,
+            "21": 0.18449902931849163,
+            "26": 0.24017087022463482,
+            "30": 0.18550458351771038,
+            "35": 0.07997972369194031
+          },
+          "quest4|vote": {
+            "3": 0.2250435431798299,
+            "8": 0.13559987545013427,
+            "12": 0.18269543449083964,
+            "17": 0.2281797707080841,
+            "21": 0.17828033765157064,
+            "26": 0.1317731499671936,
+            "30": 0.0728754460811615,
+            "35": 0.10364459951718648
+          },
+          "meanc|sum": {
+            "3": 0.3991566628217697,
+            "8": 0.10030715465545655,
+            "12": 0.13942311803499857,
+            "17": 0.2269062062104543,
+            "21": 0.19139938155810038,
+            "26": 0.2453769644101461,
+            "30": 0.1920916755994161,
+            "35": 0.08542381723721822
+          },
+          "quest4p2|vote": {
+            "3": 0.2906559328238169,
+            "8": 0.1353902816772461,
+            "12": 0.185253244638443,
+            "17": 0.24622708559036255,
+            "21": 0.193822314341863,
+            "26": 0.14035348097483316,
+            "30": 0.07464137673377991,
+            "35": 0.10308620731035868
+          },
+          "lite|sum": {
+            "3": 0.2748408595720927,
+            "8": 0.12208070556322734,
+            "12": 0.16023752093315125,
+            "17": 0.2135693589846293,
+            "21": 0.16535147031148276,
+            "26": 0.12773343722025554,
+            "30": 0.06658511956532796,
+            "35": 0.09829412897427876
+          },
+          "ours48|sum": {
+            "3": 0.22023159662882488,
+            "8": 0.11629238327344259,
+            "12": 0.15139810840288798,
+            "17": 0.19281323949495952,
+            "21": 0.1464876651763916,
+            "26": 0.11637980937957763,
+            "30": 0.06056950688362121,
+            "35": 0.09593252738316854
+          },
+          "quest@la1|vote": {
+            "3": 0.22718406518300374,
+            "8": 0.10367323557535807,
+            "12": 0.15463805397351582,
+            "17": 0.22939709226290386,
+            "21": 0.16364037195841472,
+            "26": 0.12580581108729044,
+            "30": 0.0653074304262797,
+            "35": 0.09359216094017028
+          },
+          "ours@la1|sum": {
+            "3": 0.23183924158414204,
+            "8": 0.09480337500572204,
+            "12": 0.13708941539128622,
+            "17": 0.19709542592366536,
+            "21": 0.14733785192171733,
+            "26": 0.11487512588500977,
+            "30": 0.06058039863904317,
+            "35": 0.08471845587094624
+          },
+          "quest@la2|vote": {
+            "3": 0.23166176478068035,
+            "8": 0.10506706237792969,
+            "12": 0.15739258527755737,
+            "17": 0.23223474224408466,
+            "21": 0.17121873100598653,
+            "26": 0.12494019667307536,
+            "30": 0.06521931489308676,
+            "35": 0.09452518622080484
+          },
+          "ours@la2|sum": {
+            "3": 0.24356600046157836,
+            "8": 0.09654409289360047,
+            "12": 0.13927197456359863,
+            "17": 0.1984899381796519,
+            "21": 0.14889461795488992,
+            "26": 0.1176399290561676,
+            "30": 0.0607684850692749,
+            "35": 0.08585165540377299
+          },
+          "quest@la3|vote": {
+            "3": 0.4599486927191416,
+            "8": 0.10534550547599793,
+            "12": 0.15989831288655598,
+            "17": 0.24672887722651163,
+            "21": 0.18027677138646445,
+            "26": 0.12538514137268067,
+            "30": 0.06524141828219096,
+            "35": 0.09425800244013469
+          },
+          "ours@la3|sum": {
+            "3": 0.4861565371354421,
+            "8": 0.0978275736172994,
+            "12": 0.14163726965586346,
+            "17": 0.20922391017278036,
+            "21": 0.154803866147995,
+            "26": 0.11884162425994874,
+            "30": 0.06161741018295288,
+            "35": 0.08567182024319966
+          },
+          "snapkv|evict": {
+            "3": 0.27395315368970236,
+            "8": 0.11560612122217814,
+            "12": 0.16738203565279644,
+            "17": 0.2645706872145335,
+            "21": 0.21854414343833922,
+            "26": 0.1537828803062439,
+            "30": 0.07378444075584412,
+            "35": 0.09009249806404114
+          }
+        },
+        "1024": {
+          "oracle|sum": {
+            "3": 0.1198709229628245,
+            "8": 0.05138474901517232,
+            "12": 0.07777130007743835,
+            "17": 0.09652753472328186,
+            "21": 0.06414910554885864,
+            "26": 0.06286797126134237,
+            "30": 0.03024882674217224,
+            "35": 0.051650853951772054
+          },
+          "oracle|per_head": {
+            "3": 0.10136646827061971,
+            "8": 0.04097628593444824,
+            "12": 0.06438964605331421,
+            "17": 0.08083312114079794,
+            "21": 0.05344420075416565,
+            "26": 0.05430001417795817,
+            "30": 0.023491384585698445,
+            "35": 0.04708861509958903
+          },
+          "quest|vote": {
+            "3": 0.14769225517908732,
+            "8": 0.06689937512079874,
+            "12": 0.10186618566513062,
+            "17": 0.1414294123649597,
+            "21": 0.09384145538012187,
+            "26": 0.08488402764002483,
+            "30": 0.04577333132425944,
+            "35": 0.06869235038757324
+          },
+          "quest|sum": {
+            "3": 0.146349702278773,
+            "8": 0.0670654296875,
+            "12": 0.1021955668926239,
+            "17": 0.14163334568341573,
+            "21": 0.10022814472516378,
+            "26": 0.08612040281295777,
+            "30": 0.043441247940063474,
+            "35": 0.06773916085561117
+          },
+          "mean|sum": {
+            "3": 0.3161991616090139,
+            "8": 0.05794253945350647,
+            "12": 0.08508135080337524,
+            "17": 0.13812541564305622,
+            "21": 0.1255906601746877,
+            "26": 0.18789459466934205,
+            "30": 0.154205717643102,
+            "35": 0.054618465900421145
+          },
+          "ours|sum": {
+            "3": 0.13550809423128765,
+            "8": 0.058751893043518064,
+            "12": 0.08676388462384542,
+            "17": 0.11462553143501282,
+            "21": 0.07930065194765727,
+            "26": 0.07207762201627095,
+            "30": 0.03665903608004252,
+            "35": 0.05881609121958415
+          },
+          "mean16|sum": {
+            "3": 0.3161977489789327,
+            "8": 0.057942265272140504,
+            "12": 0.0850816289583842,
+            "17": 0.1381249745686849,
+            "21": 0.12559101978937784,
+            "26": 0.18789292573928834,
+            "30": 0.15420733094215394,
+            "35": 0.054618312915166216
+          },
+          "mean8|sum": {
+            "3": 0.31672372023264567,
+            "8": 0.058043340841929116,
+            "12": 0.08518743713696798,
+            "17": 0.1381972074508667,
+            "21": 0.12570478717486064,
+            "26": 0.1879633645216624,
+            "30": 0.15421330730120342,
+            "35": 0.054679936170578
+          },
+          "quest4|vote": {
+            "3": 0.15372016032536825,
+            "8": 0.10822623570760091,
+            "12": 0.1372260848681132,
+            "17": 0.14665803511937459,
+            "21": 0.10828487475713094,
+            "26": 0.09025703469912211,
+            "30": 0.05268333752950032,
+            "35": 0.08435208201408387
+          },
+          "meanc|sum": {
+            "3": 0.2846719662348429,
+            "8": 0.06570379932721455,
+            "12": 0.09031123717625936,
+            "17": 0.14929299155871073,
+            "21": 0.12914791703224182,
+            "26": 0.19129976034164428,
+            "30": 0.16083956956863404,
+            "35": 0.060004363457361855
+          },
+          "quest4p2|vote": {
+            "3": 0.17508244514465332,
+            "8": 0.10824649532636006,
+            "12": 0.13954750100771587,
+            "17": 0.15964370171229045,
+            "21": 0.11931492884953816,
+            "26": 0.0966194748878479,
+            "30": 0.05402028759320577,
+            "35": 0.08382784128189087
+          },
+          "lite|sum": {
+            "3": 0.1633685052394867,
+            "8": 0.08984918196996053,
+            "12": 0.10963349938392639,
+            "17": 0.12928683161735535,
+            "21": 0.09327692985534668,
+            "26": 0.0828282376130422,
+            "30": 0.0427875558535258,
+            "35": 0.0755724569161733
+          },
+          "ours48|sum": {
+            "3": 0.13825199405352276,
+            "8": 0.08383870124816895,
+            "12": 0.102231365442276,
+            "17": 0.11625211834907531,
+            "21": 0.08292208313941955,
+            "26": 0.07579266826311747,
+            "30": 0.03839398821194966,
+            "35": 0.07249866922696431
+          },
+          "quest@la1|vote": {
+            "3": 0.1507688303788503,
+            "8": 0.06961913704872132,
+            "12": 0.10390567779541016,
+            "17": 0.1503063678741455,
+            "21": 0.09680958191553751,
+            "26": 0.08473162452379862,
+            "30": 0.04506611426671346,
+            "35": 0.06953230698903402
+          },
+          "ours@la1|sum": {
+            "3": 0.1387710670630137,
+            "8": 0.061504008372624715,
+            "12": 0.08858782649040223,
+            "17": 0.11975836555163065,
+            "21": 0.08186803062756856,
+            "26": 0.07285017569859822,
+            "30": 0.036968696117401126,
+            "35": 0.05945679744084676
+          },
+          "quest@la2|vote": {
+            "3": 0.1555348515510559,
+            "8": 0.07093939383824667,
+            "12": 0.1062274436155955,
+            "17": 0.15216922163963317,
+            "21": 0.10311508178710938,
+            "26": 0.0838564932346344,
+            "30": 0.045027037461598717,
+            "35": 0.07087651093800863
+          },
+          "ours@la2|sum": {
+            "3": 0.1474858065446218,
+            "8": 0.06320347984631856,
+            "12": 0.09041435718536377,
+            "17": 0.12079330086708069,
+            "21": 0.08377329508463542,
+            "26": 0.07374498844146729,
+            "30": 0.037205936511357625,
+            "35": 0.06076332132021586
+          },
+          "quest@la3|vote": {
+            "3": 0.3488030930360158,
+            "8": 0.07127617001533508,
+            "12": 0.10875017046928406,
+            "17": 0.16757641434669496,
+            "21": 0.11125298142433167,
+            "26": 0.08459159334500631,
+            "30": 0.04494465589523315,
+            "35": 0.07052912910779317
+          },
+          "ours@la3|sum": {
+            "3": 0.3741299311319987,
+            "8": 0.06455220381418864,
+            "12": 0.09263631701469421,
+            "17": 0.13105263710021972,
+            "21": 0.08907051285107931,
+            "26": 0.07474260926246643,
+            "30": 0.03750957051912943,
+            "35": 0.060633760690689084
+          },
+          "snapkv|evict": {
+            "3": 0.1535599629084269,
+            "8": 0.07754885156949361,
+            "12": 0.11233622630437215,
+            "17": 0.1789013663927714,
+            "21": 0.14546534419059753,
+            "26": 0.10432480374972025,
+            "30": 0.045666052897771196,
+            "35": 0.06154869794845581
+          }
+        }
+      },
+      "churn_512": {
+        "oracle|sum": 5.287145110964775,
+        "quest|vote": 5.549933685362339,
+        "mean|sum": 5.665503074725469,
+        "ours|sum": 5.266314074397087,
+        "mean16|sum": 5.665415748953819,
+        "mean8|sum": 5.673762969175974,
+        "quest4|vote": 5.5923508187135065,
+        "meanc|sum": 5.782431810100873,
+        "quest4p2|vote": 5.399279199292263,
+        "lite|sum": 4.6587297568718595,
+        "ours48|sum": 5.329392617940902,
+        "quest@la1|vote": 5.749000828464826,
+        "ours@la1|sum": 5.517634324232737,
+        "quest@la2|vote": 5.832194399833679,
+        "ours@la2|sum": 5.701591437061627,
+        "quest@la3|vote": 6.951709964871407,
+        "ours@la3|sum": 6.793902231256167
+      },
+      "prior_spearman": {},
+      "max_q_self_err": 0.0,
+      "head_dim": 128,
+      "complete": true,
+      "metadata_share": {
+        "quest": 0.0625,
+        "ours": 0.09375,
+        "mean": 0.03125,
+        "mean16": 0.03125,
+        "mean8": 0.015625,
+        "quest4": 0.015869140625,
+        "meanc": 0.0078125,
+        "quest4p2": 0.0079345703125,
+        "lite": 0.0157470703125,
+        "ours48": 0.031494140625
+      }
+    }
+  },
+  "fidelity": {
+    "qwen35_4b": {
+      "n_sequences": 10,
+      "oracle@256": {
+        "kl": 0.03459043242037296,
+        "kl_p90": 0.09273031428456306,
+        "top1_agree": 0.95209721326828,
+        "missing": 0.41343202292919157,
+        "n_layers": 8.0
+      },
+      "oracle@512": {
+        "kl": 0.011243745032697917,
+        "kl_p90": 0.030152281187474726,
+        "top1_agree": 0.9729946076869964,
+        "missing": 0.22870066463947297,
+        "n_layers": 8.0
+      },
+      "quest@512": {
+        "kl": 0.0248757379129529,
+        "kl_p90": 0.063392373919487,
+        "top1_agree": 0.9610147356987,
+        "missing": 0.33008786886930463,
+        "n_layers": 8.0
+      },
+      "ours@512": {
+        "kl": 0.014436529390513897,
+        "kl_p90": 0.038726174645125865,
+        "top1_agree": 0.96995250582695,
+        "missing": 0.26572971493005754,
+        "n_layers": 8.0
+      },
+      "quest@1024": {
+        "kl": 0.007988681644201278,
+        "kl_p90": 0.020349043887108564,
+        "top1_agree": 0.978235924243927,
+        "missing": 0.17846901342272758,
+        "n_layers": 8.0
+      },
+      "ours@1024": {
+        "kl": 0.00476530499290675,
+        "kl_p90": 0.012298965081572532,
+        "top1_agree": 0.982998925447464,
+        "missing": 0.13523808345198632,
+        "n_layers": 8.0
+      },
+      "recent@0": {
+        "kl": 0.29685377031564714,
+        "kl_p90": 0.816206032037735,
+        "top1_agree": 0.8515920042991638,
+        "missing": 0.646854829788208,
+        "n_layers": 8.0
+      },
+      "oracle@1048576": {
+        "kl": 0.0002648787398356944,
+        "kl_p90": 0.0010797337745316327,
+        "top1_agree": 0.9961235463619232,
+        "missing": 2.521192343785117e-09,
+        "n_layers": 8.0
+      }
+    },
+    "qwen3_4b": {
+      "n_sequences": 10,
+      "oracle@256": {
+        "kl": 0.10837499648332596,
+        "kl_p90": 0.22205852791666986,
+        "top1_agree": 0.9270497620105743,
+        "missing": 0.26064591854810715,
+        "n_layers": 36.0
+      },
+      "oracle@512": {
+        "kl": 0.03521400634199381,
+        "kl_p90": 0.06880675666034222,
+        "top1_agree": 0.9580796599388123,
+        "missing": 0.14081879779696466,
+        "n_layers": 36.0
+      },
+      "quest@512": {
+        "kl": 0.05908701047301292,
+        "kl_p90": 0.11905410289764404,
+        "top1_agree": 0.9459644615650177,
+        "missing": 0.17642705887556076,
+        "n_layers": 36.0
+      },
+      "ours@512": {
+        "kl": 0.04305396042764187,
+        "kl_p90": 0.08599345982074738,
+        "top1_agree": 0.9540739119052887,
+        "missing": 0.15663523077964783,
+        "n_layers": 36.0
+      },
+      "quest@1024": {
+        "kl": 0.020017127227038144,
+        "kl_p90": 0.03858709130436182,
+        "top1_agree": 0.96894690990448,
+        "missing": 0.0954641617834568,
+        "n_layers": 36.0
+      },
+      "ours@1024": {
+        "kl": 0.014596852706745267,
+        "kl_p90": 0.02757463129237294,
+        "top1_agree": 0.9740064024925232,
+        "missing": 0.08051476925611496,
+        "n_layers": 36.0
+      },
+      "recent@0": {
+        "kl": 0.4794507145881653,
+        "kl_p90": 1.3214095294475556,
+        "top1_agree": 0.8233175277709961,
+        "missing": 0.4845759689807892,
+        "n_layers": 36.0
+      },
+      "oracle@1048576": {
+        "kl": 0.0006427243090001867,
+        "kl_p90": 0.0019122534198686481,
+        "top1_agree": 0.9939946234226227,
+        "missing": 2.5507263634594325e-09,
+        "n_layers": 36.0
+      }
+    }
+  },
+  "complete": true,
+  "gate_h1": {
+    "budget_tokens": 512,
+    "oracle": {
+      "qwen35_4b": 0.22682948932051658,
+      "qwen3_4b": 0.11584911197423935
+    },
+    "quest_gap_share": {
+      "qwen35_4b": 0.2867822029379556,
+      "qwen3_4b": 0.19039037694124739
+    },
+    "i_passed": false,
+    "ii_passed": true,
+    "complete": true
+  },
+  "gate_hc": {
+    "lookahead": 3,
+    "cost_points": {
+      "quest": 6.816810208062329,
+      "ours": 6.739402587215104
+    },
+    "max_points": 1.0,
+    "passed": false,
+    "complete": true
+  },
+  "gate_hd": {
+    "chosen_on_aime24": "ours+beta0.5|sum",
+    "aime25_ours": 0.27233934551477434,
+    "aime25_with_prior": 0.27147110303243,
+    "reduction": 0.003188090507830199,
+    "min_reduction": 0.05,
+    "passed": false,
+    "complete": true
+  },
+  "h2_choice": {
+    "candidates": {
+      "mean8": {
+        "share": 0.015625,
+        "aime24": 0.24484600673119228,
+        "aime25": 0.2660482719540596
+      },
+      "quest4": {
+        "share": 0.0157470703125,
+        "aime24": 0.3357334901889165,
+        "aime25": 0.3580723581214746
+      },
+      "meanc": {
+        "share": 0.0078125,
+        "aime24": 0.29050358235836027,
+        "aime25": 0.31381756216287615
+      },
+      "quest4p2": {
+        "share": 0.00787353515625,
+        "aime24": 0.3577961186567942,
+        "aime25": 0.38000546942154567
+      },
+      "lite": {
+        "share": 0.01568603515625,
+        "aime24": 0.3033207500974337,
+        "aime25": 0.32523559456070267
+      }
+    },
+    "ours_aime24": 0.2517436221241951,
+    "ours_aime25": 0.27233934551477434,
+    "chosen": "mean8",
+    "rule": {
+      "metadata_max_share": 0.02,
+      "within_points": 0.5,
+      "engine_specs": {
+        "mean16": {
+          "method": "ours",
+          "bound_fmt": "none",
+          "mean_fmt": "fp16"
+        },
+        "mean8": {
+          "method": "ours",
+          "bound_fmt": "none",
+          "mean_fmt": "fp8"
+        },
+        "meanc": {
+          "method": "ours",
+          "bound_fmt": "none",
+          "mean_fmt": "chan"
+        },
+        "quest4": {
+          "method": "quest",
+          "bound_fmt": "int4"
+        },
+        "quest4p2": {
+          "method": "quest",
+          "bound_fmt": "int4p2"
+        },
+        "lite": {
+          "method": "ours",
+          "bound_fmt": "int4p2",
+          "mean_fmt": "chan"
+        }
+      },
+      "chosen": "mean8"
+    },
+    "complete": true
+  }
+}
