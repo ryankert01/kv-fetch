@@ -50,7 +50,9 @@ hybrid:
       quest4: {method: quest, bound_fmt: int4}
       quest4p2: {method: quest, bound_fmt: int4p2}
       lite: {method: ours, bound_fmt: int4p2, mean_fmt: chan}
-    chosen: null                     # set from results/h1_explore.json (h2_choice) before the ours runs
+    # 2026-10-26, results/h1_explore.json h2_choice (Qwen3.5 screen complete, 30 sequences): mean8 is the
+    # cheapest format within 0.5 points of ours|sum on aime24 (24.48% vs 25.17% missing at 512; 1.56% of KV)
+    chosen: mean8
 
   # H3 (scripts/run_h3.py): online accuracy
   h3:
@@ -64,10 +66,10 @@ hybrid:
       qwen3_4b: 16384                # = E3
     batch_size: {qwen35_4b: 24, qwen3_4b: 12}   # qwen35: ~38 GB at 32K (dry run: 16 slots 28 GB)
     runs:                            # priority tiers per model (method@attended budget); "ours" waits for H2
-      qwen35_4b:
+      qwen35_4b:                     # 2026-10-26: ours moved ahead of the 1024 baselines once H2 picked (scheduling only)
         - [full, quest@512, snapkv@512, oracle@512]
-        - [quest@1024, snapkv@1024, oracle@1024]
         - [ours@512, ours@1024]
+        - [quest@1024, snapkv@1024, oracle@1024]
       qwen3_4b:                      # H-b: prompt-protected eviction under E3's settings, with its own full run
         - [full, snapkv@1024, snapkv@512]
     snapkv_window: 32
