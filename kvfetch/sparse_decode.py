@@ -36,6 +36,7 @@ from kvfetch.selectors import _RECENCY_TIEBREAK
 SPARSE_ATTN = "kvfetch_sparse"
 METHODS = ("full", "quest", "ours", "snapkv", "oracle")
 _NEG = float("-inf")
+_UNIT_TIEBREAK = 1e-4      # int4p2: the two pages of a unit share its bound; prefer the later one
 _ENGINE: "SparseEngine | None" = None
 
 
@@ -404,7 +405,7 @@ class SparseEngine:
             raise ValueError(self.bound_fmt)
         b = (_qk(qg.clamp(min=0), kmax, scaling) + _qk(qg.clamp(max=0), kmin, scaling)).amax(2)
         if self.bound_fmt == "int4p2":
-            b = b.repeat_interleave(2, -1)[..., :self.P + 1]
+            b = b.repeat_interleave(2, -1)[..., :self.P + 1] + _UNIT_TIEBREAK * (self.page_ar % 2)
         return b
 
     def _mean_logit(self, li, qg, scaling):

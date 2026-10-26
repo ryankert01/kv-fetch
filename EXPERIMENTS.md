@@ -188,3 +188,14 @@ analysis code before its numbers are used, and every reported number against the
   eviction trimmed only when a page joined, so on most steps it attended one page over budget (~3% more
   tokens at 512, ~1.5% at 1K). This was also in E3 (SnapKV collapsed there regardless); fixed (trim every
   step), in the offline replica too. Old and new engines give bit-identical tokens on Qwen3-4B otherwise.
+- H1/H2 analysis audit (independent agent, 2026-10-26, before any Qwen3.5 sequence was analysed): no
+  blocker. Fixed: offline SnapKV renormalised the GQA-group mean instead of each query head (the
+  engine's softmax over attended tokens) and evicted at step 0 (dense prefill online); int4 bounds now
+  rounded to bf16 as the engine scores them; 2-page units break ties toward the later page in both
+  (they tied on the same unit bound); merge marks gates incomplete unless both models have all 30
+  problems with all layers. Change to H1's design: each problem is cut to the shorter of the two
+  models' generated lengths (missing attention at a fixed budget grows with context; Qwen3.5's 32K
+  samples would otherwise be compared at 16K against Qwen3-4B's shorter finished ones). The fidelity
+  run adds a budget-above-context row (the sparse path's numerical floor). After the fixes every
+  offline replica selects the engine's pages on every step (scripts/check_h1_replicas.py,
+  results/hybrid/h1_checks/replicas.txt: 90 of 90 method x seed x prompt-length cases, 0 steps differ).

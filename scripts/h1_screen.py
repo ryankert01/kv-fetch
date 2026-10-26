@@ -45,6 +45,7 @@ from transformers.integrations.sdpa_attention import sdpa_attention_forward
 from transformers.masking_utils import ALL_MASK_ATTENTION_FUNCTIONS, AttentionMaskInterface
 
 from kvfetch import selectors_gpu as G
+from kvfetch import sparse_decode as SD
 from kvfetch.baselines import attention_by_group, landmark_scores, quest_scores, unit_summaries
 from kvfetch.config import add_config_args, config_from_args
 from kvfetch.metrics.importance import eligibility_matrix
@@ -61,19 +62,23 @@ _STATE: dict = {}
 
 # ---------------------------------------------------------------------------- sequences and capture
 def sequences(cfg: dict, mkey: str, tok) -> list[dict]:
+    """Each problem is cut, for every model alike, to the shortest of the models' generated lengths
+    (and h1.max_gen_tokens): missing attention at a fixed budget grows with context, so the models are
+    compared at equal lengths (H1 audit, 2026-10-26, before any Qwen3.5 sequence was analysed)."""
     h1 = cfg["hybrid"]["h1"]
-    root = Path(h1["sequences"][mkey])
     out = []
     for s in problems({**cfg, "e3": cfg["hybrid"]["h3"]}, tok):
-        f = root / s.task / f"{s.index:04d}_s{h1['sample']}.json"
-        if not f.exists():
+        fs = {m: Path(d) / s.task / f"{s.index:04d}_s{h1['sample']}.json" for m, d in h1["sequences"].items()}
+        if not all(f.exists() for f in fs.values()):
             continue
-        r = json.loads(f.read_text())
+        recs = {m: json.loads(f.read_text()) for m, f in fs.items()}
+        cap = min([h1["max_gen_tokens"]] + [r["n_gen"] for r in recs.values()])
+        f, r = fs[mkey], recs[mkey]
         prompt = encode(tok, format_prompt(tok, s.turns[0], "", cfg))["input_ids"]
         if len(prompt) != r["prompt_tokens"]:
             raise RuntimeError(f"{f}: prompt has {len(prompt)} tokens, the run had {r['prompt_tokens']}")
         gen = r["token_ids"] if "token_ids" in r else encode(tok, r["text"])["input_ids"]   # E3 stored text only
-        out.append({"task": s.task, "index": s.index, "prompt": prompt, "gen": gen[:h1["max_gen_tokens"]],
+        out.append({"task": s.task, "index": s.index, "prompt": prompt, "gen": gen[:cap],
                     "retokenized": "token_ids" not in r, "score": r["score"], "stopped": r["stopped"]})
     return out
 
@@ -162,17 +167,22 @@ def budgets_for(btoks, ps, exist_np, elig_np, device):
 
 
 def page_scores(q: torch.Tensor, k: torch.Tensor, pl: int, P: int, ps: int, chunk: int, summ: dict) -> dict:
-    """Exact page mass m, Quest bounds and mean-key logits for queries q [T, H, d]: each [T, S, P]."""
+    """Exact page mass m (mean over each GQA group), Quest bounds and mean-key logits for queries
+    q [T, H, d]: each [T, S, P]; and the page mass per query head, mh [T, S, g, P] (fp16)."""
     T, H, d = q.shape
     scaling = d ** -0.5
     n_keys = torch.arange(T, device=q.device) + pl
-    out = {n: torch.empty((T, k.shape[0], P), device=q.device) for n in ("m", "quest", "mean")}
+    S = k.shape[0]
+    out = {n: torch.empty((T, S, P), device=q.device) for n in ("m", "quest", "mean")}
+    out["mh"] = torch.empty((T, S, H // S, P), dtype=torch.float16, device=q.device)   # per query head (snapkv)
     pad = P * ps - k.shape[1]
     for a in range(0, T, chunk):
         sl = slice(a, min(T, a + chunk))
         qc = q[sl].float()
-        att = attention_by_group(qc, k, n_keys[sl], scaling).mean(2)
-        out["m"][sl] = F.pad(att, (0, pad)).reshape(*att.shape[:-1], P, ps).sum(-1)
+        att = F.pad(attention_by_group(qc, k, n_keys[sl], scaling), (0, pad))
+        mh = att.reshape(*att.shape[:-1], P, ps).sum(-1)                              # [c, S, g, P]
+        out["mh"][sl] = mh.half()
+        out["m"][sl] = mh.mean(2)
         out["quest"][sl] = fit_pages(quest_scores(qc, summ, scaling), P)
         out["mean"][sl] = fit_pages(landmark_scores(qc, summ, scaling), P)
     return out
@@ -195,7 +205,8 @@ def q4_bounds(summ: dict) -> dict:
     up, so they stay bounds."""
     s = torch.maximum(summ["min"].abs(), summ["max"].abs()).amax(-1, keepdim=True).clamp(min=1e-8) / 7
     s = s.half().float()
-    return {"min": torch.floor(summ["min"] / s).clamp(-8, 7) * s, "max": torch.ceil(summ["max"] / s).clamp(-8, 7) * s}
+    bf = lambda x: x.to(torch.bfloat16).float()                  # the engine scores bf16 bounds
+    return {"min": bf(torch.floor(summ["min"] / s).clamp(-8, 7) * s), "max": bf(torch.ceil(summ["max"] / s).clamp(-8, 7) * s)}
 
 
 def partial_mean_scores(q: torch.Tensor, mean: torch.Tensor, ch: torch.Tensor, scaling: float) -> torch.Tensor:
@@ -223,6 +234,7 @@ def h2_scores(q: torch.Tensor, k: torch.Tensor, pl: int, P: int, ps: int, chunk:
     imp = q[0].float().abs().reshape(S, H // S, d).mean(1) * k[:, :pl].abs().mean(1)          # [S, d]
     ch = torch.topk(imp, d // 4, dim=-1).indices
     out = {n: torch.empty((T, S, P), device=q.device) for n in ("mean16", "mean8", "quest4", "meanc", "quest4p2")}
+    unit_tb = SD._UNIT_TIEBREAK * (torch.arange(P, device=q.device) % 2)          # as the engine: later page of a unit first
     for a in range(0, T, chunk):
         sl = slice(a, min(T, a + chunk))
         qc = q[sl].float()
@@ -230,7 +242,7 @@ def h2_scores(q: torch.Tensor, k: torch.Tensor, pl: int, P: int, ps: int, chunk:
         out["mean8"][sl] = fit_pages(landmark_scores(qc, m8, scaling), P)
         out["quest4"][sl] = fit_pages(quest_scores(qc, q4, scaling), P)
         out["meanc"][sl] = fit_pages(partial_mean_scores(qc, summ["mean"], ch, scaling), P)
-        out["quest4p2"][sl] = fit_pages(quest_scores(qc, s2, scaling).repeat_interleave(2, -1), P)
+        out["quest4p2"][sl] = fit_pages(quest_scores(qc, s2, scaling).repeat_interleave(2, -1), P) + unit_tb
     return out
 
 
@@ -248,13 +260,15 @@ def churn(sel: torch.Tensor) -> float:
     return float((s[1:] & ~s[:-1]).sum(-1).float().mean()) if s.shape[0] > 1 else 0.0
 
 
-def snapkv_evict(m: torch.Tensor, elig: torch.Tensor, exist: torch.Tensor, b: torch.Tensor, window: int,
-                 prompt_pages: int, protect: bool) -> torch.Tensor:
+def snapkv_evict(m: torch.Tensor, mh: torch.Tensor, elig: torch.Tensor, exist: torch.Tensor, b: torch.Tensor,
+                 window: int, prompt_pages: int, protect: bool) -> torch.Tensor:
     """sparse_decode.SparseEngine._snapkv offline, one set per layer: pages join when they age into
     eligibility; whenever the kept pages exceed the step's budget the lowest window-sum ones are
     dropped for good.
-    The window holds the attention the method observed (renormalised over attended pages); step 0
-    (the last prompt query, dense in prefill) opens it. Returns the kept sets [T, P]."""
+    The window holds the attention the method observed: each query head's attention renormalised
+    over the attended pages, then averaged over its GQA group (mh [T, S, g, P]), as the engine's
+    softmax over attended tokens. Step 0 (the last prompt query) is dense in prefill: it opens the
+    window and evicts nothing; eviction starts at step 1. Returns the kept sets [T, P]."""
     T, S, P = m.shape
     dev = m.device
     ring = torch.zeros((window, S, P), device=dev)
@@ -266,7 +280,8 @@ def snapkv_evict(m: torch.Tensor, elig: torch.Tensor, exist: torch.Tensor, b: to
     is_prompt = (torch.arange(P, device=dev) < prompt_pages).float() * ((window * S + 1.0) if protect else 0.0)
     page_ar = torch.arange(P, device=dev)
     tiny = torch.finfo(torch.float32).tiny
-    for t in range(T):                                   # no host syncs: the loop stays on the GPU queue
+    out[0] = elig[0]
+    for t in range(1, T):                                # no host syncs: the loop stays on the GPU queue
         kept |= elig[t] & ~evicted
         excess = (kept.sum() - b[t]).clamp(min=0)
         prio = (wsum.sum(0) + is_prompt).masked_fill(~kept, float("inf"))
@@ -276,13 +291,12 @@ def snapkv_evict(m: torch.Tensor, elig: torch.Tensor, exist: torch.Tensor, b: to
         kept &= ~drop
         evicted |= drop
         out[t] = kept
-        if t > 0:
-            att = kept | (exist[t] & ~elig[t])
-            mt = torch.where(att, m[t], 0.0)
-            obs = mt / mt.sum(-1, keepdim=True).clamp(min=tiny)
-            slot = t % window
-            wsum += obs - ring[slot]
-            ring[slot] = obs
+        att = kept | (exist[t] & ~elig[t])
+        mt = torch.where(att, mh[t].float(), 0.0)                                      # [S, g, P]
+        obs = (mt / mt.sum(-1, keepdim=True).clamp(min=tiny)).mean(1)
+        slot = t % window
+        wsum += obs - ring[slot]
+        ring[slot] = obs
     return out
 
 
@@ -374,7 +388,7 @@ def analyze_layer(c: dict, pl: int, cfg: dict, device: str, prompt_pages: int) -
         del ranks
     h3 = cfg["hybrid"]["h3"]
     for btok, b in budgets.items():
-        kept = snapkv_evict(m, elig, exist, b, h3["snapkv_window"], prompt_pages, h3["snapkv_protect_prompt"])
+        kept = snapkv_evict(m, sc["mh"], elig, exist, b, h3["snapkv_window"], prompt_pages, h3["snapkv_protect_prompt"])
         res[btok]["snapkv|evict"] = score.whole(kept[:, None, :].expand(T, S, P) & elig[:, None, :], b, False)
     out = {"missing": res, "churn_512": churns, "q_self_err": c["q_self_err"], "n_steps": T, "n_pages": P,
            "head_dim": int(q.shape[-1])}
@@ -412,6 +426,9 @@ def screen(cfg: dict, args) -> None:
         ids = s["prompt"] + s["gen"][:-1]                     # T = len(gen) decode queries
         cap = capture(model, ids, pl, mc["layers"], h1["lookahead_layers"], gdn=hybrid)
         layers = {}
+        bad = {l: cap[l]["q_self_err"] for l in mc["layers"] if cap[l]["q_self_err"] > 1e-2}
+        if bad:
+            raise RuntimeError(f"recomputed queries differ from the model's: {bad}")
         for l in mc["layers"]:
             layers[str(l)] = analyze_layer(cap[l], pl, cfg, args.device, prompt_pages=-(-pl // ps))
             print(f"[h1] {args.model} {s['task']}/{s['index']} layer {l} done (q self err {layers[str(l)]['q_self_err']:.2e})", flush=True)
@@ -484,7 +501,8 @@ def fidelity(cfg: dict, args) -> None:
     model, tok = load_model(mc["name"], cfg, args.device, attn_implementation=SPARSE)
     seqs = sequences(cfg, args.model, tok)[:fc["n_sequences"]]
     prov = provenance(cfg, model=mc["name"], context_length=None, fidelity=fc)
-    configs = [("oracle", 256), ("oracle", 512), ("quest", 512), ("ours", 512), ("quest", 1024), ("ours", 1024), ("recent", 0)]
+    configs = [("oracle", 256), ("oracle", 512), ("quest", 512), ("ours", 512), ("quest", 1024), ("ours", 1024), ("recent", 0),
+               ("oracle", 1 << 20)]          # budget above the context: the sparse path's numerical floor
     for s in seqs:
         out = Path(h1["shard_dir"]) / "fidelity" / args.model / s["task"] / f"{s['index']:04d}.json"
         if out.exists():
@@ -572,17 +590,28 @@ def merge(cfg: dict) -> None:
     sc = out["screen"]
     g = h1["gate"]
     bt = str(g["budget_tokens"])
+    h3 = cfg["hybrid"]["h3"]
+    n_expect = sum(len(range(0, cfg["sweep"]["tasks"][t]["n"], 2)) for t in h3["tasks"])     # explore: even indices
+    keysets = {}
+    for mkey in sc:
+        rows = [json.loads(p.read_text()) for p in sorted((root / "screen" / mkey).glob("*/*.json"))]
+        full = all(len(r["layers"]) == len(cfg["hybrid"]["models"][mkey]["layers"]) for r in rows)
+        keysets[mkey] = {(r["task"], r["index"]) for r in rows}
+        sc[mkey]["complete"] = bool(full and len(rows) == n_expect)
+    out["complete"] = bool(len(sc) == len(cfg["hybrid"]["models"]) and all(v["complete"] for v in sc.values())
+                           and len({frozenset(v) for v in keysets.values()}) == 1)
     if "qwen35_4b" in sc and "qwen3_4b" in sc:
         a, b = sc["qwen35_4b"]["missing"][bt], sc["qwen3_4b"]["missing"][bt]
         share = lambda d: (d["quest|vote"] - d["oracle|sum"]) / d["quest|vote"]
         out["gate_h1"] = {"budget_tokens": g["budget_tokens"],
                           "oracle": {"qwen35_4b": a["oracle|sum"], "qwen3_4b": b["oracle|sum"]},
                           "quest_gap_share": {"qwen35_4b": share(a), "qwen3_4b": share(b)},
-                          "i_passed": a["oracle|sum"] <= b["oracle|sum"], "ii_passed": share(a) >= share(b)}
+                          "i_passed": a["oracle|sum"] <= b["oracle|sum"], "ii_passed": share(a) >= share(b),
+                          "complete": out["complete"]}
         la = max(h1["lookahead_layers"])
         cost = {n: 100 * (a[f"{n}@la{la}|{m}"] - a[f"{n}|{m}"]) for n, m in (("quest", "vote"), ("ours", "sum"))}
         out["gate_hc"] = {"lookahead": la, "cost_points": cost, "max_points": g["lookahead_max_points"],
-                          "passed": all(v <= g["lookahead_max_points"] for v in cost.values())}
+                          "passed": all(v <= g["lookahead_max_points"] for v in cost.values()), "complete": out["complete"]}
     if "qwen35_4b" in sc:
         t = sc["qwen35_4b"]["missing_by_task"]
         if "aime24" in t and "aime25" in t:
@@ -592,7 +621,8 @@ def merge(cfg: dict) -> None:
                 red = 1 - t["aime25"][bt][best] / t["aime25"][bt]["ours|sum"]
                 out["gate_hd"] = {"chosen_on_aime24": best, "aime25_ours": t["aime25"][bt]["ours|sum"],
                                   "aime25_with_prior": t["aime25"][bt][best], "reduction": red,
-                                  "min_reduction": g["gdn_prior_min_reduction"], "passed": red >= g["gdn_prior_min_reduction"]}
+                                  "min_reduction": g["gdn_prior_min_reduction"], "passed": red >= g["gdn_prior_min_reduction"],
+                                  "complete": out["complete"]}
     ps = cfg["definitions"]["page_size"]
     for mkey, s in sc.items():
         d = s["head_dim"]
@@ -608,7 +638,7 @@ def merge(cfg: dict) -> None:
         out["h2_choice"] = {"candidates": {n: {"share": share[n], "aime24": t["aime24"][bt][main(n)],
                                                "aime25": t["aime25"][bt][main(n)] if "aime25" in t else None} for n in ok},
                             "ours_aime24": ref, "ours_aime25": t.get("aime25", {}).get(bt, {}).get("ours|sum"),
-                            "chosen": pick, "rule": h2c}
+                            "chosen": pick, "rule": h2c, "complete": out["complete"]}
     for mkey, s in sc.items():
         print(f"\n== {mkey}: {s['n_sequences']} sequences, mean {s['mean_gen_tokens']:.0f} generated tokens, max q self err {s['max_q_self_err']:.1e}")
         names = sorted(s["missing"][bt], key=lambda n: s["missing"][bt][n])

@@ -1,0 +1,102 @@
+### prompt_len 41
+--- seed 0
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+--- seed 1
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+--- seed 2
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+### prompt_len 120
+--- seed 0
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+--- seed 1
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+--- seed 2
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+### prompt_len 123
+--- seed 0
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+--- seed 1
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
+--- seed 2
+snapkv W4 : steps differing 0/299; first at t=None
+snapkv W32: steps differing 0/299; first at t=None
+quest     : steps differing 0/299; first at t=None
+ours      : steps differing 0/299; first at t=None
+oracle    : steps differing 0/299; first at t=None
+quest4    : steps differing 0/299; first at t=None
+quest4p2  : steps differing 0/299; first at t=None
+mean8     : steps differing 0/299; first at t=None
+meanc     : steps differing 0/299; first at t=None
+lite      : steps differing 0/299; first at t=None
