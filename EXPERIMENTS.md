@@ -214,20 +214,22 @@ analysis code before its numbers are used, and every reported number against the
   - H-d FAILED: the GDN prior (beta, weight 0.5 chosen on aime24) lowers aime25 missing attention by 0.3%
     (needed 5%); its Spearman correlation with page mass is 0.09 (beta) / -0.01 (forgot).
   - H2: mean8 chosen (fp8 mean keys, 1.56% of KV): 24.5% vs the mix's 25.2% on aime24 (aime25 26.6 vs
-    27.2). It is ShadowKV-style landmark scoring in fp8 with summed head shares: little novelty alone.
+    27.2). It is ShadowKV-style landmark scoring in fp8 with summed head shares: little novelty alone. 1.56% is the
+    format's size: the engine still stores fp32 means (6.25% of KV) and casts them to fp8 every step.
   - H-b offline (teacher-forced fidelity, 10 sequences <= 8K tokens): Qwen3.5's oracle@512 gives
     next-token KL 0.011 at 22.9% missing; Qwen3-4B 0.035 at 14.1% (0.108 at 26.1%, oracle@256). Per unit
-    of missing attention the hybrid's output moves 5-10x less. H3's online test decides H-b.
-  - Page churn at 512: 6.6 new pages per step per layer (Qwen3.5, mean8) vs 5.3 (Qwen3-4B, mix).
+    of missing attention the hybrid's output moves less: 7.4-7.5x lower KL over three pairs with matched
+    missing attention (confounded: 8 perturbed layers vs 36). H3's online test decides H-b.
+  - Page churn at 512: 6.7 new pages per step per layer (Qwen3.5, mean8) vs 5.3 (Qwen3-4B, mix).
 - H3 (2026-10-26, results/h3_explore.json; 30 explore problems x 8 samples, 32K cap for Qwen3.5, 16K for
   Qwen3-4B as in E3; gates complete, oracle@1024 on Qwen3.5 and snapkv@512 on Qwen3-4B, which no gate
   uses, still finishing their last samples):
   - Gate PASSED: ours (mean8, 1.56% of KV) @512 30.0% vs quest@512 19.2% (snapkv@512 0.0%): +10.8 points
-    paired by problem, CI95 [+4.2, +18.3], 9 wins / 1 loss of 30. At 1K: ours 41.2% vs quest 33.8%, +7.5
-    [+1.7, +14.6]. Full attention 49.6%; even oracle@512 loses 13.8 points [-21.3, -6.2] and ours@512
+    paired by problem, CI95 [+4.2, +18.3], 9 wins / 1 loss of 30. At 1K: ours 41.25% vs quest 33.8%, +7.5
+    [+1.7, +14.6]. Full attention 49.6%; even oracle@512 loses 13.8 points [-21.3, -6.25] and ours@512
     5.8 points to it; ours@1024 is 8.3 points below full.
   - Losses are mostly unfinished reasoning: 43.8% of full-attention samples hit the 32K cap, 63.3% of
-    ours@512 and 75.4% of quest@512; accuracy among finished samples is 78-88% for every method.
+    ours@512 and 75.4% of quest@512; accuracy among finished samples is 78-92% for every method (full 88%).
   - H-b FAILED online: prompt-protected SnapKV@1K loses 40.0 points on Qwen3.5 vs 38.8 on Qwen3-4B
     (ratio 1.03, needed <= 0.5); both fail by not finishing (89.6% vs 43.8% capped on Qwen3.5, 82.9% vs
     35.8% on Qwen3-4B). The offline KL advantage does not survive long generation. The caps differ by
@@ -238,14 +240,16 @@ analysis code before its numbers are used, and every reported number against the
   model from measured parts, not an end-to-end prototype):
   - Fetch paths (64 KB pages): a Triton gather reading pinned host memory over PCIe (UVA, in-graph, no
     host sync) reaches ~25 GB/s (one page 14 us); with 16 looping programs it slows a concurrent GDN layer
-    by 8-16%, with one program per block by 2.9x. The staged CPU path (index readback, CPU gather, copy)
-    reaches ~4.7 GB/s (one page 51 us). Summed layer times match measured whole steps within 0-3%.
+    by 7-16%, with one program per block by 2.7-2.9x. The staged CPU path (index readback, CPU gather, copy)
+    reaches ~4.7 GB/s (one page 51 us). Summed layer times match measured whole steps within -2% to +3% (whole steps measured up to batch 64
+  only; batch 128 and 160 are uncalibrated sums).
   - Misses per step per attention layer at 512 (exact selection, LRU GPU cache of c x budget): 6.8 (c1),
-    3.6 (c2), 1.7 (c4); on the selector's own trajectories 7.5 / 4.1 / 2.1. The H-c lookahead prefetch
-    is never better than exact + c4 (its query costs 0.1-5.5 ms per layer); the one-step-stale selection
+    3.5 (c2), 1.7 (c4); on the selector's own trajectories 7.5 / 4.1 / 2.1. The H-c lookahead prefetch
+    is never better than exact + c4 (its predicted query, page scores and top-k cost 0.1-5.5 ms per layer); the one-step-stale selection
     (lag1) hides every fetch but raises missing attention from 31.8% to 35.6%.
   - Stretch gate PASSED as modelled: exact selection, c4, zero-copy gather keeps >= 0.94x the all-on-GPU
     throughput wherever both fit (batch 1-160, 8-32K), and at 32K the tiered batch reaches 160
-    (host-memory bound; GPU bound 262) vs 33 all-on-GPU: 1,219 vs 971 tokens/s (1.26x). The gain is
-    capped by the engine's per-step cost at large batch (GDN layers 2.1 ms each, the engine's fp32-mean
-    scoring 8.6 ms per attention layer at batch 160).
+    (host-memory bound; GPU bound 262) vs 33 all-on-GPU: 1,219 vs 971 tokens/s at the all-on-GPU
+    measured batch 32 (1.26x); with its step time interpolated to its max batch 33, ~980 tokens/s (1.24x). The gain is
+    capped by the engine's per-step cost at large batch (GDN layers 2.1 ms each, the engine's ours@512
+    attention layer, fp32 means cast to fp8 every step, 8.6 ms at batch 160 vs Quest's 5.0 ms).
