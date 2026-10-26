@@ -133,8 +133,10 @@ def test_merge_on_synthetic_shards(tmp_path):
              "plan_ms": {str(B): {str(n): 0.05 for n in h4["contexts"]} for B in h4["batches"]},
              "head_ms": {str(B): 1.0 for B in h4["batches"]}, "steps": [],
              "lookahead": [{"batch": B, "context": n, "multiple": m, "ms": 0.1} for B in h4["batches"] for n in h4["contexts"] for m in (1, 2)],
-             "copy": {"staged_round_trip_ms": {k: v + 0.1 for k, v in ms.items()}, "zero_copy_ms": ms,
-                      "overlap": [{"batch": 8, "gdn_alone_ms": 0.4, "gdn_with_contiguous copy_ms": 0.42, "gdn_with_zero-copy gather_ms": 0.5}]}}
+             "copy": {"staged_round_trip_ms": {k: v + 0.1 for k, v in ms.items()}, "zero_copy_ms": ms, "zero_copy_check": True,
+                      "zero_copy_few_ms": ms, "zero_copy_few_check": False, "contiguous_gbps": {"64": 25.0}, "graph_launch_us": 20.0,
+                      "overlap": [{"batch": 8, "gdn_alone_ms": 0.4, "gdn_with_contiguous copy_ms": 0.42, "gdn_with_zero-copy gather_ms": 0.5,
+                                   "zero-copy gather_alone_ms": 1.0, "zero-copy gather_with_gdn_ms": 1.2}]}}
     (tmp_path / "h4_costs_qwen35_4b.json").write_text(json.dumps(costs))
     R.merge(cfg)
     res = json.loads((tmp_path / "h4_residency_qwen35_4b.json").read_text())
@@ -142,3 +144,7 @@ def test_merge_on_synthetic_shards(tmp_path):
     rows = [m for m in res["step_model"] if m["context"] == 32768]
     assert rows and all(0 < v[k]["throughput_ratio"] <= 1 for m in rows for v in m["policies"].values() for k in v)
     assert res["capacity"]["by_context"]["32768"]["all_on_gpu"]["max_batch"] > 0
+    assert res["links_dropped"] == {"zero-copy few": "check failed"} and set(res["links"]) == {"staged", "zero-copy"}
+    assert all(not g["valid"] for g in res["gate_h4"].values())          # no calibration rows: never valid
+    last = [m for m in res["step_model"] if m["context"] == 32768]
+    assert all(m["context_bucket"][1] is None for m in last)

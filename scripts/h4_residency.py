@@ -207,7 +207,7 @@ def screen(cfg: dict, args) -> None:
             "cross": (rc["cross_check"]["sequences"], probs[::rc["cross_check"]["every"]])}
     for kind, (src, plist) in sets.items():
         plist = plist[:args.limit]
-        if not args.max_gen:
+        if not args.max_gen and not args.limit:
             write_json(Path(rc["shard_dir"]) / kind / "manifest.json",
                        {"provenance": prov, "expected": [f"{s.task}/{s.index:04d}" for s in plist]})
         for s in plist:
@@ -303,15 +303,23 @@ def merge(cfg: dict) -> None:
     cpath = Path(cfg["paths"]["results_dir"]) / f"h4_costs_{mkey}.json"
     costs = json.loads(cpath.read_text())
     cp = costs["copy"]
-    links = {"staged": {"fetch": cp["staged_round_trip_ms"], "slow": "contiguous copy"},
-             "zero-copy": {"fetch": cp["zero_copy_ms"], "slow": "zero-copy gather"},
-             "zero-copy few": {"fetch": cp.get("zero_copy_few_ms", {}), "slow": "zero-copy gather (few programs)"}}
-    links = {k: v for k, v in links.items() if sum(x is not None for x in v["fetch"].values()) >= 2}
+    # a link is priced only with a measured table (>= 2 sizes) and, for the zero-copy gathers, a passing
+    # data check; the staged path needs the step's graph split at each attention layer (host sync)
+    split_ms = cp["graph_launch_us"] / 1e3
+    links = {"staged": {"fetch": cp["staged_round_trip_ms"], "slow": "contiguous copy", "check": True, "split_ms": split_ms},
+             "zero-copy": {"fetch": cp["zero_copy_ms"], "slow": "zero-copy gather", "check": cp.get("zero_copy_check"), "split_ms": 0.0},
+             "zero-copy few": {"fetch": cp.get("zero_copy_few_ms", {}), "slow": "zero-copy gather (few programs)",
+                               "check": cp.get("zero_copy_few_check"), "split_ms": 0.0}}
+    dropped = {k: "check failed" if v["check"] is not True else "too few sizes" for k, v in links.items()
+               if v["check"] is not True or sum(x is not None for x in v["fetch"].values()) < 2}
+    links = {k: v for k, v in links.items() if k not in dropped}
     ov = costs["copy"]["overlap"]
 
-    def slowdown(B, which):
-        xs = [o["batch"] for o in ov if o.get(f"gdn_with_{which}_ms")]
-        ys = [o[f"gdn_with_{which}_ms"] / o["gdn_alone_ms"] for o in ov if o.get(f"gdn_with_{which}_ms")]
+    def slowdown(B, which, of):
+        """Slowdown of the GDN layer (of = "gdn") or of the copy (of = "copy") when both run at once."""
+        key, base = (f"gdn_with_{which}_ms", "gdn_alone_ms") if of == "gdn" else (f"{which}_with_gdn_ms", f"{which}_alone_ms")
+        xs = [o["batch"] for o in ov if o.get(key)]
+        ys = [o[key] / o[base] for o in ov if o.get(key)]
         return float(np.interp(B, xs, ys)) if xs else 1.0
     lay = costs["layers"]
     ours = next(m for m in {r["method"] for r in lay} if m.startswith("ours"))
@@ -326,6 +334,7 @@ def merge(cfg: dict) -> None:
     cat = {l: {k: np.concatenate([a[f"{k}_{l}"] for a in arrs]).astype(np.int64) for k in ("sync", "traffic")} for l in lname}
     edges = [0] + list(h4["contexts"])
     model = []
+    beyond = float((ctx > edges[-1]).mean())             # steps past the last bucket: priced with it (open-ended)
     for B in h4["batches"]:
         for lo, n in zip(edges[:-1], edges[1:]):
             gdn, attn = t(B, n, "full", "gdn_layer_ms"), t(B, n, ours)
@@ -334,10 +343,13 @@ def merge(cfg: dict) -> None:
             plan = costs["plan_ms"][str(B)][str(n)]
             head = costs["head_ms"][str(B)]
             step = plan + n_gdn * gdn + n_attn * attn + head                     # all KV on the GPU, same selector
-            pool = np.nonzero((ctx > lo) & (ctx <= n))[0]
+            last = n == edges[-1]
+            pool = np.nonzero((ctx > lo) & ((ctx <= n) | last))[0]
             if not len(pool):
                 continue
-            row = {"batch": B, "context": n, "context_bucket": [lo, n], "bucket_steps": int(len(pool)),
+            row = {"batch": B, "context": n, "context_bucket": [lo, None if last else n], "bucket_steps": int(len(pool)),
+                   "writeback_ms": B * sz["kv_per_token"] / (max(cp["contiguous_gbps"].values()) * 1e9) * 1e3,   # GPU -> host, other direction
+                   "missing_costs": [],
                    "step_gpu_ms": step, "parts_ms": {"plan": plan, "gdn": gdn, "attn": attn, "head": head},
                    "step_gpu_full_ms": plan + n_gdn * gdn + n_attn * (t(B, n, "full") or float("nan")) + head,
                    "gdn_window_ms": win * gdn, "policies": {}}
@@ -347,9 +359,11 @@ def merge(cfg: dict) -> None:
                 la = next((r["ms"] for r in costs["lookahead"] if r["batch"] == B and r["context"] == n
                            and r["multiple"] == p["pre"] and not r.get("oom")), None) if p["pre"] else 0.0
                 if la is None:
+                    row["missing_costs"].append(f"lookahead x{p['pre']:g} ({name})")
                     continue
                 for link, L in links.items():
-                    f = slowdown(B, L["slow"])
+                    f = slowdown(B, L["slow"], "gdn")
+                    fc = slowdown(B, L["slow"], "copy")
                     o = np.zeros(len(draws))
                     tot = np.zeros(len(draws))
                     n_ext, n_all = 0, 0
@@ -359,18 +373,20 @@ def merge(cfg: dict) -> None:
                         if p["need"] == "lag1":
                             tot += ts
                             continue
-                        o += ts
+                        o += ts + L["split_ms"]
                         if p["pre"]:
                             tp, e2 = interp(L["fetch"], cat[l]["traffic"][draws, i_pol].sum(-1))
                             n_ext, n_all = n_ext + int(e2.sum()), n_all + e2.size
+                            tp = tp * fc                                     # the copy slowed by the GDN layers it overlaps
                             w = win * gdn
                             o += la + np.maximum(0.0, tp - w) + (f - 1) * np.minimum(w, tp)
                     if p["need"] == "lag1":
-                        o = np.maximum(0.0, tot - step) + (f - 1) * np.minimum(n_gdn * gdn, tot)
+                        tot = tot * fc
+                        o = np.maximum(0.0, tot - step) + (f - 1) * np.minimum(step, tot)
                     eo = float(o.mean())
                     row["policies"].setdefault(name, {})[link] = {
                         "overhead_ms": eo, "throughput_ratio": step / (step + eo), "tokens_per_s": 1e3 * B / (step + eo),
-                        "gdn_slowdown": f, "extrapolated_share": n_ext / n_all}
+                        "gdn_slowdown": f, "copy_slowdown": fc, "extrapolated_share": n_ext / n_all}
             model.append(row)
     calib = []
     for r in costs.get("steps", []):
@@ -384,7 +400,9 @@ def merge(cfg: dict) -> None:
     share = H1.H2_BYTES[cfg["hybrid"]["h2"]["chosen"]](sz["head_dim"], cfg["definitions"]["page_size"]) / (2 * sz["head_dim"] * 2)
     page = h4["page_bytes"]
     free = (rc["gpu_mem_gib"] - rc["reserve_gib"]) * 2 ** 30 - sz["weights"]
-    extras = sz["vocab"] * (4 + 1)                       # fp32 logits + presence-penalty mask per slot
+    kmax_pages = h4["budget_tokens"] // cfg["definitions"]["page_size"]
+    extras = (sz["vocab"] * (4 + 1)                       # fp32 logits + presence-penalty mask per slot
+              + (kmax_pages + sz["np_pinned"]) * cfg["definitions"]["page_size"] * sz["kv_per_token"] // sz["n_attn"])   # gathered K, V
     st = sz["state_per_seq"]
     cap = {"free_gpu_bytes": free, "weights_bytes": sz["weights"], "state_bytes": st, "metadata_share": share,
            "per_seq_extras_bytes": extras, "by_context": {}}
@@ -398,6 +416,8 @@ def merge(cfg: dict) -> None:
                        "max_batch_host": int(rc["host_kv_gib"] * 2 ** 30 // kv),
                        "max_batch": int(min(free // per, rc["host_kv_gib"] * 2 ** 30 // kv))}
         cap["by_context"][str(n)] = d
+    tol = h4["gate"]["calibration_tol"]
+    calib_ok = bool(calib) and all(abs(c["ratio"] - 1) <= tol for c in calib)
     # H4 stretch gate: tiered throughput >= h4.gate.min_ratio x all-on-GPU wherever both fit, and a larger
     # max batch at the longest context; throughput at each mode's capacity (largest timed batch within it)
     nmax = max(h4["contexts"])
@@ -417,20 +437,28 @@ def merge(cfg: dict) -> None:
             both = [m["policies"][name][link]["throughput_ratio"] for m in model
                     if name in m["policies"] and m["batch"] <= cap["by_context"][str(m["context"])]["all_on_gpu"]["max_batch"]]
             if both:
+                ext = max(m["policies"][name][link]["extrapolated_share"] for m in model if name in m["policies"])
                 gate[f"{name} | {link}"] = {"min_ratio_where_both_fit": min(both), "ratio_ok": min(both) >= h4["gate"]["min_ratio"],
                                             "larger_max_batch": cn[name]["max_batch"] > cn["all_on_gpu"]["max_batch"],
-                                            "changes_selection": p["need"] == "lag1"}
+                                            "changes_selection": p["need"] == "lag1", "max_extrapolated_share": ext,
+                                            "valid": bool(check["complete"] and ext == 0.0 and calib_ok)}
     res = {"provenance": provenance(cfg, model=cfg["hybrid"]["models"][mkey]["name"], context_length=None, residency=rc, h4=h4),
            "costs_file": {"path": str(cpath), "sha256": hashlib.sha256(cpath.read_bytes()).hexdigest(),
                           "provenance": {k: costs["provenance"].get(k) for k in ("git", "timestamp", "gpu", "gpu_name", "host", "h2_chosen")}},
-           "check": check, "n_sequences": len(rows), "mean_gen_tokens": float(np.mean([r["n_gen"] for r in rows])),
+           "check": check, "calibration_ok": calib_ok, "links_dropped": dropped, "steps_beyond_last_bucket": beyond,
+           "n_sequences": len(rows), "mean_gen_tokens": float(np.mean([r["n_gen"] for r in rows])),
            "missing": miss, "policies": pol, "cross_check": cross, "links": list(links),
            "step_model": model, "calibration": calib, "capacity": cap, "at_capacity": at_cap, "gate_h4": gate,
            "notes": ["step_gpu = plan + GDN + attention (H3's ours engine path) + head, from per-layer graph timings",
                      "staged = measured wall-clock round trip incl. index readback and syncs; zero-copy = measured "
                      "in-graph GPU gather from pinned host memory",
-                     "prefetch / lag1 overlap: copy hidden behind compute up to the window; GDN slowed by the measured "
-                     "factor under a concurrent copy (applied to attention layers too in lag1)"]}
+                     "prefetch / lag1 overlap: copy hidden behind compute up to the window; the copy and the GDN layers "
+                     "each slowed by their measured factors when run together (lag1: the factor applied to the whole step)",
+                     "staged: one graph launch + sync per attention layer added (the step graph is split for the host sync)",
+                     "new KV written back GPU -> host each step (writeback_ms, the other PCIe direction) is not added",
+                     "steps beyond the longest context are priced in the last bucket (steps_beyond_last_bucket)",
+                     "gate_h4 valid only with all sequences, no extrapolated fetch sizes and calibration within "
+                     "h4.gate.calibration_tol"]}
     print(f"{len(rows)} sequences ({check}), mean {res['mean_gen_tokens']:.0f} generated tokens; missing at "
           f"{h4['budget_tokens']}: exact {100 * miss['exact']:.2f}%, lag1 {100 * miss['lag1']:.2f}%")
     for n, p in pol.items():

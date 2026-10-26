@@ -94,6 +94,7 @@ hybrid:
     iters: 50
     page_bytes: 65536                # one 16-token page of one attention layer (all KV heads, K and V)
     host_pool_mib: 2048
+    cache_flush_mib: 512             # bytes read between two uses of a page set (> CPU LLC, > GPU L2 96 MB)
     copy_mib: [1, 4, 16, 64]
     fetch_pages: [1, 4, 16, 64, 256, 1024, 4096]   # scattered pages per fetch (64 KB to 256 MB)
     gather_block: 1024               # int64 elements per Triton program in the zero-copy gather
@@ -101,7 +102,8 @@ hybrid:
     overlap_batches: [8, 32, 160]
     lookahead_multiples: [1, 2]      # H-c prefetch of k x budget pages
     cpu_threads: 8
-    gate: {min_ratio: 0.9}           # stretch: tiered >= 0.9x all-on-GPU where both fit; larger max batch at 32K
+    gate: {min_ratio: 0.9, calibration_tol: 0.15}   # stretch: tiered >= 0.9x all-on-GPU where both fit, larger max batch
+                                     # at 32K; valid only if summed layer times are within 15% of measured steps
     residency:                       # scripts/h4_residency.py: pages a host-resident KV moves per step
       model: qwen35_4b
       sequences: results/hybrid/h3_shards/qwen35_4b/full   # sample h1.sample, the model's own length

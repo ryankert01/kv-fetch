@@ -245,7 +245,7 @@ def lookahead_times(model, cfg, h4, device) -> list[dict]:
                     SD._ENGINE = eng
                     hs, pos, pe = decode_inputs(model, eng, B, n, device)
                     eng.begin_step(eng.Lmax)
-                    k = int(mult * eng.kmax_pages)
+                    k = int(mult * (eng.kmax_pages - eng.np_pinned + 1))       # the largest per-step budget
                     host_idx = torch.empty((B, k), dtype=torch.long).pin_memory()
                     li = eng.aslot[att]
                     elig = eng.plan["elig"]
@@ -301,18 +301,31 @@ def zero_copy_gather(src_host: torch.Tensor, idx: torch.Tensor, dst: torch.Tenso
         _gather_pages_few[(programs,)](src_host, idx, dst, k, pe, NPROG=programs, BLOCK=block)
 
 
+def fill_pattern(host: torch.Tensor, chunk: int = 2 ** 24) -> None:
+    """Distinct int64 values everywhere, so a gather that moves nothing cannot pass the check."""
+    h = host.view(torch.int64)
+    for a in range(0, h.numel(), chunk):
+        n = min(chunk, h.numel() - a)
+        h[a:a + n] = torch.arange(a, a + n, dtype=torch.int64)
+
+
 @torch.inference_mode()
 def copy_costs(model, cfg, h4, device) -> dict:
+    """Every timed fetch reads a fresh random page set from the h4.host_pool_mib pool (far above the CPU
+    last-level cache and the GPU L2), so neither cache serves repeated reads; sizes whose rate exceeds
+    the contiguous copy rate are flagged."""
     page = h4["page_bytes"]
     host = torch.empty(h4["host_pool_mib"] * 2 ** 20, dtype=torch.uint8).pin_memory()
+    fill_pattern(host)
     n_pages = host.numel() // page
     pages = host[:n_pages * page].view(n_pages, page)
     kmax = max(h4["fetch_pages"])
     staging = torch.empty((kmax, page), dtype=torch.uint8).pin_memory()
     rows_ = max(kmax, -(-max(h4["copy_mib"]) * 2 ** 20 // page))
     dst = torch.empty((rows_, page), dtype=torch.uint8, device=device)
-    out = {"contiguous_gbps": {}, "staged_round_trip_ms": {}, "zero_copy_ms": {}, "zero_copy_few_ms": {}, "zero_copy_check": None,
-           "zero_copy_few_check": None, "zero_copy_programs": h4["zero_copy_programs"]}
+    out = {"contiguous_gbps": {}, "staged_round_trip_ms": {}, "zero_copy_ms": {}, "zero_copy_few_ms": {},
+           "zero_copy_check": None, "zero_copy_few_check": None, "zero_copy_programs": h4["zero_copy_programs"],
+           "above_contiguous_rate": []}
     a, b = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
     flat = dst.view(-1)
     for mib in h4["copy_mib"]:
@@ -326,14 +339,21 @@ def copy_costs(model, cfg, h4, device) -> dict:
         b.record()
         torch.cuda.synchronize()
         out["contiguous_gbps"][str(mib)] = nb * h4["iters"] / (a.elapsed_time(b) / 1e3) / 1e9
+    peak_gbps = max(out["contiguous_gbps"].values())
+    out["graph_launch_us"] = graph_launch_us(device, h4["iters"])
     g = torch.Generator().manual_seed(0)
+    src64, dst64 = pages.view(torch.int64), dst.view(torch.int64)
     for k in h4["fetch_pages"]:
-        idx_gpu = torch.randperm(n_pages, generator=g)[:k].to(device)
+        R = max(h4["iters"] + 8, -(-h4["cache_flush_mib"] * 2 ** 20 // (k * page)))   # fresh pages per call; a set comes back
+        # only after h4.cache_flush_mib of other pages were read (CPU LLC, GPU L2)
+        bank = torch.stack([torch.randperm(n_pages, generator=g)[:k] for _ in range(R)]).to(device)   # [R, k]
         idx_host = torch.empty(k, dtype=torch.long).pin_memory()
         sv = staging[:k]
+        ctr = [0]
 
         def staged():
-            idx_host.copy_(idx_gpu, non_blocking=True)
+            idx_host.copy_(bank[ctr[0] % R], non_blocking=True)
+            ctr[0] += 1
             torch.cuda.current_stream().synchronize()
             torch.index_select(pages, 0, idx_host, out=sv)
             dst[:k].copy_(sv, non_blocking=True)
@@ -344,31 +364,53 @@ def copy_costs(model, cfg, h4, device) -> dict:
         for _ in range(h4["iters"]):
             staged()
         out["staged_round_trip_ms"][str(k)] = 1e3 * (time.perf_counter() - t0) / h4["iters"]
-        src64, dst64 = pages.view(torch.int64), dst.view(torch.int64)
-        try:
-            out["zero_copy_ms"][str(k)] = graph_time(lambda: zero_copy_gather(src64, idx_gpu, dst64[:k], h4["gather_block"]), h4["iters"])
-            if out["zero_copy_check"] is None:
-                out["zero_copy_check"] = bool(torch.equal(dst[:k].cpu(), pages[idx_gpu.cpu()]))
-        except Exception as e:                       # e.g. the launcher refuses a host pointer
-            out["zero_copy_ms"][str(k)] = None
-            out["zero_copy_error"] = repr(e)[:300]
-        try:
-            dst.zero_()
-            out["zero_copy_few_ms"][str(k)] = graph_time(lambda: zero_copy_gather(src64, idx_gpu, dst64[:k], h4["gather_block"],
-                                                                                   h4["zero_copy_programs"]), h4["iters"])
-            if out["zero_copy_few_check"] is None or k == kmax:
-                out["zero_copy_few_check"] = bool(torch.equal(dst[:k].cpu(), pages[idx_gpu.cpu()]))
-        except Exception as e:
-            out["zero_copy_few_ms"][str(k)] = None
-            out["zero_copy_few_error"] = repr(e)[:300]
-        print("copy", k, "pages:", out["staged_round_trip_ms"][str(k)], out["zero_copy_ms"][str(k)], out["zero_copy_few_ms"][str(k)], flush=True)
+        dctr = torch.zeros(1, dtype=torch.long, device=device)
+        idx = torch.empty(k, dtype=torch.long, device=device)
+
+        def rotate():                                                # in-graph: next page set
+            idx.copy_(bank.index_select(0, dctr)[0])
+            dctr.add_(1).remainder_(R)
+        base = graph_time(rotate, h4["iters"])
+        for key, progs in (("zero_copy", None), ("zero_copy_few", h4["zero_copy_programs"])):
+            try:
+                dst.zero_()
+                ms = graph_time(lambda: (rotate(), zero_copy_gather(src64, idx, dst64[:k], h4["gather_block"], progs)), h4["iters"]) - base
+                out[f"{key}_ms"][str(k)] = ms
+                torch.cuda.synchronize()
+                ok = bool(torch.equal(dst[:k].cpu(), pages[idx.cpu()]))
+                out[f"{key}_check"] = ok if out[f"{key}_check"] is None else (out[f"{key}_check"] and ok)
+            except Exception as e:                   # e.g. the launcher refuses a host pointer
+                out[f"{key}_ms"][str(k)] = None
+                out[f"{key}_error"] = repr(e)[:300]
+        for key in ("staged_round_trip_ms", "zero_copy_ms", "zero_copy_few_ms"):
+            v = out[key][str(k)]
+            if v and k * page / (v / 1e3) / 1e9 > peak_gbps:
+                out["above_contiguous_rate"].append([key, k])
+        print("copy", k, "pages:", {key: out[key][str(k)] for key in ("staged_round_trip_ms", "zero_copy_ms", "zero_copy_few_ms")}, flush=True)
     out["overlap"] = overlap(model, cfg, h4, device, host, pages, dst)
     return out
 
 
+def graph_launch_us(device, iters: int) -> float:
+    """Wall-clock cost of launching one small CUDA graph and waiting for it: what splitting a step's
+    graph at each attention layer (the staged fetch's host sync) adds per split."""
+    x = torch.zeros(1, device=device)
+    g = capture(lambda: x.add_(1))
+    for _ in range(5):
+        g.replay()
+        torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    for _ in range(iters):
+        g.replay()
+        torch.cuda.synchronize()
+    return 1e6 * (time.perf_counter() - t0) / iters
+
+
 @torch.inference_mode()
 def overlap(model, cfg, h4, device, host, pages, dst) -> list[dict]:
-    """GDN layer time alone vs while another stream copies (contiguous) or runs the zero-copy gather."""
+    """A GDN layer and a copy / gather on two streams, each slowed by the other: phase "gdn" times the
+    GDN replays while the copies outlast them, phase "copy" times the copies while GDN replays outlast
+    them."""
     types_ = model.config.layer_types
     att, lin = types_.index("full_attention"), types_.index("linear_attention")
     cm = cut_model(model, att)
@@ -384,6 +426,15 @@ def overlap(model, cfg, h4, device, host, pages, dst) -> list[dict]:
              "zero-copy gather": lambda: zero_copy_gather(src64, idx_gpu, dst64[:k], h4["gather_block"]),
              "zero-copy gather (few programs)": lambda: zero_copy_gather(src64, idx_gpu, dst64[:k], h4["gather_block"],
                                                                          h4["zero_copy_programs"])}
+
+    def timed(g, n, stream):
+        a, b = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+        with torch.cuda.stream(stream):
+            a.record(stream)
+            for _ in range(n):
+                g.replay()
+            b.record(stream)
+        return a, b
     for B in h4["overlap_batches"]:
         eng = engine(cm, SD.Method("full"), B, cfg["definitions"]["page_size"] * 2, cfg, device)
         SD._ENGINE = eng
@@ -396,23 +447,22 @@ def overlap(model, cfg, h4, device, host, pages, dst) -> list[dict]:
         gg = capture(step)
         alone = replay_time(gg, h4["iters"])
         row = {"batch": B, "gdn_alone_ms": alone}
+        main = torch.cuda.current_stream()
         for name, fn in loads.items():
             try:
                 lg = capture(fn)
                 one = replay_time(lg, 5)
-                reps = max(1, int(2 * alone * h4["iters"] / max(one, 1e-3)))
-                torch.cuda.synchronize()
-                side.wait_stream(torch.cuda.current_stream())
-                with torch.cuda.stream(side):
-                    for _ in range(reps):
-                        lg.replay()
-                a, b = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-                a.record()
-                for _ in range(h4["iters"]):
-                    gg.replay()
-                b.record()
-                torch.cuda.synchronize()
-                row[f"gdn_with_{name}_ms"] = a.elapsed_time(b) / h4["iters"]
+                for phase, (n_g, n_l, measure) in {"gdn": (h4["iters"], max(1, int(2 * alone * h4["iters"] / one)), "g"),
+                                                   "copy": (max(1, int(2 * one * h4["iters"] / alone)), h4["iters"], "l")}.items():
+                    torch.cuda.synchronize()
+                    side.wait_stream(main)
+                    el = timed(lg, n_l, side)
+                    eg = timed(gg, n_g, main)
+                    torch.cuda.synchronize()
+                    if measure == "g":
+                        row[f"gdn_with_{name}_ms"] = eg[0].elapsed_time(eg[1]) / n_g
+                    else:
+                        row[f"{name}_with_gdn_ms"] = el[0].elapsed_time(el[1]) / n_l
                 row[f"{name}_alone_ms"] = one
             except Exception as e:
                 row[f"gdn_with_{name}_ms"] = None
