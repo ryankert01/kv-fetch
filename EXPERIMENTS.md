@@ -219,3 +219,20 @@ analysis code before its numbers are used, and every reported number against the
     next-token KL 0.011 at 22.9% missing; Qwen3-4B 0.035 at 14.1% (0.108 at 26.1%, oracle@256). Per unit
     of missing attention the hybrid's output moves 5-10x less. H3's online test decides H-b.
   - Page churn at 512: 6.6 new pages per step per layer (Qwen3.5, mean8) vs 5.3 (Qwen3-4B, mix).
+- H4 (2026-10-26; costs results/h4_costs_qwen35_4b.json measured on an idle RTX 6000 Ada at 5ae4a8f;
+  residency results/h4_residency_qwen35_4b.json, 10 full-length Qwen3.5 sequences, mean 22,082 generated
+  tokens, plus 3 ours@512 trajectories as a cross-check; two audit rounds, no blocker; this is a cost
+  model from measured parts, not an end-to-end prototype):
+  - Fetch paths (64 KB pages): a Triton gather reading pinned host memory over PCIe (UVA, in-graph, no
+    host sync) reaches ~25 GB/s (one page 14 us); with 16 looping programs it slows a concurrent GDN layer
+    by 8-16%, with one program per block by 2.9x. The staged CPU path (index readback, CPU gather, copy)
+    reaches ~4.7 GB/s (one page 51 us). Summed layer times match measured whole steps within 0-3%.
+  - Misses per step per attention layer at 512 (exact selection, LRU GPU cache of c x budget): 6.8 (c1),
+    3.6 (c2), 1.7 (c4); on the selector's own trajectories 7.5 / 4.1 / 2.1. The H-c lookahead prefetch
+    is never better than exact + c4 (its query costs 0.1-5.5 ms per layer); the one-step-stale selection
+    (lag1) hides every fetch but raises missing attention from 31.8% to 35.6%.
+  - Stretch gate PASSED as modelled: exact selection, c4, zero-copy gather keeps >= 0.94x the all-on-GPU
+    throughput wherever both fit (batch 1-160, 8-32K), and at 32K the tiered batch reaches 160
+    (host-memory bound; GPU bound 262) vs 33 all-on-GPU: 1,219 vs 971 tokens/s (1.25x). The gain is
+    capped by the engine's per-step cost at large batch (GDN layers 2.1 ms each, the engine's fp32-mean
+    scoring 8.6 ms per attention layer at batch 160).

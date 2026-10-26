@@ -321,7 +321,7 @@ def merge(cfg: dict) -> None:
         key, base = (f"gdn_with_{which}_ms", "gdn_alone_ms") if of == "gdn" else (f"{which}_with_gdn_ms", f"{which}_alone_ms")
         xs = [o["batch"] for o in ov if o.get(key)]
         ys = [o[key] / o[base] for o in ov if o.get(key)]
-        return float(np.interp(B, xs, ys)) if xs else 1.0
+        return max(1.0, float(np.interp(B, xs, ys))) if xs else 1.0       # a measured speed-up is noise
     lay = costs["layers"]
     ours = next(m for m in {r["method"] for r in lay} if m.startswith("ours"))
 
