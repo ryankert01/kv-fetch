@@ -95,3 +95,17 @@ hybrid:
     host_pool_mib: 2048
     copy_mib: [1, 4, 16, 64]
     cpu_threads: 8
+    residency:                       # scripts/h4_residency.py: pages a host-resident KV moves per step
+      model: qwen35_4b
+      sequences: results/hybrid/h3_shards/qwen35_4b/full   # sample h1.sample, the model's own length
+      every: 3                       # every 3rd explore problem: 10 sequences
+      max_gen_tokens: 32768
+      budget_tokens: 512             # H3's gate budget
+      cache_multiples: [1, 2, 4]     # GPU page cache, x budget pages (LRU)
+      prefetch: {lookahead: 3, cache_plus: [[2, 1], [4, 2]]}   # [cache x budget, prefetch x budget] with the H-c query
+      lag1_cache_multiples: [1, 2]
+      step_chunk: 512
+      shard_dir: results/hybrid/h4_shards
+      gpu_mem_gib: 48                # RTX 6000 Ada / RTX A6000 (49140 MiB)
+      reserve_gib: 4                 # activations and workspace
+      host_kv_gib: 160               # of 251 GiB host memory on gpuserv4
