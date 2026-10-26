@@ -1,0 +1,66 @@
+inherit: reasoning.yaml
+
+# Hybrid models (EXPERIMENTS.md, "Hybrid models", agreed 2026-10-26). Run with .venv-hybrid
+# (transformers 5.19, fla-core 0.5.2); E3's .venv stays as it was.
+
+models:
+  local_files_only: true
+
+hybrid:
+  models:
+    qwen35_4b:
+      name: Qwen/Qwen3.5-4B
+      layers: [3, 7, 11, 15, 19, 23, 27, 31]   # every full-attention layer (layer_types)
+      sampling: {temperature: 1.0, top_p: 0.95, top_k: 20, presence_penalty: 1.5}   # model card, thinking mode
+    qwen3_4b:
+      name: Qwen/Qwen3-4B
+      layers: [3, 8, 12, 17, 21, 26, 30, 35]   # floor((L + 1) * 36 / 32) - 1: Qwen3.5's attention depths
+      sampling: {temperature: 0.6, top_p: 0.95, top_k: 20, presence_penalty: 0.0}   # = e3.sampling
+
+  # H1 (scripts/h1_screen.py): offline screen, exact attention from one replay forward per sequence
+  h1:
+    sequences:                       # sample 0 of each explore problem, full attention
+      qwen35_4b: results/hybrid/h3_shards/qwen35_4b/full     # H3's full-attention run (token ids stored)
+      qwen3_4b: results/reasoning/e3_shards/full              # E3's full run (text: re-tokenized)
+    sample: 0
+    max_gen_tokens: 16384            # first 16K generated tokens (E3's cap) for both models
+    budgets_tokens: [256, 512, 1024] # attended tokens per layer incl. sink + recent (as E3)
+    step_chunk: 128                  # decode steps per GPU batch of exact attention
+    lookahead_layers: [1, 2, 3]      # H-c: query predicted from the hidden state entering layer L - k
+    ours: {mean_mix: 0.5}            # E3's gain: Quest bound + mean-key logit, summed over KV heads
+    gdn_prior_weights: [0.1, 0.25, 0.5]   # H-d mixing weights (chosen on aime24, reported on aime25)
+    fidelity:                        # H-b offline: teacher-forced sparse forward, next-token KL vs dense
+      n_sequences: 10
+      max_gen_tokens: 8192
+      query_chunk: 1024
+    shard_dir: results/hybrid/h1_shards
+    gate:
+      budget_tokens: 512             # (i) oracle(qwen35) <= oracle(qwen3); (ii) quest gap share(qwen35) >= qwen3's
+      lookahead_max_points: 1.0      # H-c: lookahead-3 query costs <= 1.0 point of missing attention
+      gdn_prior_min_reduction: 0.05  # H-d
+
+  # H2: cheap page summaries
+  h2:
+    metadata_max_share: 0.02         # GPU metadata <= 2% of KV bytes
+    within_points: 0.5               # missing attention within 0.5 points of full-precision ours at 512
+
+  # H3 (scripts/run_h3.py): online accuracy
+  h3:
+    tasks: [aime24, aime25]
+    split: explore
+    samples: 8
+    sample_group: 4
+    seed: 20261026
+    max_new_tokens: 32768            # model card: 32K for most queries (81,920 for competitions: too costly)
+    batch_size: 16
+    snapkv_window: 32
+    snapkv_protect_prompt: true      # prompt pages are evicted only when the prompt alone exceeds the budget
+    out_dir: results/hybrid/h3_shards
+    claims_dir: results/hybrid/h3_claims
+    gate:
+      budget_tokens: 512
+      baselines: [quest, snapkv]
+      margin_points: 5
+    hb_gate:                         # H-b online: loss of snapkv@1024 vs full, qwen35 <= half of qwen3's
+      budget_tokens: 1024
+      max_loss_ratio: 0.5

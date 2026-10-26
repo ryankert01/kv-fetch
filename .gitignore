@@ -6,3 +6,6 @@ traces/
 results/**/*.claim
 results/**/logs/
 results/**/*.log
+.venv-hybrid/
+results/hybrid/*_shards/
+results/hybrid/*_claims/
