@@ -215,7 +215,8 @@ analysis code before its numbers are used, and every reported number against the
     (needed 5%); its Spearman correlation with page mass is 0.09 (beta) / -0.01 (forgot).
   - H2: mean8 chosen (fp8 mean keys, 1.56% of KV): 24.5% vs the mix's 25.2% on aime24 (aime25 26.6 vs
     27.2). It is ShadowKV-style landmark scoring in fp8 with summed head shares: little novelty alone. 1.56% is the
-    format's size: the engine still stores fp32 means (6.25% of KV) and casts them to fp8 every step.
+    format's size: the engine still stores fp32 means and casts them to fp8 every step, and still allocates
+    and writes the unused bf16 min/max bounds, so its summaries take ~12.5% of KV.
   - H-b offline (teacher-forced fidelity, 10 sequences <= 8K tokens): Qwen3.5's oracle@512 gives
     next-token KL 0.011 at 22.9% missing; Qwen3-4B 0.035 at 14.1% (0.108 at 26.1%, oracle@256). Per unit
     of missing attention the hybrid's output moves less: 7.4-7.5x lower KL over three pairs with matched
@@ -234,7 +235,9 @@ analysis code before its numbers are used, and every reported number against the
   - H-b FAILED online: prompt-protected SnapKV@1K loses 40.0 points on Qwen3.5 vs 38.8 on Qwen3-4B
     (ratio 1.03, needed <= 0.5); both fail by not finishing (89.6% vs 43.8% capped on Qwen3.5, 82.9% vs
     35.8% on Qwen3-4B). The offline KL advantage does not survive long generation. The caps differ by
-    design (each model's pre-registered setting), so the ratio is approximate.
+    design (each model's pre-registered setting, as are the sampling settings) and both SnapKV@1K runs
+    sit near the floor (9.6%, 14.2%), so the ratio is approximate; a fair test needs one decoding setting
+    and a budget that does not collapse (2-8K).
 - H4 (2026-10-26; costs results/h4_costs_qwen35_4b.json measured on an idle RTX 6000 Ada at 5ae4a8f;
   residency results/h4_residency_qwen35_4b.json, 10 full-length Qwen3.5 sequences, mean 22,082 generated
   tokens, plus 3 ours@512 trajectories as a cross-check; two audit rounds, no blocker; this is a cost
@@ -242,8 +245,11 @@ analysis code before its numbers are used, and every reported number against the
   - Fetch paths (64 KB pages): a Triton gather reading pinned host memory over PCIe (UVA, in-graph, no
     host sync) reaches ~25 GB/s (one page 14 us); with 16 looping programs it slows a concurrent GDN layer
     by 7-16%, with one program per block by 2.7-2.9x. The staged CPU path (index readback, CPU gather, copy)
-    reaches ~4.7 GB/s (one page 51 us). Summed layer times match measured whole steps within -2% to +3% (whole steps measured up to batch 64
-  only; batch 128 and 160 are uncalibrated sums).
+    reaches ~4.7 GB/s (one page 51 us). Summed layer times match measured whole steps within -2% to +3% (whole steps measured where all KV fits
+  in 30 GiB: batch 64 at 8K, 32 at 16K, 8 at 32K; the rest, including the 32K batch-32 all-on-GPU
+  reference, are uncalibrated sums). Misses come from full-attention trajectories; on the selector's own
+  trajectories c4 misses 26% more pages, and the engine's slower ours attention layer dilutes fetch cost:
+  both make 0.94x optimistic.
   - Misses per step per attention layer at 512 (exact selection, LRU GPU cache of c x budget): 6.8 (c1),
     3.5 (c2), 1.7 (c4); on the selector's own trajectories 7.5 / 4.1 / 2.1. The H-c lookahead prefetch
     is never better than exact + c4 (its predicted query, page scores and top-k cost 0.1-5.5 ms per layer); the one-step-stale selection
