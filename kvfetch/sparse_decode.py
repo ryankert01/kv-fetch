@@ -16,6 +16,10 @@ over the pages it attended (the observability rule of E1/E2b).
 
 Slots run at their own lengths (continuous batching): positions, cache writes and masks are per
 slot, so a finished sequence is replaced by a new prompt without padding. Prefill is dense.
+
+Hybrid models (``config.layer_types``, e.g. Qwen3.5: Gated DeltaNet + full attention): only the
+full-attention layers hold KV and are page-selected; the linear-attention layers' conv and recurrent
+states live in per-slot buffers that this engine also serves (the HF linear-attention cache protocol).
 """
 from __future__ import annotations
 
@@ -32,6 +36,7 @@ from kvfetch.selectors import _RECENCY_TIEBREAK
 SPARSE_ATTN = "kvfetch_sparse"
 METHODS = ("full", "quest", "ours", "snapkv", "oracle")
 _NEG = float("-inf")
+_PROTECT = 1e6
 _ENGINE: "SparseEngine | None" = None
 
 
@@ -39,6 +44,18 @@ def _attention(module, query, key, value, attention_mask, dropout=0.0, scaling=N
     if kwargs.get("sliding_window") is not None:
         raise NotImplementedError("sparse decoding assumes full attention layers")
     return _ENGINE.attend(module.layer_idx, query, key, value, scaling)
+
+
+class _LinearState:
+    """One linear-attention layer's buffers, shaped as HF's ``LinearAttentionLayer`` exposes them."""
+    record_past = False
+
+    def __init__(self, conv: torch.Tensor, recurrent: torch.Tensor):
+        self.conv_states, self.recurrent_states = {0: conv}, {0: recurrent}
+
+    def reset_slot(self, b: int) -> None:
+        self.conv_states[0][b].zero_()
+        self.recurrent_states[0][b].zero_()
 
 
 def register_sparse_attention() -> None:
@@ -53,6 +70,7 @@ class Method:
     budget_tokens: int | None = None             # total attended tokens incl. pinned (None: full)
     spec: dict = field(default_factory=dict)     # ours: a selectors.candidates entry
     window: int = 32                             # snapkv observation window (steps)
+    protect_prompt: bool = False                 # snapkv: evict prompt pages only when the prompt alone overflows
 
     @property
     def label(self) -> str:
@@ -93,7 +111,13 @@ class SparseEngine:
         if method.name not in METHODS:
             raise ValueError(method.name)
         c = model.config
-        self.L, self.S, self.H = c.num_hidden_layers, c.num_key_value_heads, c.num_attention_heads
+        types = getattr(c, "layer_types", None) or ["full_attention"] * c.num_hidden_layers
+        self.attn_layers = [i for i, t in enumerate(types) if t == "full_attention"]
+        self.lin_layers = [i for i, t in enumerate(types) if t == "linear_attention"]
+        if len(self.attn_layers) + len(self.lin_layers) != c.num_hidden_layers:
+            raise NotImplementedError(f"layer types {sorted(set(types))}")
+        self.aslot = {l: i for i, l in enumerate(self.attn_layers)}     # model layer -> KV slot
+        self.L, self.S, self.H = len(self.attn_layers), c.num_key_value_heads, c.num_attention_heads
         self.d = getattr(c, "head_dim", None) or c.hidden_size // c.num_attention_heads
         self.g = self.H // self.S
         self.B, self.ps, self.sink, self.R, self.W = batch, page_size, sink_pages, recent_tokens, obs_window
@@ -105,6 +129,15 @@ class SparseEngine:
         L, B, S, P, d = self.L, self.B, self.S, self.P, self.d
         self.k = torch.zeros((L, B, S, self.Lmax, d), dtype=dt, device=self.dev)
         self.v = torch.zeros_like(self.k)
+        self.layers = [None] * c.num_hidden_layers        # linear-attention layers: per-slot state buffers
+        if self.lin_layers:
+            conv_dim = 2 * c.linear_num_key_heads * c.linear_key_head_dim + c.linear_num_value_heads * c.linear_value_head_dim
+            sdt = getattr(torch, getattr(c, "mamba_ssm_dtype", None) or "float32")
+            for l in self.lin_layers:
+                self.layers[l] = _LinearState(
+                    torch.zeros((B, conv_dim, c.linear_conv_kernel_dim), dtype=dt, device=self.dev),
+                    torch.zeros((B, c.linear_num_value_heads, c.linear_key_head_dim, c.linear_value_head_dim),
+                                dtype=sdt, device=self.dev))
         self.lens = torch.zeros(B, dtype=torch.long, device=self.dev)
         self.ar = torch.arange(B, device=self.dev)
         self.tok_ar = torch.arange(page_size, device=self.dev)
@@ -131,6 +164,7 @@ class SparseEngine:
             self.fresh = torch.zeros(B, dtype=torch.bool, device=self.dev)    # first decode step after prefill
             self.prev_hi = torch.zeros(B, dtype=torch.long, device=self.dev)
             self.kept_order = torch.arange(P + 1, device=self.dev, dtype=torch.float32) * 1e-7   # kept pages first
+            self.prompt_pages = torch.zeros(B, dtype=torch.long, device=self.dev)    # protect_prompt
         self.ptr = torch.zeros((), dtype=torch.long, device=self.dev)    # decode steps run (snapkv window slot)
         self.mode: str | None = None
         self.slot = 0
@@ -141,7 +175,7 @@ class SparseEngine:
 
     # ------------------------------------------------------------------ cache protocol
     def update(self, k_new, v_new, layer_idx, cache_kwargs=None):
-        li = layer_idx
+        li = self.aslot[layer_idx]
         if self.mode == "prefill":
             b, n = self.slot, k_new.shape[2]
             self.k[li, b, :, :n] = k_new[0]
@@ -175,9 +209,35 @@ class SparseEngine:
     def get_seq_length(self, layer_idx: int = 0) -> int:
         return 0
 
+    # ------------------------------------------------------------------ linear-attention cache protocol
+    def has_previous_state(self, layer_idx: int | None = None, state_idx: int | None = None) -> bool:
+        return self.mode == "decode"
+
+    def update_conv_state(self, conv_states, layer_idx, state_idx: int = 0, conv_kernel_size: int | None = None, **kw):
+        """Prefill only (decode updates the buffer in place): keep the last kernel-size inputs of slot
+        ``self.slot`` and return the (left zero-padded) inputs the causal conv needs."""
+        if self.mode != "prefill":
+            raise RuntimeError("conv state update outside prefill")
+        buf = self.layers[layer_idx].conv_states[0]
+        ks = buf.shape[-1]
+        full = conv_states if conv_states.shape[-1] >= ks else F.pad(conv_states, (ks - conv_states.shape[-1], 0))
+        buf[self.slot].copy_(full[0, :, -ks:])
+        return full
+
+    def update_recurrent_state(self, recurrent_states, layer_idx, state_idx: int = 0, **kw):
+        buf = self.layers[layer_idx].recurrent_states[0]
+        if self.mode == "prefill":
+            buf[self.slot].copy_(recurrent_states[0])
+        else:
+            buf.copy_(recurrent_states)
+        return buf
+
     # ------------------------------------------------------------------ slots and steps
     def reset_slot(self, b: int) -> None:
         self.lens[b] = 0
+        for st in self.layers:
+            if st is not None:
+                st.reset_slot(b)
         if self.m.name == "ours":
             self.hist[:, b] = 0
         if self.m.name == "snapkv":
@@ -187,6 +247,7 @@ class SparseEngine:
             self.evicted[:, b] = False
             self.fresh[b] = True
             self.prev_hi[b] = 0
+            self.prompt_pages[b] = 0
 
     def begin_prefill(self, b: int) -> None:
         self.reset_slot(b)
@@ -194,6 +255,8 @@ class SparseEngine:
 
     def end_prefill(self, n: int) -> None:
         self.lens[self.slot] = n
+        if self.m.name == "snapkv":
+            self.prompt_pages[self.slot] = -(-n // self.ps)
         self.mode = None
 
     def begin_step(self, lc: int) -> None:
@@ -224,7 +287,8 @@ class SparseEngine:
         self.mode = None
 
     # ------------------------------------------------------------------ attention
-    def attend(self, li, q, K, V, scaling):
+    def attend(self, layer_idx, q, K, V, scaling):
+        li = self.aslot[layer_idx]
         if self.mode == "prefill":
             return self._prefill(li, q, K, V, scaling)
         if self.m.name == "full" or self.shadow:
@@ -244,10 +308,10 @@ class SparseEngine:
         out = _pv(p, vv)
         if self.m.name in ("ours", "snapkv"):
             self._observe(li, pages, p.mean(2).view(B, S, -1, ps).sum(-1))
-        if self.record is not None and li in self.record:
+        if self.record is not None and layer_idx in self.record:
             m = torch.zeros((B, self.P + 1), dtype=torch.bool, device=self.dev)
             m[self.ar[:, None], sel] = True
-            self.record[li].append(m[:, :self.P].cpu())
+            self.record[layer_idx].append(m[:, :self.P].cpu())
         if self.shadow:
             return dense, None
         return out.reshape(B, 1, self.H, d).to(q.dtype), None
@@ -327,7 +391,10 @@ class SparseEngine:
         event = self.fresh | (self.plan["hi"] > self.prev_hi)
         kept |= elig & ~evicted
         excess = torch.where(event, kept.sum(1) - b, 0).clamp(min=0)
-        prio = self.wsum[li].sum(1).masked_fill(~kept, float("inf"))
+        prio = self.wsum[li].sum(1)
+        if self.m.protect_prompt:                       # generated pages go first (window sums <= window * S)
+            prio = prio + _PROTECT * (self.page_ar < self.prompt_pages[:, None])
+        prio = prio.masked_fill(~kept, float("inf"))
         order = torch.argsort(prio, dim=-1, stable=True)
         rank = torch.empty_like(order).scatter_(-1, order, self.page_ar.expand_as(order))
         drop = kept & (rank < excess[:, None])
@@ -351,9 +418,14 @@ class SparseEngine:
 
 
 # ---------------------------------------------------------------------- sampling and the batch loop
-def sample_token(logits: torch.Tensor, u: torch.Tensor, temperature: float, top_k: int, top_p: float) -> torch.Tensor:
+def sample_token(logits: torch.Tensor, u: torch.Tensor, temperature: float, top_k: int, top_p: float,
+                 presence_penalty: float = 0.0, seen: torch.Tensor | None = None) -> torch.Tensor:
     """HF's temperature -> top-k -> top-p sampling, driven by one uniform per row (inverse CDF), so
-    every method sees the same random numbers for a given (problem, sample). u [B] in [0, 1)."""
+    every method sees the same random numbers for a given (problem, sample). u [B] in [0, 1).
+    ``presence_penalty`` (vLLM's semantics) is subtracted from the logits of tokens already generated
+    (``seen`` [B, V] bool), before temperature."""
+    if presence_penalty:
+        logits = logits.float() - presence_penalty * seen[:, :logits.shape[-1]].float()
     if temperature <= 0:
         return logits.argmax(-1)
     vals, idx = (logits.float() / temperature).topk(top_k, -1)                  # sorted descending
@@ -384,49 +456,55 @@ class _Slot:
 @torch.inference_mode()
 def run_batch(model, engine: SparseEngine, jobs: list[Job], *, stop_ids: list[int], max_new_tokens: int,
               sampling: dict, on_done, log_every: int = 0, logits_out: dict | None = None,
-              graphs: bool = True, lc_bucket: int = 1024) -> None:
+              graphs: bool = True, lc_bucket: int = 1024, lc_unit: int | None = None) -> None:
     """Continuous batching over ``jobs``; calls ``on_done(job, tokens, stopped)`` per finished job
     (tokens = generated ids, the stop token excluded). ``logits_out`` (checks) collects each job's
     next-token logits per step, keyed by job key. With ``graphs`` each decode step (plan, forward,
     sampling) replays a CUDA graph, one per ``lc_bucket`` of dense length for methods that read all
-    keys: Python launch overhead otherwise dominates (thousands of small kernels per step)."""
+    keys: Python launch overhead otherwise dominates (thousands of small kernels per step). ``lc_unit``
+    (checks) overrides the dense-length rounding without graphs (default: one page), e.g. to the graph
+    bucket so that graphs on and off run the same kernels."""
     global _ENGINE
     _ENGINE = engine
     try:
         _run(model, engine, jobs, stop_ids=stop_ids, max_new_tokens=max_new_tokens, sampling=sampling, on_done=on_done,
-             log_every=log_every, logits_out=logits_out, lc_bucket=lc_bucket,
+             log_every=log_every, logits_out=logits_out, lc_bucket=lc_bucket, lc_unit=lc_unit,
              graphs=graphs and logits_out is None and engine.record is None)    # checks read tensors per step
     finally:
         _ENGINE = None                            # the engine holds the KV cache: let the caller free it
 
 
 def _run(model, engine, jobs, *, stop_ids, max_new_tokens, sampling, on_done, log_every, logits_out, graphs,
-         lc_bucket) -> None:
+         lc_bucket, lc_unit=None) -> None:
     dev, B = engine.dev, engine.B
     queue = list(jobs)
     slots: list[_Slot | None] = [None] * B
     lens = np.zeros(B, dtype=np.int64)
     stops = set(stop_ids)
-    mask_dict = {"full_attention": None}
+    mask_dict = {"full_attention": None, "linear_attention": None}
     step = 0
     ids_t = torch.zeros((B, 1), dtype=torch.long, device=dev)
     u_t = torch.zeros(B, device=dev)
     act_t = torch.zeros(B, dtype=torch.bool, device=dev)
+    pp = sampling.get("presence_penalty", 0.0)
+    seen_t = torch.zeros((B, model.config.vocab_size), dtype=torch.bool, device=dev) if pp else None
     dense = engine.m.name in ("full", "oracle") or engine.shadow
 
     def step_fn(lc: int):
+        if seen_t is not None:                  # the token fed this step was generated: penalise it from now on
+            seen_t.scatter_(1, ids_t, True)
         pos = engine.lens.clone()
         engine.begin_step(lc)
         out = model(input_ids=ids_t, position_ids=pos[:, None], cache_position=pos, past_key_values=engine,
                     attention_mask=mask_dict, use_cache=True)
         engine.end_step(act_t)
         logits = out.logits[:, -1]
-        return logits, sample_token(logits, u_t, **sampling)
+        return logits, sample_token(logits, u_t, **sampling, seen=seen_t)
 
     def bucket(n: int) -> int:
         if not dense:
             return engine.Lmax
-        unit = lc_bucket if graphs else engine.ps
+        unit = lc_bucket if graphs else (lc_unit or engine.ps)
         return min(engine.Lmax, -(-n // unit) * unit)
 
     cuda_graphs = {}
@@ -450,6 +528,8 @@ def _run(model, engine, jobs, *, stop_ids, max_new_tokens, sampling, on_done, lo
         ids = torch.tensor([job.prompt_ids], device=dev)
         n = ids.shape[1]
         engine.begin_prefill(b)
+        if seen_t is not None:
+            seen_t[b] = False
         out = model(input_ids=ids, position_ids=torch.arange(n, device=dev)[None], cache_position=torch.arange(n, device=dev),
                     past_key_values=engine, attention_mask=mask_dict, use_cache=True, logits_to_keep=1)
         engine.end_prefill(n)
@@ -462,7 +542,7 @@ def _run(model, engine, jobs, *, stop_ids, max_new_tokens, sampling, on_done, lo
             sl.tokens.append(job.forced[0])
         else:
             u = torch.tensor([sl.rng.random()], device=dev)
-            sl.tokens.append(int(sample_token(out.logits[:, -1], u, **sampling)[0]))
+            sl.tokens.append(int(sample_token(out.logits[:, -1], u, **sampling, seen=None if seen_t is None else seen_t[b:b + 1])[0]))
 
     def finished(sl: _Slot) -> bool:
         t = sl.tokens

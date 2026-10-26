@@ -1,0 +1,6 @@
+greedy prompt 0: graphs on vs off first diff at None (len 400); vs HF greedy first diff at 151
+greedy prompt 1: graphs on vs off first diff at None (len 400); vs HF greedy first diff at 104
+greedy prompt 2: graphs on vs off first diff at None (len 400); vs HF greedy first diff at 134
+sampled prompt 0: graphs on vs off first diff at None (len 400)
+sampled prompt 1: graphs on vs off first diff at None (len 400)
+sampled prompt 2: graphs on vs off first diff at None (len 400)
