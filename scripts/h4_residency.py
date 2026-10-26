@@ -238,6 +238,7 @@ def screen(cfg: dict, args) -> None:
             if args.max_gen:
                 print("dry run (--max-gen): not written")
                 continue
+            out.parent.mkdir(parents=True, exist_ok=True)
             np.savez_compressed(out.with_suffix(".npz"), context=pl + np.arange(len(gen), dtype=np.int32), **arrays)
             write_json(out, {"provenance": prov, "sizes": sizes, "task": s.task, "index": s.index, "prompt_len": pl,
                              "n_gen": len(gen), "stopped": r["stopped"], "score": r["score"], "run": r["run"], "layers": layers})
