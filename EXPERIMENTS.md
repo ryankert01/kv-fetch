@@ -222,12 +222,13 @@ analysis code before its numbers are used, and every reported number against the
     missing attention (confounded: 8 perturbed layers vs 36). H3's online test decides H-b.
   - Page churn at 512: 6.7 new pages per step per layer (Qwen3.5, mean8) vs 5.3 (Qwen3-4B, mix).
 - H3 (2026-10-26, results/h3_explore.json; 30 explore problems x 8 samples, 32K cap for Qwen3.5, 16K for
-  Qwen3-4B as in E3; gates complete, oracle@1024 on Qwen3.5 and snapkv@512 on Qwen3-4B, which no gate
-  uses, still finishing their last samples):
+  Qwen3-4B as in E3; complete, every run 8 samples on all 30 problems):
   - Gate PASSED: ours (mean8, 1.56% of KV) @512 30.0% vs quest@512 19.2% (snapkv@512 0.0%): +10.8 points
     paired by problem, CI95 [+4.2, +18.3], 9 wins / 1 loss of 30. At 1K: ours 41.25% vs quest 33.8%, +7.5
     [+1.7, +14.6]. Full attention 49.6%; even oracle@512 loses 13.8 points [-21.3, -6.25] and ours@512
     5.8 points to it; ours@1024 is 8.3 points below full.
+    oracle@1024 39.2%: ours@1024 is +2.1 points above it [-0.8, +5.0] (minimum missing attention per step
+    is not maximum accuracy).
   - Losses are mostly unfinished reasoning: 43.8% of full-attention samples hit the 32K cap, 63.3% of
     ours@512 and 75.4% of quest@512; accuracy among finished samples is 78-92% for every method (full 88%).
   - H-b FAILED online: prompt-protected SnapKV@1K loses 40.0 points on Qwen3.5 vs 38.8 on Qwen3-4B
