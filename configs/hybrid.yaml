@@ -86,26 +86,38 @@ hybrid:
 
   # H4 (scripts/h4_costs.py): measured inputs of the tiered-KV cost model
   h4:
-    batches: [1, 8, 32, 64]
+    batches: [1, 8, 32, 64, 128, 160]   # layer times up to the tiered capacity at 32K (one attention layer's KV)
     contexts: [8192, 16384, 32768]
+    budget_tokens: 512               # H3's gate budget
     kv_bytes_per_token: 32768        # Qwen3.5-4B: 8 layers x 4 KV heads x 256 x (K, V) x 2 B
-    max_kv_gib: 30                   # skip (batch, context) whose full KV exceeds this on the GPU
+    max_kv_gib: 30                   # whole-step calibration only where all layers' KV fits on the GPU
     iters: 50
     page_bytes: 65536                # one 16-token page of one attention layer (all KV heads, K and V)
     host_pool_mib: 2048
     copy_mib: [1, 4, 16, 64]
+    fetch_pages: [1, 4, 16, 64, 256, 1024, 4096]   # scattered pages per fetch (64 KB to 256 MB)
+    gather_block: 1024               # int64 elements per Triton program in the zero-copy gather
+    zero_copy_programs: 16           # the looping gather's programs (enough loads in flight for PCIe, few SMs)
+    overlap_batches: [8, 32, 160]
+    lookahead_multiples: [1, 2]      # H-c prefetch of k x budget pages
     cpu_threads: 8
+    gate: {min_ratio: 0.9}           # stretch: tiered >= 0.9x all-on-GPU where both fit; larger max batch at 32K
     residency:                       # scripts/h4_residency.py: pages a host-resident KV moves per step
       model: qwen35_4b
       sequences: results/hybrid/h3_shards/qwen35_4b/full   # sample h1.sample, the model's own length
       every: 3                       # every 3rd explore problem: 10 sequences
+      cross_check:                   # H4 audit: the selector's own trajectories (sample h1.sample of ours@512)
+        sequences: results/hybrid/h3_shards/qwen35_4b/ours_512
+        every: 10                    # 3 sequences
       max_gen_tokens: 32768
-      budget_tokens: 512             # H3's gate budget
-      cache_multiples: [1, 2, 4]     # GPU page cache, x budget pages (LRU)
+      cache_multiples: [1, 2, 4]     # GPU page cache, x the largest per-step budget (LRU)
       prefetch: {lookahead: 3, cache_plus: [[2, 1], [4, 2]]}   # [cache x budget, prefetch x budget] with the H-c query
       lag1_cache_multiples: [1, 2]
       step_chunk: 512
+      q_self_err_max: 1.0e-2         # as scripts/h1_screen.py
       shard_dir: results/hybrid/h4_shards
+      mc_samples: 400                # sampled batches per (batch, context bucket)
+      mc_seed: 20261026
       gpu_mem_gib: 48                # RTX 6000 Ada / RTX A6000 (49140 MiB)
-      reserve_gib: 4                 # activations and workspace
+      reserve_gib: 4                 # activations and workspace (per-slot logits and penalty masks counted apart)
       host_kv_gib: 160               # of 251 GiB host memory on gpuserv4
