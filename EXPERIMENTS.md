@@ -335,3 +335,25 @@ with K0.
   is left is engineering: the pilot's precision data (fp8-e4m3 per-row at the rechunk floor, int8 per-row
   2.4x it, chained rounding sublinear) bears on vLLM PR 52962 (draft FP8/INT8 checkpoints). The host-tier
   junction is already filed upstream with a proposed fix (#63565) and changed K0 by < 0.1%.
+
+# Profiling hybrid models on vLLM (user, 2026-10-28)
+
+Goal: measure where time and memory go when vLLM serves hybrid models, next to dense models of the same
+width, and list what could be optimised and by how much (share of time x headroom to the hardware bound).
+Exploratory: no gate; each opportunity is reported with its measured share and a bound, not a claim.
+
+Setup: upstream vLLM 0.32.0 (cu129 wheel, torch 2.13, scratchpad venv-vllm32), not the ReplaySSM fork; one
+free GPU only while GPU 0 is in use by others (GPU 6, RTX 6000 Ada). Pairs at equal hidden size:
+Qwen3.5-4B vs Qwen3-4B, Qwen3.5-9B vs Qwen3-8B; then Qwen3.6-35B-A3B-FP8 vs Qwen3-30B-A3B-Instruct-2507-FP8
+(MoE) and Olmo-Hybrid-7B (another hybrid family) if they fit and load.
+
+Measurements (configs/profile.yaml, scripts/profile/, results/profile/):
+- P1 step-time sweeps: prefill time vs prompt length (1K-32K); decode step time vs batch (1-256) x context
+  (2K-32K); KV/state capacity and max concurrency from the engine's own logs.
+- P2 kernel breakdown (torch profiler / nsys) at representative prefill and decode points, CUDA graphs on:
+  GDN (chunked prefill, recurrent decode), causal conv1d, attention, GEMMs, MoE, norms/activations,
+  sampling, copies, and GPU idle time (CPU-side overhead).
+- P3 roofline: achieved bandwidth / FLOP rate per kernel class against measured peaks (copy and GEMM
+  microbenchmarks on the same GPU).
+- P4 serving: `vllm bench serve`, random prompts, reasoning-like (in 1K, out 8K) and chat-like (in 4K,
+  out 512) at several concurrencies; prefix caching on vs off (hybrid "align" mode cost).
