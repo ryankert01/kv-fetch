@@ -194,7 +194,7 @@ Unprofiled prefill latency, median of 5, LLM class (8192-token budget), GPU 6.
   35B MoE where a second full pass costs more); the FLA version (#60659) is open. Confirms the lead is
   real and already taken. Not pursued.
 
-## 05:45 -- the collapse with spread lengths, and its counters (f8: serve_thrash_qwen35_4b)
+## 05:37 -- the collapse with spread lengths, and its counters (f8: serve_thrash_qwen35_4b)
 Qwen3.5-4B, `vllm serve` (2048-token budget, 256 seqs), GPU 6, workload reasoning_var: input 1024 and
 output 8192, each uniform in +-50% (`--random-range-ratio 0.5`), 2 prompts per concurrency slot.
 Counters are /metrics deltas over each run; ms/step = run time / `vllm:iteration_tokens_total_count`;

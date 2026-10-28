@@ -1,4 +1,4 @@
-note: 'follow-up 10 (05:50): f8 found the collapse with varied lengths too, and prefix caching on preempts 4.3x as
+note: 'follow-up 10 (05:38): f8 found the collapse with varied lengths too, and prefix caching on preempts 4.3x as
   often as off at c=256 (3474 vs 800) at the same ~133 running, 27% longer engine steps (73.9 vs 58.3 ms), 22% less
   output. The server counters do not count recomputed tokens. Run the same load offline with the scheduler
   instrumented: what triggers each preemption (a running decode or a prefill chunk that cannot get a block), how
