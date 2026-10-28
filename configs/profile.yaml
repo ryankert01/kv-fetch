@@ -58,5 +58,22 @@ profile:
     workloads:
       reasoning: {input: 1024, output: 8192, prompts_per_concurrency: 2, concurrency: [16, 64, 256]}
       chat: {input: 4096, output: 512, prompts_per_concurrency: 4, concurrency: [16, 64, 256]}
+    # multi-turn-like reuse, run as its own job (--set profile.serve.workloads=...): 64 shared 4K prefixes,
+    # each request adds a 128-token suffix, so every prefill is short and follows a prefix-cache hit
+    multiturn_workloads:
+      multiturn: {dataset: prefix_repetition, prefix: 4096, suffix: 128, num_prefixes: 64, output: 256, prompts_per_concurrency: 8, concurrency: [16, 64]}
     range_ratio: 0.0                   # fixed lengths
     ready_timeout_s: 1200
+
+  # Microbenchmark of the two GDN paths vLLM has (scripts/profile/gdn_prefill_micro.py): the chunked
+  # prefill path (FLA Triton, several kernels) vs the fused recurrent update (one kernel, used for decode
+  # and spec-decode verify, accepts several tokens per sequence), for T new tokens of one sequence.
+  gdn_micro:
+    heads_k: 16                        # Qwen3.5-4B / 9B: linear_num_key_heads
+    heads_v: 32                        # linear_num_value_heads
+    head_dim: 128
+    tokens: [1, 4, 16, 64, 128, 256, 512, 1024, 2048]
+    layers: 24                         # calls per timed iteration (the model's GDN layers)
+    repeats: 20
+    warmup: 3
+    seed: 0

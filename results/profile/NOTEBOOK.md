@@ -89,3 +89,11 @@ Queued: configs/harness_plan_night1.yaml (24 jobs: base sweeps, serving, 8 ablat
   CUDA graphs per token-count bucket. Rule (c): the FlashInfer GDN prefill on SM90+ may not have the
   floor; upstream "breakable" graphs leave GDN eager.
 - Gate for pursuing it: P4 must show the floor in serving (TPOT of mixed steps, chat TTFT), else drop.
+
+## 01:20 -- queued to test the small-prefill lead
+- micro_gdn_prefill_paths (scripts/profile/gdn_prefill_micro.py): 24 layers of the GDN chunk path vs the
+  single-kernel fused recurrent update for T = 1..2048 tokens, wall (incl. launches) and GPU time, plus
+  agreement of outputs and final states. If recurrent wins below some T, routing short prefills there is
+  the obvious fix (vLLM already sends multi-token spec-decode verify through it).
+- serve_multiturn_4b_pair: `vllm bench serve` prefix_repetition (64 shared 4K prefixes, 128-token new
+  suffix, 256 output), concurrency 16 and 64, hybrid vs dense: every prefill is short and follows a hit.

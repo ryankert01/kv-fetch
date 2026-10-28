@@ -131,7 +131,7 @@ def main():
                 if f.name == "serve_index.json":
                     continue
                 r = json.load(open(f))
-                mkey, setting, wl, conc = re.match(r"(.+)_(default|prefix_off|[a-z0-9]+)_(reasoning|chat)_c(\d+)\.json", f.name).groups()
+                mkey, setting, wl, conc = re.match(r"(.+)_(default|prefix_off|[a-z0-9]+)_(reasoning|chat|multiturn)_c(\d+)\.json", f.name).groups()
                 out["serve"].append({"run": jid, "model": mkey, "setting": setting, "workload": wl, "concurrency": int(conc),
                                      **{k: r.get(k) for k in ("completed", "duration", "output_throughput", "total_token_throughput",
                                                               "median_ttft_ms", "p99_ttft_ms", "median_tpot_ms", "p99_tpot_ms")}})

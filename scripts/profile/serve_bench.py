@@ -4,7 +4,7 @@ For each model and server setting, start one server, run every workload at every
 prompts, fixed lengths, ignore_eos; num_prompts = prompts_per_concurrency x concurrency), save each
 `vllm bench serve` result, stop the server.
 
-Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y]
+Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y] [--workloads w1,w2] [--set k=v]
 """
 import argparse
 import json
@@ -18,6 +18,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from kvfetch.config import load_config  # noqa: E402
 from kvfetch.provenance import provenance  # noqa: E402
+
+
+def dataset_args(w: dict, sc: dict) -> list[str]:
+    if w.get("dataset", "random") == "prefix_repetition":   # shared prefixes + short new suffixes: multi-turn-like reuse
+        return ["--dataset-name", "prefix_repetition", "--prefix-repetition-prefix-len", str(w["prefix"]),
+                "--prefix-repetition-suffix-len", str(w["suffix"]), "--prefix-repetition-num-prefixes", str(w["num_prefixes"]),
+                "--prefix-repetition-output-len", str(w["output"])]
+    return ["--dataset-name", "random", "--random-input-len", str(w["input"]), "--random-output-len", str(w["output"]),
+            "--random-range-ratio", str(sc["range_ratio"])]
 
 
 def wait_ready(port: int, proc, timeout: float):
@@ -40,6 +49,7 @@ def main():
     ap.add_argument("--models", default=None)
     ap.add_argument("--settings", default=None)
     ap.add_argument("--set", action="append", default=[])
+    ap.add_argument("--workloads", default=None)
     args = ap.parse_args()
     cfg = load_config(args.config, args.set)
     sc = cfg["profile"]["serve"]
@@ -59,11 +69,12 @@ def main():
             try:
                 wait_ready(port, proc, sc["ready_timeout_s"])
                 for wname, w in sc["workloads"].items():
+                    if args.workloads and wname not in args.workloads.split(","):
+                        continue
                     for c in w["concurrency"]:
                         fname = f"{mkey}_{sname}_{wname}_c{c}.json"
                         bench = ["vllm", "bench", "serve", "--backend", "vllm", "--port", str(port), "--model", name,
-                                 "--dataset-name", "random", "--random-input-len", str(w["input"]),
-                                 "--random-output-len", str(w["output"]), "--random-range-ratio", str(sc["range_ratio"]),
+                                 *dataset_args(w, sc),
                                  "--num-prompts", str(w["prompts_per_concurrency"] * c), "--max-concurrency", str(c),
                                  "--ignore-eos", "--seed", "0", "--percentile-metrics", "ttft,tpot,itl,e2el",
                                  "--metric-percentiles", "50,90,99", "--save-result", "--result-dir", str(out),

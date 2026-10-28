@@ -91,8 +91,9 @@ def command(job: dict, out: Path, hc: dict) -> list[str]:
         return ["bash", "-c", " ".join(map(sh, prof)) + " && " + " ".join(map(sh, parse))]
     if job["kind"] == "serve":
         sets = [x for s in job.get("sets", []) for x in ("--set", s)]
+        wl = ["--workloads", ",".join(job["workloads"])] if job.get("workloads") else []
         return [py, "scripts/profile/serve_bench.py", hc["profile_config"], str(out), "--models", ",".join(job["models"]),
-                "--settings", ",".join(job["settings"]), *sets]
+                "--settings", ",".join(job["settings"]), *wl, *sets]
     if job["kind"] == "cmd":
         return ["bash", "-c", job["cmd"].replace("{out}", str(out)).replace("{py}", py)]
     raise ValueError(job["kind"])

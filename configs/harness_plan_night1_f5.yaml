@@ -1,0 +1,8 @@
+note: 'follow-up 5 (01:12): GDN path microbenchmark'
+jobs:
+- id: micro_gdn_prefill_paths
+  kind: cmd
+  priority: 4
+  timeout_s: 1800
+  cmd: '{py} scripts/profile/gdn_prefill_micro.py configs/harness.yaml {out}/gdn_prefill_micro.json'
+  why: 'fix potential for the small-prefill floor: 24 layers of the GDN chunk path vs the fused recurrent kernel for T tokens (wall incl. launches, GPU time, numerical agreement)'

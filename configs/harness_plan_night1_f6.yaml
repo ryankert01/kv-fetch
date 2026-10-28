@@ -1,0 +1,14 @@
+note: 'follow-up 6 (01:20): multi-turn-like serving'
+jobs:
+- id: serve_multiturn_4b_pair
+  kind: serve
+  models:
+  - qwen35_4b
+  - qwen3_4b
+  settings:
+  - default
+  priority: 6
+  timeout_s: 10800
+  sets:
+  - 'profile.serve.workloads={multiturn: {concurrency: [16, 64], dataset: prefix_repetition, num_prefixes: 64, output: 256, prefix: 4096, prompts_per_concurrency: 8, suffix: 128}}'
+  why: 'short prefills after prefix-cache hits in serving: does the hybrid''s ~11 ms small-prefill floor show in TTFT/TPOT?'
