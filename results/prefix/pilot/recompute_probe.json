@@ -1,0 +1,322 @@
+{
+ "provenance": {
+  "settings": {
+   "model": "/share2/huggingface/hub/models--Qwen--Qwen3.5-4B/snapshots/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+   "max_model_len": 40960,
+   "gpu_memory_utilization": 0.85,
+   "contexts": [
+    8192,
+    32768
+   ],
+   "offsets": [
+    1,
+    32,
+    128,
+    264,
+    527
+   ],
+   "repeats": 3,
+   "token_range": [
+    1000,
+    100000
+   ],
+   "seed": 0
+  },
+  "block_size": 528,
+  "warm_prefill_ms": 4388.606736436486,
+  "vllm": "0.23.1+replayssm",
+  "torch": "2.13.0+cu129",
+  "gpu": "NVIDIA RTX A6000",
+  "host": "gpuserv4",
+  "timestamp": "2026-10-26T23:18:15+0800",
+  "replayssm_commit": "73a9592e9d8a2268620e8883a82f5cec7442ed36"
+ },
+ "rows": [
+  {
+   "context": 8192,
+   "offset": 1,
+   "length": 8449,
+   "ms": 612.0370188727975,
+   "cached_tokens": 1584,
+   "recomputed": 6865,
+   "repeat": 0
+  },
+  {
+   "context": 8192,
+   "offset": 32,
+   "length": 9008,
+   "ms": 101.89148504287004,
+   "cached_tokens": 8448,
+   "recomputed": 560,
+   "repeat": 0
+  },
+  {
+   "context": 8192,
+   "offset": 128,
+   "length": 9632,
+   "ms": 51.63876246660948,
+   "cached_tokens": 9504,
+   "recomputed": 128,
+   "repeat": 0
+  },
+  {
+   "context": 8192,
+   "offset": 264,
+   "length": 10296,
+   "ms": 122.0661485567689,
+   "cached_tokens": 9504,
+   "recomputed": 792,
+   "repeat": 0
+  },
+  {
+   "context": 8192,
+   "offset": 527,
+   "length": 11087,
+   "ms": 152.78734732419252,
+   "cached_tokens": 10032,
+   "recomputed": 1055,
+   "repeat": 0
+  },
+  {
+   "context": 8192,
+   "offset": 1,
+   "length": 11089,
+   "ms": 98.06697349995375,
+   "cached_tokens": 10560,
+   "recomputed": 529,
+   "repeat": 1
+  },
+  {
+   "context": 8192,
+   "offset": 32,
+   "length": 11648,
+   "ms": 106.30892962217331,
+   "cached_tokens": 11088,
+   "recomputed": 560,
+   "repeat": 1
+  },
+  {
+   "context": 8192,
+   "offset": 128,
+   "length": 12272,
+   "ms": 110.54070480167866,
+   "cached_tokens": 11616,
+   "recomputed": 656,
+   "repeat": 1
+  },
+  {
+   "context": 8192,
+   "offset": 264,
+   "length": 12936,
+   "ms": 124.99755714088678,
+   "cached_tokens": 12144,
+   "recomputed": 792,
+   "repeat": 1
+  },
+  {
+   "context": 8192,
+   "offset": 527,
+   "length": 13727,
+   "ms": 155.43629322201014,
+   "cached_tokens": 12672,
+   "recomputed": 1055,
+   "repeat": 1
+  },
+  {
+   "context": 8192,
+   "offset": 1,
+   "length": 13729,
+   "ms": 100.66176019608974,
+   "cached_tokens": 13200,
+   "recomputed": 529,
+   "repeat": 2
+  },
+  {
+   "context": 8192,
+   "offset": 32,
+   "length": 14288,
+   "ms": 107.67052508890629,
+   "cached_tokens": 13728,
+   "recomputed": 560,
+   "repeat": 2
+  },
+  {
+   "context": 8192,
+   "offset": 128,
+   "length": 14912,
+   "ms": 110.520307905972,
+   "cached_tokens": 14256,
+   "recomputed": 656,
+   "repeat": 2
+  },
+  {
+   "context": 8192,
+   "offset": 264,
+   "length": 15576,
+   "ms": 127.63341888785362,
+   "cached_tokens": 14784,
+   "recomputed": 792,
+   "repeat": 2
+  },
+  {
+   "context": 8192,
+   "offset": 527,
+   "length": 16367,
+   "ms": 158.62489864230156,
+   "cached_tokens": 15312,
+   "recomputed": 1055,
+   "repeat": 2
+  },
+  {
+   "context": 8192,
+   "offset": "cold",
+   "length": 15840,
+   "ms": 1436.5316675975919,
+   "cached_tokens": 0,
+   "recomputed": 15840
+  },
+  {
+   "context": 32768,
+   "offset": 1,
+   "length": 33265,
+   "ms": 65.13682100921869,
+   "cached_tokens": 33264,
+   "recomputed": 1,
+   "repeat": 0
+  },
+  {
+   "context": 32768,
+   "offset": 32,
+   "length": 33824,
+   "ms": 166.0588625818491,
+   "cached_tokens": 33264,
+   "recomputed": 560,
+   "repeat": 0
+  },
+  {
+   "context": 32768,
+   "offset": 128,
+   "length": 34448,
+   "ms": 155.90850915759802,
+   "cached_tokens": 33792,
+   "recomputed": 656,
+   "repeat": 0
+  },
+  {
+   "context": 32768,
+   "offset": 264,
+   "length": 35112,
+   "ms": 171.80873174220324,
+   "cached_tokens": 34320,
+   "recomputed": 792,
+   "repeat": 0
+  },
+  {
+   "context": 32768,
+   "offset": 527,
+   "length": 35903,
+   "ms": 216.0184783861041,
+   "cached_tokens": 34848,
+   "recomputed": 1055,
+   "repeat": 0
+  },
+  {
+   "context": 32768,
+   "offset": 1,
+   "length": 35905,
+   "ms": 141.41713175922632,
+   "cached_tokens": 35376,
+   "recomputed": 529,
+   "repeat": 1
+  },
+  {
+   "context": 32768,
+   "offset": 32,
+   "length": 36464,
+   "ms": 160.94888281077147,
+   "cached_tokens": 35904,
+   "recomputed": 560,
+   "repeat": 1
+  },
+  {
+   "context": 32768,
+   "offset": 128,
+   "length": 37088,
+   "ms": 162.22968604415655,
+   "cached_tokens": 36432,
+   "recomputed": 656,
+   "repeat": 1
+  },
+  {
+   "context": 32768,
+   "offset": 264,
+   "length": 37752,
+   "ms": 180.81517051905394,
+   "cached_tokens": 36960,
+   "recomputed": 792,
+   "repeat": 1
+  },
+  {
+   "context": 32768,
+   "offset": 527,
+   "length": 38543,
+   "ms": 219.45596486330032,
+   "cached_tokens": 37488,
+   "recomputed": 1055,
+   "repeat": 1
+  },
+  {
+   "context": 32768,
+   "offset": 1,
+   "length": 38545,
+   "ms": 151.53560042381287,
+   "cached_tokens": 38016,
+   "recomputed": 529,
+   "repeat": 2
+  },
+  {
+   "context": 32768,
+   "offset": 32,
+   "length": 39104,
+   "ms": 169.2494535818696,
+   "cached_tokens": 38544,
+   "recomputed": 560,
+   "repeat": 2
+  },
+  {
+   "context": 32768,
+   "offset": 128,
+   "length": 39728,
+   "ms": 172.83697240054607,
+   "cached_tokens": 39072,
+   "recomputed": 656,
+   "repeat": 2
+  },
+  {
+   "context": 32768,
+   "offset": 264,
+   "length": 40392,
+   "ms": 189.8243771865964,
+   "cached_tokens": 39600,
+   "recomputed": 792,
+   "repeat": 2
+  },
+  {
+   "context": 32768,
+   "offset": 527,
+   "length": 41183,
+   "ms": 89.65110220015049,
+   "cached_tokens": 40656,
+   "recomputed": 527,
+   "repeat": 2
+  },
+  {
+   "context": 32768,
+   "offset": "cold",
+   "length": 40656,
+   "ms": 4500.971308909357,
+   "cached_tokens": 0,
+   "recomputed": 40656
+  }
+ ]
+}

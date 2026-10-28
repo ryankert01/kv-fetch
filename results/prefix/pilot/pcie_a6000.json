@@ -1,0 +1,47 @@
+{
+ "provenance": {
+  "settings": {
+   "layer_bytes": 2146304,
+   "layers": 24,
+   "repeats": 50,
+   "batch_checkpoints": [
+    1,
+    4,
+    16
+   ]
+  },
+  "torch": "2.8.0+cu128",
+  "gpu": "NVIDIA RTX A6000",
+  "host": "gpuserv4",
+  "timestamp": "2026-10-27T15:22:55+0800"
+ },
+ "rows": [
+  {
+   "checkpoints": 1,
+   "bytes": 51511296,
+   "h2d_ms": 2.0206620916724205,
+   "d2h_ms": 1.9560891389846804,
+   "h2d_per_layer_copies_ms": 2.056088801473379,
+   "h2d_GBps": 25.49228602460997,
+   "d2h_GBps": 26.33381831808403
+  },
+  {
+   "checkpoints": 4,
+   "bytes": 206045184,
+   "h2d_ms": 8.070844374597073,
+   "d2h_ms": 7.820971366018058,
+   "h2d_per_layer_copies_ms": 8.217540141195059,
+   "h2d_GBps": 25.529569700107935,
+   "d2h_GBps": 26.34521651559314
+  },
+  {
+   "checkpoints": 16,
+   "bytes": 824180736,
+   "h2d_ms": 32.28037752211094,
+   "d2h_ms": 31.279568206518885,
+   "h2d_per_layer_copies_ms": 32.87539588287473,
+   "h2d_GBps": 25.53194229018743,
+   "d2h_GBps": 26.348852725794178
+  }
+ ]
+}

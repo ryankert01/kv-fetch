@@ -1,0 +1,20 @@
+inherit: hybrid.yaml
+
+# Checkpoint-precision pilot (scripts/prefix_pilot/ckpt_precision.py and ckpt_chain.py), run 2026-10-27.
+ckpt:
+  model: qwen35_4b
+  runs: results/hybrid/h3_shards/qwen35_4b/full   # H3 full-attention run: token ids stored
+  sample: 0
+  offsets: [2048, 8192, 16384]   # checkpoint P = prompt + this many generated tokens
+  window: 2048                   # teacher-forced tokens after the checkpoint
+  bins: [0, 16, 64, 256, 1024, 2048]
+  curve_step: 32                 # tokens per point of the stored KL curve
+  rechunk_tokens: 528            # noise floor: prefix as [0, P-528) + [P-528, P) (one vLLM block)
+  logit_chunk: 256
+  rank_energy: 0.99              # effective rank = singular values holding this share of energy
+  scale_bytes: 2                 # one fp16 scale per quantization group
+  variants: [identity, bf16, fp16, fp8_e4m3_row, fp8_e5m2_row, int8_row, int4_g128, int4_g32,
+             lowrank_r64, lowrank_r32, lowrank_r16, zero]
+  # ckpt_chain.py: round the states again at every block boundary of the continuation
+  chain_tokens: 528
+  chain_variants: [bf16, fp8_e4m3_row, int8_row, int4_g32]

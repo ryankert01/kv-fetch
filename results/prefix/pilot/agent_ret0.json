@@ -1,0 +1,63 @@
+{
+ "provenance": {
+  "settings": {
+   "model": "/share2/huggingface/hub/models--Qwen--Qwen3.5-4B/snapshots/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+   "max_model_len": 40960,
+   "gpu_memory_utilization": 0.85,
+   "first_prompt_tokens": 8000,
+   "turns": 5,
+   "output_tokens": 2048,
+   "tool_tokens": 300,
+   "token_range": [
+    1000,
+    100000
+   ],
+   "seed": 0
+  },
+  "block_size": 528,
+  "retention_env": "0",
+  "vllm": "0.23.1+replayssm",
+  "torch": "2.13.0+cu129",
+  "gpu": "NVIDIA RTX A6000",
+  "host": "gpuserv4",
+  "timestamp": "2026-10-27T15:30:57+0800",
+  "replayssm_commit": "73a9592e9d8a2268620e8883a82f5cec7442ed36"
+ },
+ "rows": [
+  {
+   "turn": 0,
+   "prompt_tokens": 8000,
+   "cached_tokens": 0,
+   "recomputed": 8000,
+   "prefill_ms": 692.2592092305422
+  },
+  {
+   "turn": 1,
+   "prompt_tokens": 10348,
+   "cached_tokens": 7920,
+   "recomputed": 2428,
+   "prefill_ms": 277.79748756438494
+  },
+  {
+   "turn": 2,
+   "prompt_tokens": 12696,
+   "cached_tokens": 10032,
+   "recomputed": 2664,
+   "prefill_ms": 336.0657198354602
+  },
+  {
+   "turn": 3,
+   "prompt_tokens": 15044,
+   "cached_tokens": 12672,
+   "recomputed": 2372,
+   "prefill_ms": 324.5089240372181
+  },
+  {
+   "turn": 4,
+   "prompt_tokens": 17392,
+   "cached_tokens": 14784,
+   "recomputed": 2608,
+   "prefill_ms": 324.53384436666965
+  }
+ ]
+}
