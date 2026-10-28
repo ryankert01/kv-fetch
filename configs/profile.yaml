@@ -1,0 +1,59 @@
+inherit: hybrid.yaml
+
+# Profiling hybrid vs dense models on upstream vLLM (EXPERIMENTS.md, "Profiling hybrid models on vLLM").
+# Run with the scratchpad venv-vllm32 (vLLM 0.32.0 cu129, torch 2.13): scripts/profile/engine_profile.py.
+profile:
+  models:                              # pairs at equal hidden size; HF ids resolved from HF_HUB_CACHE
+    qwen35_4b: {name: Qwen/Qwen3.5-4B, kind: hybrid}
+    qwen3_4b: {name: Qwen/Qwen3-4B, kind: dense}
+    qwen35_9b: {name: Qwen/Qwen3.5-9B, kind: hybrid}
+    qwen3_8b: {name: Qwen/Qwen3-8B, kind: dense}
+
+  engine:                              # vLLM defaults otherwise (prefix caching on, CUDA graphs, torch.compile)
+    gpu_memory_utilization: 0.85
+    max_model_len: 34816               # 32K prompt + output
+    max_num_seqs: 256
+    seed: 0
+
+  prompt_token_range: [1000, 100000]   # random token ids (fresh per call unless reused on purpose)
+
+  # P1: prefill time vs prompt length (batch 1, fresh prompts, no cache hit); median of `repeats`
+  prefill_lengths: [1024, 2048, 4096, 8192, 16384, 32768]
+  repeats: 3
+  # P1: decode step time vs batch x context. The prompts are prefilled once, then re-sent (cache hit) with
+  # max_tokens 1 and 1 + decode_steps; step = difference / decode_steps. Points over capacity_share of the
+  # engine's KV capacity are skipped.
+  decode_contexts: [2048, 8192, 32768]
+  decode_batches: [1, 4, 16, 64, 128, 256]
+  decode_steps: 128
+  capacity_share: 0.8
+
+  # P2: kernel breakdown (torch profiler, CUDA graphs on) at these points; decode points profile
+  # `profile_decode_steps` steps after a cached prefill and count only pure-decode steps.
+  profile_prefill: [8192, 32768]
+  profile_decode: [[8192, 1], [8192, 16], [8192, 64], [8192, 128], [32768, 16]]   # [context, batch]
+  profile_decode_steps: 32
+
+  # P3: hardware ceilings on this GPU (scripts/profile/microbench.py)
+  microbench:
+    repeats: 20
+    copy_MiB: [256, 1024]
+    gemm_sizes: [4096, 8192]
+    skinny_m: [1, 4, 16, 64, 128, 256]        # decode batch rows
+    skinny_set_MiB: 512                       # rotating weights per shape, > 5x the 96 MB L2 of the RTX 6000 Ada
+    skinny_kn: [[2560, 9216], [4096, 12288]]  # [hidden, intermediate] of Qwen3.5-4B / 9B (one MLP projection)
+
+  # P4: online serving (scripts/profile/serve_bench.py): `vllm serve` + `vllm bench serve`, random prompts,
+  # ignore_eos so every request generates its full output. Each server setting runs every workload.
+  serve:
+    models: [qwen35_4b, qwen3_4b]
+    port: 8765
+    server_args: ["--gpu-memory-utilization", "0.85", "--max-model-len", "34816", "--max-num-seqs", "256", "--seed", "0"]
+    settings:                          # extra server args per setting; prefix_off only matters for the comparison
+      default: []
+      prefix_off: ["--no-enable-prefix-caching"]
+    workloads:
+      reasoning: {input: 1024, output: 8192, prompts_per_concurrency: 2, concurrency: [16, 64, 256]}
+      chat: {input: 4096, output: 512, prompts_per_concurrency: 4, concurrency: [16, 64, 256]}
+    range_ratio: 0.0                   # fixed lengths
+    ready_timeout_s: 1200

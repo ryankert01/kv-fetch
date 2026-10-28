@@ -357,3 +357,10 @@ Measurements (configs/profile.yaml, scripts/profile/, results/profile/):
   microbenchmarks on the same GPU).
 - P4 serving: `vllm bench serve`, random prompts, reasoning-like (in 1K, out 8K) and chat-like (in 4K,
   out 512) at several concurrencies; prefix caching on vs off (hybrid "align" mode cost).
+- Aim (user, 2026-10-28): find the bottlenecks, then fix one as the paper's contribution. Selection
+  rule, fixed before the full profiles are read: a candidate qualifies if, on at least one realistic
+  workload (P4 reasoning or chat), (a) it takes >= 15% of step or request time, (b) it runs at <= 50%
+  of its hardware bound (or is pure overhead such as GPU idle time), so fixing it is worth >= 10% end to
+  end, and (c) no merged vLLM/SGLang change or published paper already removes it (checked against PRs,
+  issues and arXiv before any building; ReplaySSM, arXiv 2610.13778, already targets GDN state I/O).
+  Candidates are then ranked by end-to-end potential and by how hybrid-specific the fix is.
