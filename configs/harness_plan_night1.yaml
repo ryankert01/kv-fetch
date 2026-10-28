@@ -1,0 +1,234 @@
+note: 'Night 1 (2026-10-29): base sweeps, serving, ablations on Qwen3.5-4B, scaling. Agent adds follow-ups.'
+jobs:
+- id: base_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 0
+  why: base sweep + kernel profiles (text-only)
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_qwen3_4b
+  kind: engine
+  model: qwen3_4b
+  priority: 0
+  why: dense pair of qwen35_4b
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: serve_qwen35_4b
+  kind: serve
+  models:
+  - qwen35_4b
+  settings:
+  - default
+  - prefix_off
+  priority: 5
+  why: online serving, prefix caching (align mode) on vs off
+  timeout_s: 14400
+- id: serve_qwen3_4b
+  kind: serve
+  models:
+  - qwen3_4b
+  settings:
+  - default
+  priority: 5
+  why: dense pair, online serving
+  timeout_s: 10800
+- id: base_qwen35_9b
+  kind: engine
+  model: qwen35_9b
+  priority: 10
+  why: base sweep, larger hybrid
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_qwen3_8b
+  kind: engine
+  model: qwen3_8b
+  priority: 10
+  why: dense pair of qwen35_9b
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: probe_b256_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 15
+  why: 'pilot: C=2048 b=256 step 348 ms vs 39 ms at b=128 -- preemption? batch scan with preemption counts'
+  sets:
+  - profile.prefill_lengths=[1024]
+  - profile.decode_contexts=[2048]
+  - profile.decode_batches=[128,160,192,224,256]
+  - profile.profile_prefill=[]
+  - profile.profile_decode=[[2048,192],[2048,256]]
+  flags: []
+  timeout_s: 7200
+- id: abl_ssm_bf16_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: GDN state traffic halves; how much of decode is state I/O
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.mamba_ssm_cache_dtype=bfloat16
+  flags: []
+  timeout_s: 7200
+- id: abl_no_prefix_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: cost of mamba align mode when nothing is reused
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.enable_prefix_caching=false
+  flags: []
+  timeout_s: 7200
+- id: abl_flashinfer_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: attention backend at long context (head_dim 256)
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.attention_backend=FLASHINFER
+  flags: []
+  timeout_s: 7200
+- id: abl_triton_attn_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: attention backend at long context (head_dim 256)
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.attention_backend=TRITON_ATTN
+  flags: []
+  timeout_s: 7200
+- id: abl_no_async_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: 'CPU-side step overhead: gaps with and without async scheduling'
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.async_scheduling=false
+  flags: []
+  timeout_s: 7200
+- id: abl_eager_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: 'launch overhead: CUDA graphs off'
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.enforce_eager=true
+  flags: []
+  timeout_s: 7200
+- id: abl_kv_fp8_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: attention bytes and capacity with fp8 KV
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.kv_cache_dtype=fp8
+  flags: []
+  timeout_s: 7200
+- id: abl_mnbt16k_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 20
+  why: prefill chunk size
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.max_num_batched_tokens=16384
+  flags: []
+  timeout_s: 7200
+- id: base_qwen35_2b
+  kind: engine
+  model: qwen35_2b
+  priority: 30
+  why: 'scaling: other sizes / MoE / another hybrid family'
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_qwen3_1p7b
+  kind: engine
+  model: qwen3_1p7b
+  priority: 31
+  why: 'scaling: other sizes / MoE / another hybrid family'
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_qwen35_27b_fp8
+  kind: engine
+  model: qwen35_27b_fp8
+  priority: 32
+  why: 'scaling: other sizes / MoE / another hybrid family'
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_qwen36_35b_a3b_fp8
+  kind: engine
+  model: qwen36_35b_a3b_fp8
+  priority: 33
+  why: 'scaling: other sizes / MoE / another hybrid family'
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_qwen3_30b_a3b_fp8
+  kind: engine
+  model: qwen3_30b_a3b_fp8
+  priority: 34
+  why: 'scaling: other sizes / MoE / another hybrid family'
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: base_olmo_hybrid_7b
+  kind: engine
+  model: olmo_hybrid_7b
+  priority: 35
+  why: 'scaling: other sizes / MoE / another hybrid family'
+  sets: []
+  flags: []
+  timeout_s: 7200
+- id: abl_ssm_bf16_qwen35_9b
+  kind: engine
+  model: qwen35_9b
+  priority: 40
+  why: state I/O share at 9B
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.mamba_ssm_cache_dtype=bfloat16
+  flags: []
+  timeout_s: 7200
+- id: abl_no_prefix_qwen35_9b
+  kind: engine
+  model: qwen35_9b
+  priority: 40
+  why: align-mode cost at 9B
+  sets:
+  - profile.prefill_lengths=[8192,32768]
+  - profile.decode_batches=[1,16,64]
+  - profile.engine.enable_prefix_caching=false
+  flags: []
+  timeout_s: 7200
+- id: serve_9b_pair
+  kind: serve
+  models:
+  - qwen35_9b
+  - qwen3_8b
+  settings:
+  - default
+  priority: 50
+  why: online serving, 9B pair
+  timeout_s: 21600

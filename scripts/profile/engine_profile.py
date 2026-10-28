@@ -31,6 +31,10 @@ class Prompts:
         return [{"prompt_token_ids": [self.rng.randrange(self.lo, self.hi) for _ in range(length)]} for _ in range(n)]
 
 
+def preemptions(llm) -> int:
+    return int(sum(getattr(m, "value", 0) for m in llm.get_metrics() if m.name == "vllm:num_preemptions"))
+
+
 def timed(llm, prompts, sp) -> float:
     t = time.perf_counter()
     llm.generate(prompts, sp, use_tqdm=False)
@@ -57,7 +61,7 @@ def main():
     import vllm
     from vllm import LLM, SamplingParams
 
-    llm = LLM(model=mc["name"], **pc["engine"],
+    llm = LLM(model=mc["name"], **{**pc["engine"], **mc.get("engine", {})}, disable_log_stats=False,
               profiler_config={"profiler": "torch", "torch_profiler_dir": str(trace_root / "_tmp"),
                                "torch_profiler_with_stack": False})
     vc = llm.llm_engine.vllm_config
@@ -90,13 +94,18 @@ def main():
                     print(f"decode C={C} b={b}: skipped (capacity)", flush=True)
                     continue
                 prompts = P.make(b, C)
+                pre0 = preemptions(llm)
                 t_cold = timed(llm, prompts, one)
                 t_hit = timed(llm, prompts, one)
+                pre1 = preemptions(llm)
                 t_gen = timed(llm, prompts, gen)
+                pre2 = preemptions(llm)
                 step = (t_gen - t_hit) / N
                 res["decode"].append({"context": C, "batch": b, "steps": N, "cold_s": t_cold, "hit_s": t_hit,
-                                      "gen_s": t_gen, "step_ms": step * 1e3, "tokens_per_s": b / step})
-                print(f"decode C={C} b={b}: step {step * 1e3:.2f} ms ({b / step:.0f} tok/s; cold {t_cold:.2f}s hit {t_hit:.2f}s)", flush=True)
+                                      "gen_s": t_gen, "step_ms": step * 1e3, "tokens_per_s": b / step,
+                                      "preemptions_prefill": pre1 - pre0, "preemptions_gen": pre2 - pre1})
+                print(f"decode C={C} b={b}: step {step * 1e3:.2f} ms ({b / step:.0f} tok/s; cold {t_cold:.2f}s hit {t_hit:.2f}s; "
+                      f"preempted {pre1 - pre0}/{pre2 - pre1})", flush=True)
 
     if not args.skip_profile:
         def profile(name: str, fn):

@@ -39,8 +39,9 @@ def main():
     ap.add_argument("out_dir")
     ap.add_argument("--models", default=None)
     ap.add_argument("--settings", default=None)
+    ap.add_argument("--set", action="append", default=[])
     args = ap.parse_args()
-    cfg = load_config(args.config)
+    cfg = load_config(args.config, args.set)
     sc = cfg["profile"]["serve"]
     out = Path(args.out_dir).resolve()
     (out / "logs").mkdir(parents=True, exist_ok=True)
@@ -52,7 +53,8 @@ def main():
         name = cfg["profile"]["models"][mkey]["name"]
         for sname in settings:
             log = open(out / "logs" / f"serve_{mkey}_{sname}.log", "w")
-            cmd = ["vllm", "serve", name, "--port", str(port), *sc["server_args"], *sc["settings"][sname]]
+            cmd = ["vllm", "serve", name, "--port", str(port), *sc["server_args"],
+                   *cfg["profile"]["models"][mkey].get("server_args", []), *sc["settings"][sname]]
             proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=os.environ.copy())
             try:
                 wait_ready(port, proc, sc["ready_timeout_s"])

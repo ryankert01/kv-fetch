@@ -1,0 +1,37 @@
+inherit: profile.yaml
+
+# Profiling harness (scripts/profile/harness.py): job queue, GPU policy, analysis (scripts/profile/findings.py).
+harness:
+  profile_config: configs/harness.yaml   # jobs read the profile settings from here too
+  queue_dir: results/profile/harness
+  runs_dir: results/profile/runs
+  default_timeout_s: 7200
+  max_attempts: 2
+  poll_s: 30
+  gpus:                                  # never GPU 0; while GPU 0 is in use by others, one card only
+    allowed: [1, 2, 3, 4, 5, 6]
+    watch: 0
+    max_mem_MiB: 1500
+    max_util: 10
+    samples: 3
+    sample_interval_s: 5
+  max_concurrent: 3
+  max_concurrent_when_watch_busy: 1
+
+# Extra models for the harness's scaling jobs (see the plan): more hybrid sizes, MoE, another family.
+profile:
+  models:
+    qwen35_2b: {name: Qwen/Qwen3.5-2B, kind: hybrid, engine: {language_model_only: true}, server_args: ["--language-model-only"]}
+    qwen3_1p7b: {name: Qwen/Qwen3-1.7B, kind: dense}
+    qwen35_27b_fp8: {name: Qwen/Qwen3.5-27B-FP8, kind: hybrid, engine: {language_model_only: true}, server_args: ["--language-model-only"]}
+    qwen36_35b_a3b_fp8: {name: Qwen/Qwen3.6-35B-A3B-FP8, kind: hybrid, engine: {language_model_only: true}, server_args: ["--language-model-only"]}
+    qwen3_30b_a3b_fp8: {name: Qwen/Qwen3-30B-A3B-Instruct-2507-FP8, kind: dense}
+    olmo_hybrid_7b: {name: allenai/Olmo-Hybrid-7B, kind: hybrid}
+
+# findings.py: the selection rule of EXPERIMENTS.md ("Profiling hybrid models on vLLM") and the ceilings
+findings:
+  microbench: results/profile/microbench_ada.json
+  qualify_share: 0.15                    # (a) share of step time
+  qualify_efficiency: 0.5                # (b) at most this fraction of its hardware bound
+  qualify_overhead_share: 0.10           # pure overhead (GPU idle) counts when it is at least this share
+  watch_share: 0.05                      # listed as "watch" below the qualifying share

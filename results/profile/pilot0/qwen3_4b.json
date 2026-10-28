@@ -1,0 +1,1348 @@
+{
+ "provenance": {
+  "model": "Qwen/Qwen3-4B",
+  "context_length": null,
+  "page_size": 16,
+  "w": 8,
+  "git": {
+   "commit": "71f874c9192cf9f9155f8c6b2eba653e4c031271",
+   "dirty": false
+  },
+  "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/profile.yaml",
+  "timestamp": "2026-10-29T00:23:55",
+  "host": "gpuserv4",
+  "torch": "2.13.0+cu129",
+  "gpu": "NVIDIA RTX 6000 Ada Generation",
+  "transformers": "5.19.0",
+  "script": "/home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/engine_profile.py",
+  "settings": {
+   "models": {
+    "qwen35_4b": {
+     "name": "Qwen/Qwen3.5-4B",
+     "kind": "hybrid"
+    },
+    "qwen3_4b": {
+     "name": "Qwen/Qwen3-4B",
+     "kind": "dense"
+    },
+    "qwen35_9b": {
+     "name": "Qwen/Qwen3.5-9B",
+     "kind": "hybrid"
+    },
+    "qwen3_8b": {
+     "name": "Qwen/Qwen3-8B",
+     "kind": "dense"
+    }
+   },
+   "engine": {
+    "gpu_memory_utilization": 0.85,
+    "max_model_len": 34816,
+    "max_num_seqs": 256,
+    "seed": 0
+   },
+   "prompt_token_range": [
+    1000,
+    100000
+   ],
+   "prefill_lengths": [
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768
+   ],
+   "repeats": 3,
+   "decode_contexts": [
+    2048,
+    8192,
+    32768
+   ],
+   "decode_batches": [
+    1,
+    4,
+    16,
+    64,
+    128,
+    256
+   ],
+   "decode_steps": 128,
+   "capacity_share": 0.8,
+   "profile_prefill": [
+    8192,
+    32768
+   ],
+   "profile_decode": [
+    [
+     8192,
+     1
+    ],
+    [
+     8192,
+     16
+    ],
+    [
+     8192,
+     64
+    ],
+    [
+     8192,
+     128
+    ],
+    [
+     32768,
+     16
+    ]
+   ],
+   "profile_decode_steps": 32,
+   "microbench": {
+    "repeats": 20,
+    "copy_MiB": [
+     256,
+     1024
+    ],
+    "gemm_sizes": [
+     4096,
+     8192
+    ],
+    "skinny_m": [
+     1,
+     4,
+     16,
+     64,
+     128,
+     256
+    ],
+    "skinny_set_MiB": 512,
+    "skinny_kn": [
+     [
+      2560,
+      9216
+     ],
+     [
+      4096,
+      12288
+     ]
+    ]
+   },
+   "serve": {
+    "models": [
+     "qwen35_4b",
+     "qwen3_4b"
+    ],
+    "port": 8765,
+    "server_args": [
+     "--gpu-memory-utilization",
+     "0.85",
+     "--max-model-len",
+     "34816",
+     "--max-num-seqs",
+     "256",
+     "--seed",
+     "0"
+    ],
+    "settings": {
+     "default": [],
+     "prefix_off": [
+      "--no-enable-prefix-caching"
+     ]
+    },
+    "workloads": {
+     "reasoning": {
+      "input": 1024,
+      "output": 8192,
+      "prompts_per_concurrency": 2,
+      "concurrency": [
+       16,
+       64,
+       256
+      ]
+     },
+     "chat": {
+      "input": 4096,
+      "output": 512,
+      "prompts_per_concurrency": 4,
+      "concurrency": [
+       16,
+       64,
+       256
+      ]
+     }
+    },
+    "range_ratio": 0.0,
+    "ready_timeout_s": 1200
+   }
+  },
+  "model_key": "qwen3_4b",
+  "vllm": "0.32.0",
+  "cuda": "12.9",
+  "load_avg": [
+   17.10205078125,
+   17.47705078125,
+   18.4033203125
+  ],
+  "python": "3.12.11",
+  "resolved_config": {
+   "definitions": {
+    "page_size": 16,
+    "w": 8,
+    "budget_fracs": [
+     0.01,
+     0.05,
+     0.1
+    ],
+    "budget_rounding": "ceil",
+    "k_grid": [
+     1,
+     2,
+     4,
+     8,
+     16
+    ],
+    "pinned": {
+     "sink_pages": 1,
+     "recent_prompt_pages": 0,
+     "decode_region": "aged",
+     "recent_tokens": 128
+    },
+    "head_views": [
+     "query",
+     "kv_mean"
+    ]
+   },
+   "trajectory": {
+    "budget_frac": 0.05,
+    "exit_ratio": 0.5,
+    "floor_ratio": 0.1,
+    "smooth_ema_alpha": null,
+    "stable_high_min_frac": 0.9,
+    "min_initial_low_steps": 4,
+    "sudden_max_rise_steps": 2,
+    "oscillating_min_transitions": 4
+   },
+   "lead_time": {
+    "budget_frac": 0.05,
+    "truth": "m",
+    "mode": "first",
+    "required_lead": 0
+   },
+   "revival": {
+    "budget_frac": 0.05,
+    "exit_ratio": 0.5,
+    "dormancy_steps": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "dormancy_main": 16,
+    "eviction_budget_fracs": [
+     0.05,
+     0.1
+    ],
+    "q_lags": [
+     1,
+     4,
+     16,
+     64
+    ],
+    "q_pca_var": 0.9
+   },
+   "trace": {
+    "format": "full",
+    "topk": 512,
+    "mass_dtype": "float16",
+    "prefill_obs_window": 32,
+    "flush_every": 64,
+    "record_q": true,
+    "key_summary": true,
+    "head_reduce": "kv_mean"
+   },
+   "reference_predictors": {
+    "ema_alpha": 0.3
+   },
+   "decision_point": {
+    "LEAD_TIME_MIN": 1,
+    "GRADUAL_SHARE_MIN": 0.25,
+    "GRADUAL_SHARE_DENOMINATOR": "onsets_after_low"
+   },
+   "models": {
+    "local_files_only": true,
+    "dtype": "bfloat16",
+    "attn_implementation": "sdpa",
+    "prefill_chunk_size": 32768,
+    "chat_template_kwargs": {
+     "enable_thinking": false,
+     "date_string": "26 Jul 2024"
+    }
+   },
+   "paths": {
+    "trace_dir": "traces",
+    "results_dir": "results"
+   },
+   "data": {
+    "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+    "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+   },
+   "ruler": {
+    "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+    "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+    "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+    "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+    "num_depths": 40,
+    "number_digits": 7,
+    "tokens_to_generate": 128,
+    "incremental": {
+     "essay": 500,
+     "noise": 25,
+     "needle": 25
+    },
+    "shuffle_seed": 42,
+    "tasks": {
+     "niah_single_1": {
+      "type_haystack": "noise",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_single_2": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_single_3": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "uuids",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multikey_1": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 4,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multikey_2": {
+      "type_haystack": "needle",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multikey_3": {
+      "type_haystack": "needle",
+      "type_needle_k": "uuids",
+      "type_needle_v": "uuids",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multivalue": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 4,
+      "num_needle_q": 1
+     },
+     "niah_multiquery": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 4
+     }
+    }
+   },
+   "longgen": {
+    "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+    "answer_prefix": "",
+    "min_book_tokens_slack": 1.05
+   },
+   "sweep": {
+    "model": "Qwen/Qwen3-4B",
+    "max_context": 17408,
+    "max_new_tokens": 16384,
+    "context_margin": 256,
+    "samples_per_task": 16,
+    "layers": [
+     4,
+     18,
+     29,
+     32
+    ],
+    "trace_dir": "/share3/saves/ryankert_l/kvfetch/traces/reasoning",
+    "records_dir": "results/reasoning/records",
+    "claims_dir": "results/reasoning/claims",
+    "shard_size": 2,
+    "tasks": {
+     "aime24": {
+      "loader": "aime",
+      "name": "aime24",
+      "dataset": "HuggingFaceH4___aime_2024/**/*.arrow",
+      "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+      "n": 30
+     },
+     "aime25": {
+      "loader": "aime",
+      "name": "aime25",
+      "dataset": "math-ai___aime25/**/*.arrow",
+      "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+      "n": 30
+     },
+     "math500": {
+      "level": 5,
+      "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+      "n": 16
+     }
+    },
+    "out": "results/sweep/sweep_runs.json"
+   },
+   "signals": {
+    "names": [
+     "attn_last",
+     "attn_ema",
+     "key_mean",
+     "quest",
+     "q_trend"
+    ],
+    "ks": [
+     1,
+     4,
+     16
+    ],
+    "budget_frac": 0.05,
+    "ema_alpha": 0.3,
+    "q_slope_steps": 4
+   },
+   "compare": {
+    "budgets_tokens": [
+     512,
+     1024,
+     2048,
+     4096
+    ],
+    "evict_methods": [
+     "streaming",
+     "h2o",
+     "tova",
+     "snapkv",
+     "raas",
+     "lazy",
+     "rkv",
+     "oracle"
+    ],
+    "prefetch_methods": [
+     "on_demand",
+     "stale_q",
+     "q_trend",
+     "oasis_ub"
+    ],
+    "lookahead_steps": [
+     1,
+     4
+    ],
+    "gpu_capacity_mult": 2.0,
+    "snapkv_window": 32,
+    "important_mult": 1.0,
+    "rkv_lambda": 0.5,
+    "q_slope_steps": 4,
+    "blas_threads": 4
+   },
+   "selectors": {
+    "budgets_tokens": [
+     512,
+     1024,
+     2048
+    ],
+    "candidates": {
+     "quest": {
+      "quest_share": 1.0
+     },
+     "quest_recent12": {
+      "quest_share": 1.0,
+      "recent_share": 0.125
+     },
+     "quest_recent25": {
+      "quest_share": 1.0,
+      "recent_share": 0.25
+     },
+     "hist_last": {
+      "quest_share": 0.0,
+      "history": "last"
+     },
+     "hist_peak": {
+      "quest_share": 0.0,
+      "history": "peak"
+     },
+     "hyb_last_q75": {
+      "quest_share": 0.75,
+      "history": "last"
+     },
+     "hyb_last_q50": {
+      "quest_share": 0.5,
+      "history": "last"
+     },
+     "hyb_last_q25": {
+      "quest_share": 0.25,
+      "history": "last"
+     },
+     "hyb_peak_q75": {
+      "quest_share": 0.75,
+      "history": "peak"
+     },
+     "hyb_peak_q50": {
+      "quest_share": 0.5,
+      "history": "peak"
+     },
+     "hyb_peak_q25": {
+      "quest_share": 0.25,
+      "history": "peak"
+     },
+     "shared_quest": {
+      "quest_share": 1.0,
+      "shared": true
+     },
+     "fused_sum_w25": {
+      "fuse": "sum",
+      "history_weight": 0.25,
+      "history": "last"
+     },
+     "fused_sum_w50": {
+      "fuse": "sum",
+      "history_weight": 0.5,
+      "history": "last"
+     },
+     "fused_max": {
+      "fuse": "max",
+      "history": "last"
+     },
+     "quest_mean50": {
+      "quest_share": 1.0,
+      "mean_mix": 0.5
+     },
+     "hyb_last_q75_mean50": {
+      "quest_share": 0.75,
+      "history": "last",
+      "mean_mix": 0.5
+     },
+     "fused_sum_w25_mean50": {
+      "fuse": "sum",
+      "history_weight": 0.25,
+      "history": "last",
+      "mean_mix": 0.5
+     }
+    },
+    "upper_bounds": [
+     "true_topB",
+     "shared_topB"
+    ],
+    "summary_bytes": 2,
+    "history_bytes": 4,
+    "gate": {
+     "budget_tokens": 1024,
+     "gap_closed_min": 0.5,
+     "cost_ratio_max": 1.5
+    },
+    "blas_threads": 4
+   },
+   "e2": {
+    "keys_dir": "/share3/saves/ryankert_l/kvfetch/keys/reasoning",
+    "check_steps": 3,
+    "check_atol": 0.05,
+    "budgets_tokens": [
+     512,
+     1024,
+     2048
+    ],
+    "step_chunk": 128,
+    "shard_dir": "results/reasoning/e2_shards",
+    "shadowkv": {
+     "chunk": 8,
+     "outlier_share": 0.05
+    },
+    "infinigen": {
+     "partial_ratio": 0.25,
+     "history_weights": [
+      0.25,
+      0.5
+     ]
+    },
+    "lessismore": {
+     "recent_share": 0.25
+    },
+    "ours": [
+     "quest",
+     "fused_sum_w25",
+     "hyb_last_q75_mean50",
+     "fused_sum_w25_mean50"
+    ]
+   },
+   "e2b": {
+    "budgets_tokens": [
+     512,
+     1024,
+     2048
+    ],
+    "step_chunk": 128,
+    "shard_dir": "results/reasoning/e2b_shards",
+    "infinigen_ratios": [
+     0.125,
+     0.1875,
+     0.25
+    ],
+    "shadowkv_outlier_share": 0.05,
+    "plugin_history_weight": 0.25,
+    "ours": [
+     "fused_sum_w25_mean50"
+    ],
+    "gate": {
+     "budgets_tokens": [
+      512,
+      1024
+     ],
+     "modes": [
+      "vote",
+      "sum"
+     ],
+     "page_baselines": [
+      "quest",
+      "arkvale",
+      "shadowkv_page"
+     ],
+     "reduction_min": 0.2,
+     "equal_bytes_rival": "infinigen_r0.1875",
+     "ours_max_bytes": 48.25
+    }
+   },
+   "e3": {
+    "tasks": [
+     "aime24",
+     "aime25"
+    ],
+    "split": "explore",
+    "samples": 8,
+    "sample_group": 4,
+    "batch_size": 12,
+    "sampling": {
+     "temperature": 0.6,
+     "top_p": 0.95,
+     "top_k": 20
+    },
+    "seed": 20261024,
+    "ours": "fused_sum_w25_mean50",
+    "snapkv_window": 32,
+    "check_budget_tokens": 1024,
+    "runs": [
+     [
+      "full",
+      "quest@1024",
+      "ours@1024",
+      "snapkv@1024"
+     ],
+     [
+      "quest@512",
+      "ours@512",
+      "snapkv@512"
+     ],
+     [
+      "oracle@1024"
+     ],
+     [
+      "ours-nohist@512",
+      "quest-sum@512",
+      "oracle@512"
+     ]
+    ],
+    "variants": {
+     "ours-nohist": {
+      "fuse": "sum",
+      "history_weight": 0.0,
+      "history": "last",
+      "mean_mix": 0.5
+     },
+     "quest-sum": {
+      "fuse": "sum",
+      "history_weight": 0.0,
+      "history": "last"
+     }
+    },
+    "extra_comparisons": [
+     [
+      "oracle@1024",
+      "quest@1024"
+     ],
+     [
+      "oracle@512",
+      "quest@512"
+     ],
+     [
+      "ours-nohist@512",
+      "quest-sum@512"
+     ],
+     [
+      "quest-sum@512",
+      "quest@512"
+     ]
+    ],
+    "repetition": {
+     "tail_chars": 6000,
+     "ngram_chars": 20,
+     "threshold": 0.5,
+     "thresholds": [
+      0.25,
+      0.5,
+      0.75
+     ]
+    },
+    "out_dir": "results/reasoning/e3_shards",
+    "claims_dir": "results/reasoning/e3_claims",
+    "gate": {
+     "budget_tokens": 1024,
+     "baselines": [
+      "quest",
+      "snapkv"
+     ],
+     "margin_points": 5
+    }
+   },
+   "hybrid": {
+    "models": {
+     "qwen35_4b": {
+      "name": "Qwen/Qwen3.5-4B",
+      "layers": [
+       3,
+       7,
+       11,
+       15,
+       19,
+       23,
+       27,
+       31
+      ],
+      "sampling": {
+       "temperature": 1.0,
+       "top_p": 0.95,
+       "top_k": 20,
+       "presence_penalty": 1.5
+      }
+     },
+     "qwen3_4b": {
+      "name": "Qwen/Qwen3-4B",
+      "layers": [
+       3,
+       8,
+       12,
+       17,
+       21,
+       26,
+       30,
+       35
+      ],
+      "sampling": {
+       "temperature": 0.6,
+       "top_p": 0.95,
+       "top_k": 20,
+       "presence_penalty": 0.0
+      }
+     }
+    },
+    "h1": {
+     "sequences": {
+      "qwen35_4b": "results/hybrid/h3_shards/qwen35_4b/full",
+      "qwen3_4b": "results/reasoning/e3_shards/full"
+     },
+     "sample": 0,
+     "max_gen_tokens": 16384,
+     "budgets_tokens": [
+      256,
+      512,
+      1024
+     ],
+     "step_chunk": 128,
+     "lookahead_layers": [
+      1,
+      2,
+      3
+     ],
+     "ours": {
+      "mean_mix": 0.5
+     },
+     "gdn_prior_weights": [
+      0.1,
+      0.25,
+      0.5
+     ],
+     "fidelity": {
+      "n_sequences": 10,
+      "max_gen_tokens": 8192,
+      "query_chunk": 1024
+     },
+     "shard_dir": "results/hybrid/h1_shards",
+     "gate": {
+      "budget_tokens": 512,
+      "lookahead_max_points": 1.0,
+      "gdn_prior_min_reduction": 0.05
+     }
+    },
+    "h2": {
+     "metadata_max_share": 0.02,
+     "within_points": 0.5,
+     "engine_specs": {
+      "mean16": {
+       "method": "ours",
+       "bound_fmt": "none",
+       "mean_fmt": "fp16"
+      },
+      "mean8": {
+       "method": "ours",
+       "bound_fmt": "none",
+       "mean_fmt": "fp8"
+      },
+      "meanc": {
+       "method": "ours",
+       "bound_fmt": "none",
+       "mean_fmt": "chan"
+      },
+      "quest4": {
+       "method": "quest",
+       "bound_fmt": "int4"
+      },
+      "quest4p2": {
+       "method": "quest",
+       "bound_fmt": "int4p2"
+      },
+      "lite": {
+       "method": "ours",
+       "bound_fmt": "int4p2",
+       "mean_fmt": "chan"
+      }
+     },
+     "chosen": "mean8"
+    },
+    "h3": {
+     "tasks": [
+      "aime24",
+      "aime25"
+     ],
+     "split": "explore",
+     "samples": 8,
+     "sample_group": 4,
+     "seed": 20261026,
+     "max_new_tokens": {
+      "qwen35_4b": 32768,
+      "qwen3_4b": 16384
+     },
+     "batch_size": {
+      "qwen35_4b": 24,
+      "qwen3_4b": 12
+     },
+     "runs": {
+      "qwen35_4b": [
+       [
+        "full",
+        "quest@512",
+        "snapkv@512",
+        "oracle@512"
+       ],
+       [
+        "ours@512",
+        "ours@1024"
+       ],
+       [
+        "quest@1024",
+        "snapkv@1024",
+        "oracle@1024"
+       ]
+      ],
+      "qwen3_4b": [
+       [
+        "full",
+        "snapkv@1024",
+        "snapkv@512"
+       ]
+      ]
+     },
+     "snapkv_window": 32,
+     "snapkv_protect_prompt": true,
+     "out_dir": "results/hybrid/h3_shards",
+     "claims_dir": "results/hybrid/h3_claims",
+     "gate": {
+      "budget_tokens": 512,
+      "baselines": [
+       "quest",
+       "snapkv"
+      ],
+      "margin_points": 5
+     },
+     "hb_gate": {
+      "budget_tokens": 1024,
+      "max_loss_ratio": 0.5
+     }
+    },
+    "h4": {
+     "batches": [
+      1,
+      8,
+      32,
+      64,
+      128,
+      160
+     ],
+     "contexts": [
+      8192,
+      16384,
+      32768
+     ],
+     "budget_tokens": 512,
+     "kv_bytes_per_token": 32768,
+     "max_kv_gib": 30,
+     "iters": 50,
+     "page_bytes": 65536,
+     "host_pool_mib": 2048,
+     "cache_flush_mib": 512,
+     "copy_mib": [
+      1,
+      4,
+      16,
+      64
+     ],
+     "fetch_pages": [
+      1,
+      4,
+      16,
+      64,
+      256,
+      1024,
+      4096
+     ],
+     "gather_block": 1024,
+     "zero_copy_programs": 16,
+     "overlap_batches": [
+      8,
+      32,
+      160
+     ],
+     "lookahead_multiples": [
+      1,
+      2
+     ],
+     "cpu_threads": 8,
+     "gate": {
+      "min_ratio": 0.9,
+      "calibration_tol": 0.15
+     },
+     "residency": {
+      "model": "qwen35_4b",
+      "sequences": "results/hybrid/h3_shards/qwen35_4b/full",
+      "every": 3,
+      "cross_check": {
+       "sequences": "results/hybrid/h3_shards/qwen35_4b/ours_512",
+       "every": 10
+      },
+      "max_gen_tokens": 32768,
+      "cache_multiples": [
+       1,
+       2,
+       4
+      ],
+      "prefetch": {
+       "lookahead": 3,
+       "cache_plus": [
+        [
+         2,
+         1
+        ],
+        [
+         4,
+         2
+        ]
+       ]
+      },
+      "lag1_cache_multiples": [
+       1,
+       2
+      ],
+      "step_chunk": 512,
+      "q_self_err_max": 0.01,
+      "shard_dir": "results/hybrid/h4_shards",
+      "mc_samples": 400,
+      "mc_seed": 20261026,
+      "gpu_mem_gib": 48,
+      "reserve_gib": 4,
+      "host_kv_gib": 160
+     }
+    }
+   },
+   "profile": {
+    "models": {
+     "qwen35_4b": {
+      "name": "Qwen/Qwen3.5-4B",
+      "kind": "hybrid"
+     },
+     "qwen3_4b": {
+      "name": "Qwen/Qwen3-4B",
+      "kind": "dense"
+     },
+     "qwen35_9b": {
+      "name": "Qwen/Qwen3.5-9B",
+      "kind": "hybrid"
+     },
+     "qwen3_8b": {
+      "name": "Qwen/Qwen3-8B",
+      "kind": "dense"
+     }
+    },
+    "engine": {
+     "gpu_memory_utilization": 0.85,
+     "max_model_len": 34816,
+     "max_num_seqs": 256,
+     "seed": 0
+    },
+    "prompt_token_range": [
+     1000,
+     100000
+    ],
+    "prefill_lengths": [
+     1024,
+     2048,
+     4096,
+     8192,
+     16384,
+     32768
+    ],
+    "repeats": 3,
+    "decode_contexts": [
+     2048,
+     8192,
+     32768
+    ],
+    "decode_batches": [
+     1,
+     4,
+     16,
+     64,
+     128,
+     256
+    ],
+    "decode_steps": 128,
+    "capacity_share": 0.8,
+    "profile_prefill": [
+     8192,
+     32768
+    ],
+    "profile_decode": [
+     [
+      8192,
+      1
+     ],
+     [
+      8192,
+      16
+     ],
+     [
+      8192,
+      64
+     ],
+     [
+      8192,
+      128
+     ],
+     [
+      32768,
+      16
+     ]
+    ],
+    "profile_decode_steps": 32,
+    "microbench": {
+     "repeats": 20,
+     "copy_MiB": [
+      256,
+      1024
+     ],
+     "gemm_sizes": [
+      4096,
+      8192
+     ],
+     "skinny_m": [
+      1,
+      4,
+      16,
+      64,
+      128,
+      256
+     ],
+     "skinny_set_MiB": 512,
+     "skinny_kn": [
+      [
+       2560,
+       9216
+      ],
+      [
+       4096,
+       12288
+      ]
+     ]
+    },
+    "serve": {
+     "models": [
+      "qwen35_4b",
+      "qwen3_4b"
+     ],
+     "port": 8765,
+     "server_args": [
+      "--gpu-memory-utilization",
+      "0.85",
+      "--max-model-len",
+      "34816",
+      "--max-num-seqs",
+      "256",
+      "--seed",
+      "0"
+     ],
+     "settings": {
+      "default": [],
+      "prefix_off": [
+       "--no-enable-prefix-caching"
+      ]
+     },
+     "workloads": {
+      "reasoning": {
+       "input": 1024,
+       "output": 8192,
+       "prompts_per_concurrency": 2,
+       "concurrency": [
+        16,
+        64,
+        256
+       ]
+      },
+      "chat": {
+       "input": 4096,
+       "output": 512,
+       "prompts_per_concurrency": 4,
+       "concurrency": [
+        16,
+        64,
+        256
+       ]
+      }
+     },
+     "range_ratio": 0.0,
+     "ready_timeout_s": 1200
+    }
+   }
+  }
+ },
+ "engine": {
+  "block_size": 16,
+  "num_gpu_blocks": 14202,
+  "capacity_tokens": 227232,
+  "enable_prefix_caching": true,
+  "mamba_cache_mode": "none",
+  "max_num_batched_tokens": 8192,
+  "max_num_seqs": 256,
+  "cudagraph_mode": "FULL_AND_PIECEWISE",
+  "kv_cache_dtype": "auto"
+ },
+ "prefill": [
+  {
+   "prompt_tokens": 1024,
+   "seconds": [
+    0.0642534364014864,
+    0.07985771261155605,
+    0.07529507018625736
+   ],
+   "median_s": 0.07529507018625736,
+   "tokens_per_s": 13599.827949783856
+  },
+  {
+   "prompt_tokens": 2048,
+   "seconds": [
+    0.1553245848044753,
+    0.16289889719337225,
+    0.15367339365184307
+   ],
+   "median_s": 0.1553245848044753,
+   "tokens_per_s": 13185.291965068183
+  },
+  {
+   "prompt_tokens": 4096,
+   "seconds": [
+    0.3343768073245883,
+    0.32518055848777294,
+    0.3315121829509735
+   ],
+   "median_s": 0.3315121829509735,
+   "tokens_per_s": 12355.503690812313
+  },
+  {
+   "prompt_tokens": 8192,
+   "seconds": [
+    0.7179259611293674,
+    0.7173723559826612,
+    0.717658331617713
+   ],
+   "median_s": 0.717658331617713,
+   "tokens_per_s": 11414.902662014616
+  },
+  {
+   "prompt_tokens": 16384,
+   "seconds": [
+    1.7211952060461044,
+    1.7227325271815062,
+    1.7235389789566398
+   ],
+   "median_s": 1.7227325271815062,
+   "tokens_per_s": 9510.472311569578
+  },
+  {
+   "prompt_tokens": 32768,
+   "seconds": [
+    4.603300537914038,
+    4.630328021012247,
+    4.660653158091009
+   ],
+   "median_s": 4.630328021012247,
+   "tokens_per_s": 7076.8204436705355
+  }
+ ],
+ "decode": [
+  {
+   "context": 2048,
+   "batch": 1,
+   "steps": 128,
+   "cold_s": 0.1468238104134798,
+   "hit_s": 0.021184295415878296,
+   "gen_s": 1.2976515125483274,
+   "step_ms": 9.972400133847259,
+   "tokens_per_s": 100.2767625223848
+  },
+  {
+   "context": 2048,
+   "batch": 4,
+   "steps": 128,
+   "cold_s": 0.6352113103494048,
+   "hit_s": 0.03752698563039303,
+   "gen_s": 1.4618212655186653,
+   "step_ms": 11.127299061627127,
+   "tokens_per_s": 359.47627342866497
+  },
+  {
+   "context": 2048,
+   "batch": 16,
+   "steps": 128,
+   "cold_s": 2.571167846210301,
+   "hit_s": 0.06716143246740103,
+   "gen_s": 2.0229421984404325,
+   "step_ms": 15.279537234164309,
+   "tokens_per_s": 1047.1521326067893
+  },
+  {
+   "context": 2048,
+   "batch": 64,
+   "steps": 128,
+   "cold_s": 10.423838183283806,
+   "hit_s": 0.21916652843356133,
+   "gen_s": 4.275685527361929,
+   "step_ms": 31.691554679127876,
+   "tokens_per_s": 2019.465458479086
+  },
+  {
+   "context": 8192,
+   "batch": 1,
+   "steps": 128,
+   "cold_s": 0.7601922266185284,
+   "hit_s": 0.032851370982825756,
+   "gen_s": 1.4301264137029648,
+   "step_ms": 10.916211271251086,
+   "tokens_per_s": 91.6068748718338
+  },
+  {
+   "context": 8192,
+   "batch": 4,
+   "steps": 128,
+   "cold_s": 3.0628686901181936,
+   "hit_s": 0.08990584034472704,
+   "gen_s": 1.9876629738137126,
+   "step_ms": 14.82622760522645,
+   "tokens_per_s": 269.79216200552224
+  },
+  {
+   "context": 8192,
+   "batch": 16,
+   "steps": 128,
+   "cold_s": 12.365178041160107,
+   "hit_s": 0.1411125622689724,
+   "gen_s": 4.075239603407681,
+   "step_ms": 30.73536750889616,
+   "tokens_per_s": 520.5729196297685
+  },
+  {
+   "context": 32768,
+   "batch": 1,
+   "steps": 128,
+   "cold_s": 4.918333772569895,
+   "hit_s": 0.06776624638587236,
+   "gen_s": 1.9491841895505786,
+   "step_ms": 14.698577680974267,
+   "tokens_per_s": 68.0337935890486
+  },
+  {
+   "context": 32768,
+   "batch": 4,
+   "steps": 128,
+   "cold_s": 19.78333969414234,
+   "hit_s": 0.14695109706372023,
+   "gen_s": 4.007459815591574,
+   "step_ms": 30.160224363498855,
+   "tokens_per_s": 132.62500808319464
+  }
+ ],
+ "profiles": [
+  {
+   "name": "prefill_8192",
+   "wall_s": 0.76095836982131,
+   "files": [
+    "traces/qwen3_4b/prefill_8192/rank0.1793204610535762192.pt.trace.json.gz",
+    "traces/qwen3_4b/prefill_8192/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "prefill_32768",
+   "wall_s": 4.9543552082031965,
+   "files": [
+    "traces/qwen3_4b/prefill_32768/rank0.1793204615765187763.pt.trace.json.gz",
+    "traces/qwen3_4b/prefill_32768/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "decode_8192_b1",
+   "wall_s": 0.3845404405146837,
+   "files": [
+    "traces/qwen3_4b/decode_8192_b1/rank0.1793204617850359083.pt.trace.json.gz",
+    "traces/qwen3_4b/decode_8192_b1/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "decode_8192_b16",
+   "wall_s": 1.107568702660501,
+   "files": [
+    "traces/qwen3_4b/decode_8192_b16/rank0.1793204633432532199.pt.trace.json.gz",
+    "traces/qwen3_4b/decode_8192_b16/rank0.profiler_out.txt"
+   ]
+  }
+ ]
+}

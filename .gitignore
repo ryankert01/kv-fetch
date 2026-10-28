@@ -9,4 +9,4 @@ results/**/*.log
 .venv-hybrid/
 results/hybrid/*_shards/
 results/hybrid/*_claims/
-results/profile/traces/
+results/profile/**/traces/

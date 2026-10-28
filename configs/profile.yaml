@@ -4,10 +4,13 @@ inherit: hybrid.yaml
 # Run with the scratchpad venv-vllm32 (vLLM 0.32.0 cu129, torch 2.13): scripts/profile/engine_profile.py.
 profile:
   models:                              # pairs at equal hidden size; HF ids resolved from HF_HUB_CACHE
-    qwen35_4b: {name: Qwen/Qwen3.5-4B, kind: hybrid}
+    # Qwen3.5 checkpoints are multimodal: text-only mode skips the vision tower (the 9B snapshot has no
+    # image processor); engine/server_args are per-model additions.
+    qwen35_4b: {name: Qwen/Qwen3.5-4B, kind: hybrid, engine: {language_model_only: true}, server_args: ["--language-model-only"]}
     qwen3_4b: {name: Qwen/Qwen3-4B, kind: dense}
-    qwen35_9b: {name: Qwen/Qwen3.5-9B, kind: hybrid}
+    qwen35_9b: {name: Qwen/Qwen3.5-9B, kind: hybrid, engine: {language_model_only: true}, server_args: ["--language-model-only"]}
     qwen3_8b: {name: Qwen/Qwen3-8B, kind: dense}
+  pairs: [[qwen35_4b, qwen3_4b], [qwen35_9b, qwen3_8b], [qwen35_2b, qwen3_1p7b], [qwen36_35b_a3b_fp8, qwen3_30b_a3b_fp8]]
 
   engine:                              # vLLM defaults otherwise (prefix caching on, CUDA graphs, torch.compile)
     gpu_memory_utilization: 0.85

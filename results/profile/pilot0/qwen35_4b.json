@@ -1,0 +1,1310 @@
+{
+ "provenance": {
+  "model": "Qwen/Qwen3.5-4B",
+  "context_length": null,
+  "page_size": 16,
+  "w": 8,
+  "git": {
+   "commit": "a8598b93a1187bc25d986aab55f88bd4196c95bd",
+   "dirty": true
+  },
+  "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/profile.yaml",
+  "timestamp": "2026-10-29T00:20:03",
+  "host": "gpuserv4",
+  "torch": "2.13.0+cu129",
+  "gpu": "NVIDIA RTX 6000 Ada Generation",
+  "transformers": "5.19.0",
+  "script": "/home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/engine_profile.py",
+  "settings": {
+   "models": {
+    "qwen35_4b": {
+     "name": "Qwen/Qwen3.5-4B",
+     "kind": "hybrid"
+    },
+    "qwen3_4b": {
+     "name": "Qwen/Qwen3-4B",
+     "kind": "dense"
+    },
+    "qwen35_9b": {
+     "name": "Qwen/Qwen3.5-9B",
+     "kind": "hybrid"
+    },
+    "qwen3_8b": {
+     "name": "Qwen/Qwen3-8B",
+     "kind": "dense"
+    }
+   },
+   "engine": {
+    "gpu_memory_utilization": 0.85,
+    "max_model_len": 34816,
+    "max_num_seqs": 256,
+    "seed": 0
+   },
+   "prompt_token_range": [
+    1000,
+    100000
+   ],
+   "prefill_lengths": [
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768
+   ],
+   "repeats": 3,
+   "decode_contexts": [
+    2048,
+    8192,
+    32768
+   ],
+   "decode_batches": [
+    1,
+    4,
+    16,
+    64,
+    128,
+    256
+   ],
+   "decode_steps": 128,
+   "capacity_share": 0.8,
+   "profile_prefill": [
+    8192,
+    32768
+   ],
+   "profile_decode": [
+    [
+     8192,
+     1
+    ],
+    [
+     8192,
+     16
+    ],
+    [
+     8192,
+     64
+    ],
+    [
+     8192,
+     128
+    ],
+    [
+     32768,
+     16
+    ]
+   ],
+   "profile_decode_steps": 32,
+   "microbench": {
+    "repeats": 20,
+    "copy_MiB": [
+     256,
+     1024
+    ],
+    "gemm_sizes": [
+     4096,
+     8192
+    ],
+    "skinny_m": [
+     1,
+     4,
+     16,
+     64,
+     128,
+     256
+    ],
+    "skinny_set_MiB": 512,
+    "skinny_kn": [
+     [
+      2560,
+      9216
+     ],
+     [
+      4096,
+      12288
+     ]
+    ]
+   }
+  },
+  "model_key": "qwen35_4b",
+  "vllm": "0.32.0",
+  "cuda": "12.9",
+  "load_avg": [
+   16.5087890625,
+   17.64697265625,
+   18.6708984375
+  ],
+  "python": "3.12.11",
+  "resolved_config": {
+   "definitions": {
+    "page_size": 16,
+    "w": 8,
+    "budget_fracs": [
+     0.01,
+     0.05,
+     0.1
+    ],
+    "budget_rounding": "ceil",
+    "k_grid": [
+     1,
+     2,
+     4,
+     8,
+     16
+    ],
+    "pinned": {
+     "sink_pages": 1,
+     "recent_prompt_pages": 0,
+     "decode_region": "aged",
+     "recent_tokens": 128
+    },
+    "head_views": [
+     "query",
+     "kv_mean"
+    ]
+   },
+   "trajectory": {
+    "budget_frac": 0.05,
+    "exit_ratio": 0.5,
+    "floor_ratio": 0.1,
+    "smooth_ema_alpha": null,
+    "stable_high_min_frac": 0.9,
+    "min_initial_low_steps": 4,
+    "sudden_max_rise_steps": 2,
+    "oscillating_min_transitions": 4
+   },
+   "lead_time": {
+    "budget_frac": 0.05,
+    "truth": "m",
+    "mode": "first",
+    "required_lead": 0
+   },
+   "revival": {
+    "budget_frac": 0.05,
+    "exit_ratio": 0.5,
+    "dormancy_steps": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "dormancy_main": 16,
+    "eviction_budget_fracs": [
+     0.05,
+     0.1
+    ],
+    "q_lags": [
+     1,
+     4,
+     16,
+     64
+    ],
+    "q_pca_var": 0.9
+   },
+   "trace": {
+    "format": "full",
+    "topk": 512,
+    "mass_dtype": "float16",
+    "prefill_obs_window": 32,
+    "flush_every": 64,
+    "record_q": true,
+    "key_summary": true,
+    "head_reduce": "kv_mean"
+   },
+   "reference_predictors": {
+    "ema_alpha": 0.3
+   },
+   "decision_point": {
+    "LEAD_TIME_MIN": 1,
+    "GRADUAL_SHARE_MIN": 0.25,
+    "GRADUAL_SHARE_DENOMINATOR": "onsets_after_low"
+   },
+   "models": {
+    "local_files_only": true,
+    "dtype": "bfloat16",
+    "attn_implementation": "sdpa",
+    "prefill_chunk_size": 32768,
+    "chat_template_kwargs": {
+     "enable_thinking": false,
+     "date_string": "26 Jul 2024"
+    }
+   },
+   "paths": {
+    "trace_dir": "traces",
+    "results_dir": "results"
+   },
+   "data": {
+    "paul_graham_essays": "/share2/huggingface/datasets/baber___paul_graham_essays/default/0.0.0/792d672b77d1a67720f7e9820d646358fc18792e/paul_graham_essays-train.arrow",
+    "pg19_test": "/share2/huggingface/datasets/emozilla___pg19-test/default/0.0.0/c5e39bf32e33f9111323aa68d7d9000d22722035/pg19-test-test.arrow"
+   },
+   "ruler": {
+    "template": "Some special magic {type_needle_v} are hidden within the following text. Make sure to memorize it. I will quiz you about the {type_needle_v} afterwards.\n{context}\nWhat are all the special magic {type_needle_v} for {query} mentioned in the provided text?",
+    "answer_prefix": " The special magic {type_needle_v} for {query} mentioned in the provided text are",
+    "needle": "One of the special magic {type_needle_v} for {key} is: {value}.",
+    "noise_sentence": "The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again.",
+    "num_depths": 40,
+    "number_digits": 7,
+    "tokens_to_generate": 128,
+    "incremental": {
+     "essay": 500,
+     "noise": 25,
+     "needle": 25
+    },
+    "shuffle_seed": 42,
+    "tasks": {
+     "niah_single_1": {
+      "type_haystack": "noise",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_single_2": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_single_3": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "uuids",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multikey_1": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 4,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multikey_2": {
+      "type_haystack": "needle",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multikey_3": {
+      "type_haystack": "needle",
+      "type_needle_k": "uuids",
+      "type_needle_v": "uuids",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 1
+     },
+     "niah_multivalue": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 4,
+      "num_needle_q": 1
+     },
+     "niah_multiquery": {
+      "type_haystack": "essay",
+      "type_needle_k": "words",
+      "type_needle_v": "numbers",
+      "num_needle_k": 1,
+      "num_needle_v": 1,
+      "num_needle_q": 4
+     }
+    }
+   },
+   "longgen": {
+    "template": "Below is the beginning of a book.\n\n{document}\n\nWrite a detailed summary of the text above. Go through it in order from the beginning, covering every part, and be thorough.",
+    "answer_prefix": "",
+    "min_book_tokens_slack": 1.05
+   },
+   "sweep": {
+    "model": "Qwen/Qwen3-4B",
+    "max_context": 17408,
+    "max_new_tokens": 16384,
+    "context_margin": 256,
+    "samples_per_task": 16,
+    "layers": [
+     4,
+     18,
+     29,
+     32
+    ],
+    "trace_dir": "/share3/saves/ryankert_l/kvfetch/traces/reasoning",
+    "records_dir": "results/reasoning/records",
+    "claims_dir": "results/reasoning/claims",
+    "shard_size": 2,
+    "tasks": {
+     "aime24": {
+      "loader": "aime",
+      "name": "aime24",
+      "dataset": "HuggingFaceH4___aime_2024/**/*.arrow",
+      "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+      "n": 30
+     },
+     "aime25": {
+      "loader": "aime",
+      "name": "aime25",
+      "dataset": "math-ai___aime25/**/*.arrow",
+      "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+      "n": 30
+     },
+     "math500": {
+      "level": 5,
+      "instruction": "\nPlease reason step by step, and put your final answer within \\boxed{}.",
+      "n": 16
+     }
+    },
+    "out": "results/sweep/sweep_runs.json"
+   },
+   "signals": {
+    "names": [
+     "attn_last",
+     "attn_ema",
+     "key_mean",
+     "quest",
+     "q_trend"
+    ],
+    "ks": [
+     1,
+     4,
+     16
+    ],
+    "budget_frac": 0.05,
+    "ema_alpha": 0.3,
+    "q_slope_steps": 4
+   },
+   "compare": {
+    "budgets_tokens": [
+     512,
+     1024,
+     2048,
+     4096
+    ],
+    "evict_methods": [
+     "streaming",
+     "h2o",
+     "tova",
+     "snapkv",
+     "raas",
+     "lazy",
+     "rkv",
+     "oracle"
+    ],
+    "prefetch_methods": [
+     "on_demand",
+     "stale_q",
+     "q_trend",
+     "oasis_ub"
+    ],
+    "lookahead_steps": [
+     1,
+     4
+    ],
+    "gpu_capacity_mult": 2.0,
+    "snapkv_window": 32,
+    "important_mult": 1.0,
+    "rkv_lambda": 0.5,
+    "q_slope_steps": 4,
+    "blas_threads": 4
+   },
+   "selectors": {
+    "budgets_tokens": [
+     512,
+     1024,
+     2048
+    ],
+    "candidates": {
+     "quest": {
+      "quest_share": 1.0
+     },
+     "quest_recent12": {
+      "quest_share": 1.0,
+      "recent_share": 0.125
+     },
+     "quest_recent25": {
+      "quest_share": 1.0,
+      "recent_share": 0.25
+     },
+     "hist_last": {
+      "quest_share": 0.0,
+      "history": "last"
+     },
+     "hist_peak": {
+      "quest_share": 0.0,
+      "history": "peak"
+     },
+     "hyb_last_q75": {
+      "quest_share": 0.75,
+      "history": "last"
+     },
+     "hyb_last_q50": {
+      "quest_share": 0.5,
+      "history": "last"
+     },
+     "hyb_last_q25": {
+      "quest_share": 0.25,
+      "history": "last"
+     },
+     "hyb_peak_q75": {
+      "quest_share": 0.75,
+      "history": "peak"
+     },
+     "hyb_peak_q50": {
+      "quest_share": 0.5,
+      "history": "peak"
+     },
+     "hyb_peak_q25": {
+      "quest_share": 0.25,
+      "history": "peak"
+     },
+     "shared_quest": {
+      "quest_share": 1.0,
+      "shared": true
+     },
+     "fused_sum_w25": {
+      "fuse": "sum",
+      "history_weight": 0.25,
+      "history": "last"
+     },
+     "fused_sum_w50": {
+      "fuse": "sum",
+      "history_weight": 0.5,
+      "history": "last"
+     },
+     "fused_max": {
+      "fuse": "max",
+      "history": "last"
+     },
+     "quest_mean50": {
+      "quest_share": 1.0,
+      "mean_mix": 0.5
+     },
+     "hyb_last_q75_mean50": {
+      "quest_share": 0.75,
+      "history": "last",
+      "mean_mix": 0.5
+     },
+     "fused_sum_w25_mean50": {
+      "fuse": "sum",
+      "history_weight": 0.25,
+      "history": "last",
+      "mean_mix": 0.5
+     }
+    },
+    "upper_bounds": [
+     "true_topB",
+     "shared_topB"
+    ],
+    "summary_bytes": 2,
+    "history_bytes": 4,
+    "gate": {
+     "budget_tokens": 1024,
+     "gap_closed_min": 0.5,
+     "cost_ratio_max": 1.5
+    },
+    "blas_threads": 4
+   },
+   "e2": {
+    "keys_dir": "/share3/saves/ryankert_l/kvfetch/keys/reasoning",
+    "check_steps": 3,
+    "check_atol": 0.05,
+    "budgets_tokens": [
+     512,
+     1024,
+     2048
+    ],
+    "step_chunk": 128,
+    "shard_dir": "results/reasoning/e2_shards",
+    "shadowkv": {
+     "chunk": 8,
+     "outlier_share": 0.05
+    },
+    "infinigen": {
+     "partial_ratio": 0.25,
+     "history_weights": [
+      0.25,
+      0.5
+     ]
+    },
+    "lessismore": {
+     "recent_share": 0.25
+    },
+    "ours": [
+     "quest",
+     "fused_sum_w25",
+     "hyb_last_q75_mean50",
+     "fused_sum_w25_mean50"
+    ]
+   },
+   "e2b": {
+    "budgets_tokens": [
+     512,
+     1024,
+     2048
+    ],
+    "step_chunk": 128,
+    "shard_dir": "results/reasoning/e2b_shards",
+    "infinigen_ratios": [
+     0.125,
+     0.1875,
+     0.25
+    ],
+    "shadowkv_outlier_share": 0.05,
+    "plugin_history_weight": 0.25,
+    "ours": [
+     "fused_sum_w25_mean50"
+    ],
+    "gate": {
+     "budgets_tokens": [
+      512,
+      1024
+     ],
+     "modes": [
+      "vote",
+      "sum"
+     ],
+     "page_baselines": [
+      "quest",
+      "arkvale",
+      "shadowkv_page"
+     ],
+     "reduction_min": 0.2,
+     "equal_bytes_rival": "infinigen_r0.1875",
+     "ours_max_bytes": 48.25
+    }
+   },
+   "e3": {
+    "tasks": [
+     "aime24",
+     "aime25"
+    ],
+    "split": "explore",
+    "samples": 8,
+    "sample_group": 4,
+    "batch_size": 12,
+    "sampling": {
+     "temperature": 0.6,
+     "top_p": 0.95,
+     "top_k": 20
+    },
+    "seed": 20261024,
+    "ours": "fused_sum_w25_mean50",
+    "snapkv_window": 32,
+    "check_budget_tokens": 1024,
+    "runs": [
+     [
+      "full",
+      "quest@1024",
+      "ours@1024",
+      "snapkv@1024"
+     ],
+     [
+      "quest@512",
+      "ours@512",
+      "snapkv@512"
+     ],
+     [
+      "oracle@1024"
+     ],
+     [
+      "ours-nohist@512",
+      "quest-sum@512",
+      "oracle@512"
+     ]
+    ],
+    "variants": {
+     "ours-nohist": {
+      "fuse": "sum",
+      "history_weight": 0.0,
+      "history": "last",
+      "mean_mix": 0.5
+     },
+     "quest-sum": {
+      "fuse": "sum",
+      "history_weight": 0.0,
+      "history": "last"
+     }
+    },
+    "extra_comparisons": [
+     [
+      "oracle@1024",
+      "quest@1024"
+     ],
+     [
+      "oracle@512",
+      "quest@512"
+     ],
+     [
+      "ours-nohist@512",
+      "quest-sum@512"
+     ],
+     [
+      "quest-sum@512",
+      "quest@512"
+     ]
+    ],
+    "repetition": {
+     "tail_chars": 6000,
+     "ngram_chars": 20,
+     "threshold": 0.5,
+     "thresholds": [
+      0.25,
+      0.5,
+      0.75
+     ]
+    },
+    "out_dir": "results/reasoning/e3_shards",
+    "claims_dir": "results/reasoning/e3_claims",
+    "gate": {
+     "budget_tokens": 1024,
+     "baselines": [
+      "quest",
+      "snapkv"
+     ],
+     "margin_points": 5
+    }
+   },
+   "hybrid": {
+    "models": {
+     "qwen35_4b": {
+      "name": "Qwen/Qwen3.5-4B",
+      "layers": [
+       3,
+       7,
+       11,
+       15,
+       19,
+       23,
+       27,
+       31
+      ],
+      "sampling": {
+       "temperature": 1.0,
+       "top_p": 0.95,
+       "top_k": 20,
+       "presence_penalty": 1.5
+      }
+     },
+     "qwen3_4b": {
+      "name": "Qwen/Qwen3-4B",
+      "layers": [
+       3,
+       8,
+       12,
+       17,
+       21,
+       26,
+       30,
+       35
+      ],
+      "sampling": {
+       "temperature": 0.6,
+       "top_p": 0.95,
+       "top_k": 20,
+       "presence_penalty": 0.0
+      }
+     }
+    },
+    "h1": {
+     "sequences": {
+      "qwen35_4b": "results/hybrid/h3_shards/qwen35_4b/full",
+      "qwen3_4b": "results/reasoning/e3_shards/full"
+     },
+     "sample": 0,
+     "max_gen_tokens": 16384,
+     "budgets_tokens": [
+      256,
+      512,
+      1024
+     ],
+     "step_chunk": 128,
+     "lookahead_layers": [
+      1,
+      2,
+      3
+     ],
+     "ours": {
+      "mean_mix": 0.5
+     },
+     "gdn_prior_weights": [
+      0.1,
+      0.25,
+      0.5
+     ],
+     "fidelity": {
+      "n_sequences": 10,
+      "max_gen_tokens": 8192,
+      "query_chunk": 1024
+     },
+     "shard_dir": "results/hybrid/h1_shards",
+     "gate": {
+      "budget_tokens": 512,
+      "lookahead_max_points": 1.0,
+      "gdn_prior_min_reduction": 0.05
+     }
+    },
+    "h2": {
+     "metadata_max_share": 0.02,
+     "within_points": 0.5,
+     "engine_specs": {
+      "mean16": {
+       "method": "ours",
+       "bound_fmt": "none",
+       "mean_fmt": "fp16"
+      },
+      "mean8": {
+       "method": "ours",
+       "bound_fmt": "none",
+       "mean_fmt": "fp8"
+      },
+      "meanc": {
+       "method": "ours",
+       "bound_fmt": "none",
+       "mean_fmt": "chan"
+      },
+      "quest4": {
+       "method": "quest",
+       "bound_fmt": "int4"
+      },
+      "quest4p2": {
+       "method": "quest",
+       "bound_fmt": "int4p2"
+      },
+      "lite": {
+       "method": "ours",
+       "bound_fmt": "int4p2",
+       "mean_fmt": "chan"
+      }
+     },
+     "chosen": "mean8"
+    },
+    "h3": {
+     "tasks": [
+      "aime24",
+      "aime25"
+     ],
+     "split": "explore",
+     "samples": 8,
+     "sample_group": 4,
+     "seed": 20261026,
+     "max_new_tokens": {
+      "qwen35_4b": 32768,
+      "qwen3_4b": 16384
+     },
+     "batch_size": {
+      "qwen35_4b": 24,
+      "qwen3_4b": 12
+     },
+     "runs": {
+      "qwen35_4b": [
+       [
+        "full",
+        "quest@512",
+        "snapkv@512",
+        "oracle@512"
+       ],
+       [
+        "ours@512",
+        "ours@1024"
+       ],
+       [
+        "quest@1024",
+        "snapkv@1024",
+        "oracle@1024"
+       ]
+      ],
+      "qwen3_4b": [
+       [
+        "full",
+        "snapkv@1024",
+        "snapkv@512"
+       ]
+      ]
+     },
+     "snapkv_window": 32,
+     "snapkv_protect_prompt": true,
+     "out_dir": "results/hybrid/h3_shards",
+     "claims_dir": "results/hybrid/h3_claims",
+     "gate": {
+      "budget_tokens": 512,
+      "baselines": [
+       "quest",
+       "snapkv"
+      ],
+      "margin_points": 5
+     },
+     "hb_gate": {
+      "budget_tokens": 1024,
+      "max_loss_ratio": 0.5
+     }
+    },
+    "h4": {
+     "batches": [
+      1,
+      8,
+      32,
+      64,
+      128,
+      160
+     ],
+     "contexts": [
+      8192,
+      16384,
+      32768
+     ],
+     "budget_tokens": 512,
+     "kv_bytes_per_token": 32768,
+     "max_kv_gib": 30,
+     "iters": 50,
+     "page_bytes": 65536,
+     "host_pool_mib": 2048,
+     "cache_flush_mib": 512,
+     "copy_mib": [
+      1,
+      4,
+      16,
+      64
+     ],
+     "fetch_pages": [
+      1,
+      4,
+      16,
+      64,
+      256,
+      1024,
+      4096
+     ],
+     "gather_block": 1024,
+     "zero_copy_programs": 16,
+     "overlap_batches": [
+      8,
+      32,
+      160
+     ],
+     "lookahead_multiples": [
+      1,
+      2
+     ],
+     "cpu_threads": 8,
+     "gate": {
+      "min_ratio": 0.9,
+      "calibration_tol": 0.15
+     },
+     "residency": {
+      "model": "qwen35_4b",
+      "sequences": "results/hybrid/h3_shards/qwen35_4b/full",
+      "every": 3,
+      "cross_check": {
+       "sequences": "results/hybrid/h3_shards/qwen35_4b/ours_512",
+       "every": 10
+      },
+      "max_gen_tokens": 32768,
+      "cache_multiples": [
+       1,
+       2,
+       4
+      ],
+      "prefetch": {
+       "lookahead": 3,
+       "cache_plus": [
+        [
+         2,
+         1
+        ],
+        [
+         4,
+         2
+        ]
+       ]
+      },
+      "lag1_cache_multiples": [
+       1,
+       2
+      ],
+      "step_chunk": 512,
+      "q_self_err_max": 0.01,
+      "shard_dir": "results/hybrid/h4_shards",
+      "mc_samples": 400,
+      "mc_seed": 20261026,
+      "gpu_mem_gib": 48,
+      "reserve_gib": 4,
+      "host_kv_gib": 160
+     }
+    }
+   },
+   "profile": {
+    "models": {
+     "qwen35_4b": {
+      "name": "Qwen/Qwen3.5-4B",
+      "kind": "hybrid"
+     },
+     "qwen3_4b": {
+      "name": "Qwen/Qwen3-4B",
+      "kind": "dense"
+     },
+     "qwen35_9b": {
+      "name": "Qwen/Qwen3.5-9B",
+      "kind": "hybrid"
+     },
+     "qwen3_8b": {
+      "name": "Qwen/Qwen3-8B",
+      "kind": "dense"
+     }
+    },
+    "engine": {
+     "gpu_memory_utilization": 0.85,
+     "max_model_len": 34816,
+     "max_num_seqs": 256,
+     "seed": 0
+    },
+    "prompt_token_range": [
+     1000,
+     100000
+    ],
+    "prefill_lengths": [
+     1024,
+     2048,
+     4096,
+     8192,
+     16384,
+     32768
+    ],
+    "repeats": 3,
+    "decode_contexts": [
+     2048,
+     8192,
+     32768
+    ],
+    "decode_batches": [
+     1,
+     4,
+     16,
+     64,
+     128,
+     256
+    ],
+    "decode_steps": 128,
+    "capacity_share": 0.8,
+    "profile_prefill": [
+     8192,
+     32768
+    ],
+    "profile_decode": [
+     [
+      8192,
+      1
+     ],
+     [
+      8192,
+      16
+     ],
+     [
+      8192,
+      64
+     ],
+     [
+      8192,
+      128
+     ],
+     [
+      32768,
+      16
+     ]
+    ],
+    "profile_decode_steps": 32,
+    "microbench": {
+     "repeats": 20,
+     "copy_MiB": [
+      256,
+      1024
+     ],
+     "gemm_sizes": [
+      4096,
+      8192
+     ],
+     "skinny_m": [
+      1,
+      4,
+      16,
+      64,
+      128,
+      256
+     ],
+     "skinny_set_MiB": 512,
+     "skinny_kn": [
+      [
+       2560,
+       9216
+      ],
+      [
+       4096,
+       12288
+      ]
+     ]
+    }
+   }
+  }
+ },
+ "engine": {
+  "block_size": 528,
+  "num_gpu_blocks": 1809,
+  "capacity_tokens": 955152,
+  "enable_prefix_caching": true,
+  "mamba_cache_mode": "align",
+  "max_num_batched_tokens": 8192,
+  "max_num_seqs": 256,
+  "cudagraph_mode": "FULL_AND_PIECEWISE",
+  "kv_cache_dtype": "auto"
+ },
+ "prefill": [
+  {
+   "prompt_tokens": 1024,
+   "seconds": [
+    0.07494049053639174,
+    0.0855972645804286,
+    0.087858647108078
+   ],
+   "median_s": 0.0855972645804286,
+   "tokens_per_s": 11962.999110068906
+  },
+  {
+   "prompt_tokens": 2048,
+   "seconds": [
+    0.16741039603948593,
+    0.16844500415027142,
+    0.16838024277240038
+   ],
+   "median_s": 0.16838024277240038,
+   "tokens_per_s": 12162.947185961017
+  },
+  {
+   "prompt_tokens": 4096,
+   "seconds": [
+    0.32098025269806385,
+    0.3299577236175537,
+    0.32622623164206743
+   ],
+   "median_s": 0.32622623164206743,
+   "tokens_per_s": 12555.703995300093
+  },
+  {
+   "prompt_tokens": 8192,
+   "seconds": [
+    1.8663438986986876,
+    0.6345328884199262,
+    0.6368822064250708
+   ],
+   "median_s": 0.6368822064250708,
+   "tokens_per_s": 12862.661128473197
+  },
+  {
+   "prompt_tokens": 16384,
+   "seconds": [
+    1.3516891729086637,
+    1.350222553126514,
+    1.3574420399963856
+   ],
+   "median_s": 1.3516891729086637,
+   "tokens_per_s": 12121.129863564498
+  },
+  {
+   "prompt_tokens": 32768,
+   "seconds": [
+    2.9375770147889853,
+    2.9460152592509985,
+    2.953527611680329
+   ],
+   "median_s": 2.9460152592509985,
+   "tokens_per_s": 11122.820866966931
+  }
+ ],
+ "decode": [
+  {
+   "context": 2048,
+   "batch": 1,
+   "steps": 128,
+   "cold_s": 0.1574571169912815,
+   "hit_s": 0.045377304777503014,
+   "gen_s": 1.3549750661477447,
+   "step_ms": 10.231232510705013,
+   "tokens_per_s": 97.73993494466016
+  },
+  {
+   "context": 2048,
+   "batch": 4,
+   "steps": 128,
+   "cold_s": 0.6431710505858064,
+   "hit_s": 0.15667624678462744,
+   "gen_s": 1.6139851128682494,
+   "step_ms": 11.385225516278297,
+   "tokens_per_s": 351.3325225118207
+  },
+  {
+   "context": 2048,
+   "batch": 16,
+   "steps": 128,
+   "cold_s": 2.506862203590572,
+   "hit_s": 0.6065521528944373,
+   "gen_s": 2.297974606975913,
+   "step_ms": 13.21423792251153,
+   "tokens_per_s": 1210.8151899355996
+  },
+  {
+   "context": 2048,
+   "batch": 64,
+   "steps": 128,
+   "cold_s": 10.194823438301682,
+   "hit_s": 2.36693075299263,
+   "gen_s": 5.405789884738624,
+   "step_ms": 23.74108696676558,
+   "tokens_per_s": 2695.748517731797
+  },
+  {
+   "context": 2048,
+   "batch": 128,
+   "steps": 128,
+   "cold_s": 20.984996089711785,
+   "hit_s": 4.879365119151771,
+   "gen_s": 9.851913815364242,
+   "step_ms": 38.848036689159926,
+   "tokens_per_s": 3294.889804192263
+  },
+  {
+   "context": 2048,
+   "batch": 256,
+   "steps": 128,
+   "cold_s": 43.31828360352665,
+   "hit_s": 10.007661062292755,
+   "gen_s": 54.569016995839775,
+   "step_ms": 348.1355932308361,
+   "tokens_per_s": 735.3456669690642
+  },
+  {
+   "context": 8192,
+   "batch": 1,
+   "steps": 128,
+   "cold_s": 0.7016740059480071,
+   "hit_s": 0.04328733868896961,
+   "gen_s": 1.3708999762311578,
+   "step_ms": 10.371973730798345,
+   "tokens_per_s": 96.41366493540363
+  },
+  {
+   "context": 8192,
+   "batch": 4,
+   "steps": 128,
+   "cold_s": 2.8439743630588055,
+   "hit_s": 0.11709728371351957,
+   "gen_s": 1.7061966275796294,
+   "step_ms": 12.414838623953983,
+   "tokens_per_s": 322.1950861513531
+  },
+  {
+   "context": 8192,
+   "batch": 16,
+   "steps": 128,
+   "cold_s": 11.433337305672467,
+   "hit_s": 0.5740007031708956,
+   "gen_s": 2.621842839755118,
+   "step_ms": 15.998766692064237,
+   "tokens_per_s": 1000.0770876880388
+  },
+  {
+   "context": 8192,
+   "batch": 64,
+   "steps": 128,
+   "cold_s": 45.986464337445796,
+   "hit_s": 1.823887538164854,
+   "gen_s": 6.575471959076822,
+   "step_ms": 37.12175328837475,
+   "tokens_per_s": 1724.0564987010619
+  },
+  {
+   "context": 32768,
+   "batch": 1,
+   "steps": 128,
+   "cold_s": 3.2831845693290234,
+   "hit_s": 0.081775545142591,
+   "gen_s": 1.4871833752840757,
+   "step_ms": 10.97974867298035,
+   "tokens_per_s": 91.0767659428182
+  },
+  {
+   "context": 32768,
+   "batch": 4,
+   "steps": 128,
+   "cold_s": 13.080674481578171,
+   "hit_s": 0.1504262639209628,
+   "gen_s": 2.0874862177297473,
+   "step_ms": 15.133280889131129,
+   "tokens_per_s": 264.3180966047382
+  },
+  {
+   "context": 32768,
+   "batch": 16,
+   "steps": 128,
+   "cold_s": 52.08967063575983,
+   "hit_s": 0.48000127729028463,
+   "gen_s": 4.21083571575582,
+   "step_ms": 29.147144050511997,
+   "tokens_per_s": 548.938859061869
+  }
+ ],
+ "profiles": [
+  {
+   "name": "prefill_8192",
+   "wall_s": 0.6930909100919962,
+   "files": [
+    "traces/qwen35_4b/prefill_8192/rank0.1793204268555640928.pt.trace.json.gz",
+    "traces/qwen35_4b/prefill_8192/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "prefill_32768",
+   "wall_s": 3.2297069495543838,
+   "files": [
+    "traces/qwen35_4b/prefill_32768/rank0.1793204272571618091.pt.trace.json.gz",
+    "traces/qwen35_4b/prefill_32768/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "decode_8192_b1",
+   "wall_s": 0.3816689429804683,
+   "files": [
+    "traces/qwen35_4b/decode_8192_b1/rank0.1793204276132292597.pt.trace.json.gz",
+    "traces/qwen35_4b/decode_8192_b1/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "decode_8192_b16",
+   "wall_s": 1.0234935712069273,
+   "files": [
+    "traces/qwen35_4b/decode_8192_b16/rank0.1793204290954539669.pt.trace.json.gz",
+    "traces/qwen35_4b/decode_8192_b16/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "decode_8192_b64",
+   "wall_s": 2.9868553709238768,
+   "files": [
+    "traces/qwen35_4b/decode_8192_b64/rank0.1793204342453780974.pt.trace.json.gz",
+    "traces/qwen35_4b/decode_8192_b64/rank0.profiler_out.txt"
+   ]
+  },
+  {
+   "name": "decode_32768_b16",
+   "wall_s": 1.2970076659694314,
+   "files": [
+    "traces/qwen35_4b/decode_32768_b16/rank0.1793204399637409345.pt.trace.json.gz",
+    "traces/qwen35_4b/decode_32768_b16/rank0.profiler_out.txt"
+   ]
+  }
+ ]
+}
