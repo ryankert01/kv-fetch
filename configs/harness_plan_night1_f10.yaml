@@ -20,12 +20,12 @@ jobs:
 - id: thrash_trace_qwen3_4b_on
   kind: cmd
   cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen3_4b --setting prefix_on --set profile.thrash.concurrency=80 --set profile.thrash.requests=160'
-  priority: 6.3
+  priority: 6.15
   timeout_s: 3600
   why: dense control at matched pressure, prefix caching on
 - id: thrash_trace_qwen3_4b_off
   kind: cmd
   cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen3_4b --setting prefix_off --set profile.thrash.concurrency=80 --set profile.thrash.requests=160'
-  priority: 6.4
+  priority: 6.16
   timeout_s: 3600
   why: dense control, prefix caching off

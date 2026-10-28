@@ -226,3 +226,26 @@ running and "gen < half its max" from the server's 10-s stats lines (serve_timel
 - f10: the same load offline with the scheduler instrumented (scripts/profile/thrash_trace.py): the
   trigger of every preemption, recomputed tokens, prefix-cache savings on readmission; dense Qwen3-4B at
   matched pressure (c=80) for whether the on/off gap is hybrid-only.
+
+## 06:47 -- an existing knob removes the collapse (f9: serve_thrash_knobs_qwen35_4b)
+Same server and load as f8 at c=256 (reasoning_var, prefix caching on unless noted). Rows 1-2 from f8.
+
+| setting | out tok/s | TTFT p50 / p99 s | TPOT p50 ms | e2e p50 s | preemptions | steps | ms/step | mean running | KV >= 97% | gen < half max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| default (watermark 0) | 1576 | 160 / 698 | 92.2 | 1143 | 3474 | 36551 | 73.9 | 133 | 84% | 87% |
+| prefix off | 2020 | 147 / 538 | 69.2 | 890 | 800 | 36175 | 58.3 | 131 | 76% | 59% |
+| `--watermark 0.1` | 2128 | 141 / 540 | 61.7 | 825 | 128 | 39644 | 50.5 | 123 | 21% | 41% |
+| `--max-num-seqs 128` | 2057 | 484 / 696 | 57.7 | 893 | 790 | 40394 | 51.4 | 116 | 35% | 28% |
+
+- Keeping 10% of the blocks free when admitting waiting / preempted requests cuts preemptions 27x and
+  gives +35% output and -33% TPOT against the default, with no TTFT cost; it also beats prefix caching
+  off. Capping running requests at 128 helps throughput as much but not preemptions, and triples the
+  median TTFT (requests queue instead).
+- So the saturation collapse fails rule (c): an existing knob removes it. What is left is a
+  configuration finding (vLLM's default watermark 0 costs this hybrid 26% of its throughput at
+  saturation, prefix caching on), worth an upstream issue, not a paper.
+- What remains against pure decode: ~123 running at ~5K mean context would take ~40-45 ms per decode
+  step (decode sweep: 39.1 ms at 2K x 128, 37.3 ms at 8K x 64), against 50.5 ms per step here. The rest is
+  the new requests' prefill chunks inside the 2048-token budget and the end-of-run drain. Not chased.
+- f10 (running) still says why prefix caching on preempts 4.3x as often at watermark 0, and whether the
+  dense model shows the same on/off gap (moved ahead of the hybrid prefix-off trace).
