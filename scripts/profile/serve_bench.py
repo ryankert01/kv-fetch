@@ -1,8 +1,10 @@
 """P4: online serving benchmarks on upstream vLLM (`vllm serve` + `vllm bench serve`).
 
 For each model and server setting, start one server, run every workload at every concurrency (random
-prompts, fixed lengths, ignore_eos; num_prompts = prompts_per_concurrency x concurrency), save each
-`vllm bench serve` result, stop the server.
+prompts, fixed lengths unless the workload sets its own range_ratio, ignore_eos; num_prompts =
+prompts_per_concurrency x concurrency), save each `vllm bench serve` result together with the change of the
+server's Prometheus counters over the run (preemptions, prompt / cached / recomputed tokens: `metrics` in
+serve_index.json), stop the server.
 
 Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y] [--workloads w1,w2] [--set k=v]
 """
@@ -26,7 +28,21 @@ def dataset_args(w: dict, sc: dict) -> list[str]:
                 "--prefix-repetition-suffix-len", str(w["suffix"]), "--prefix-repetition-num-prefixes", str(w["num_prefixes"]),
                 "--prefix-repetition-output-len", str(w["output"])]
     return ["--dataset-name", "random", "--random-input-len", str(w["input"]), "--random-output-len", str(w["output"]),
-            "--random-range-ratio", str(sc["range_ratio"])]
+            "--random-range-ratio", str(w.get("range_ratio", sc["range_ratio"]))]
+
+
+def counters(port: int) -> dict[str, float]:
+    """vLLM's Prometheus counters and histogram sums/counts, summed over label sets."""
+    text = urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics", timeout=30).read().decode()
+    res: dict[str, float] = {}
+    for line in text.splitlines():
+        if not line.startswith("vllm:"):
+            continue
+        name, _, value = line.rpartition(" ")
+        name = name.split("{")[0]
+        if name.endswith(("_total", "_sum", "_count")):
+            res[name] = res.get(name, 0.0) + float(value)
+    return res
 
 
 def wait_ready(port: int, proc, timeout: float):
@@ -80,10 +96,14 @@ def main():
                                  "--metric-percentiles", "50,90,99", "--save-result", "--result-dir", str(out),
                                  "--result-filename", fname, "--disable-tqdm"]
                         t = time.time()
+                        before = counters(port)
                         r = subprocess.run(bench, capture_output=True, text=True)
+                        after = counters(port)
                         (out / "logs" / f"bench_{fname[:-5]}.log").write_text(r.stdout + r.stderr)
                         runs.append({"model": mkey, "setting": sname, "workload": wname, "concurrency": c,
-                                     "result": fname, "ok": r.returncode == 0, "seconds": time.time() - t})
+                                     "result": fname, "ok": r.returncode == 0, "seconds": time.time() - t,
+                                     "metrics": {k: v - before.get(k, 0.0) for k, v in after.items()
+                                                 if v != before.get(k, 0.0)}})
                         print(f"{mkey} {sname} {wname} c={c}: {'ok' if r.returncode == 0 else 'FAILED'} "
                               f"({time.time() - t:.0f}s)", flush=True)
             finally:
