@@ -97,3 +97,50 @@ Queued: configs/harness_plan_night1.yaml (24 jobs: base sweeps, serving, 8 ablat
   the obvious fix (vLLM already sends multi-token spec-decode verify through it).
 - serve_multiturn_4b_pair: `vllm bench serve` prefix_repetition (64 shared 4K prefixes, 128-token new
   suffix, 256 output), concurrency 16 and 64, hybrid vs dense: every prefill is short and follows a hit.
+
+## 03:50 -- P4 hybrid serving (serve_qwen35_4b), and a hybrid-only extra prefill step
+Qwen3.5-4B, GPU 6, `vllm serve` defaults on this GPU: max_num_batched_tokens 2048 (48 GB card), 905K-token
+pool. Random prompts, fixed lengths, ignore_eos; one run per cell.
+
+| workload | c | setting | out tok/s | TTFT p50 ms | TPOT p50 ms | ITL p99 ms |
+|---|---|---|---|---|---|---|
+| reasoning 1K/8K | 16 | prefix on / off | 1037 / 1042 | 564 / 824 | 15.3 / 15.2 | 18 / 18 |
+| reasoning 1K/8K | 64 | on / off | 2068 / 2078 | 2397 / 922 | 30.7 / 30.6 | 41 / 40 |
+| reasoning 1K/8K | 256 | on / off | 1698 / 2057 | 54390 / 43894 | 93.8 / 73.0 | 261 / 281 |
+| chat 4K/512 | 16 | on / off | 617 / 634 | 1649 / 1071 | 22.8 / 23.1 | 180 / 180 |
+| chat 4K/512 | 64 | on / off | 958 / 850 | 1215 / 1283 | 70.9 / 73.4 | 222 / 219 |
+| chat 4K/512 | 256 | on / off | 714 / 761 | 77338 / 74185 | 220 / 207 | 266 / 287 |
+
+- **Saturation collapse.** At c=256 throughput is at or below c=64 for both workloads. Engine log
+  (reasoning, prefix on): 256 running at 4068 tok/s, then the pool fills (99%) and the running set
+  drains 256 -> 186 -> 133 -> 103 -> 34 with 222 waiting, KV only 33% used and 148 tok/s. Preempted
+  requests are recomputed (V1 has no swap) 2048 tokens per step (prompt throughput counts none of it).
+  Same pattern with prefix caching off. Cause candidates: lockstep growth of identical requests
+  (range_ratio 0) plus 528-token blocks makes many requests need a block on the same step; recompute of
+  up to 9K tokens per victim at the 2048 budget. Generic (dense preempts too, at 1/4 the load), and
+  partly an artefact of identical synthetic lengths; not pursued yet. Prefix on vs off differences are
+  within run-to-run scatter except possibly reasoning c=256 (1698 vs 2057); one run each, not claimed.
+- **Align-mode prefill split (new, hybrid-only).** The trace step annotations show that with prefix
+  caching on every hybrid prefill is cut at its last 528-token block boundary and the tail runs as its
+  own engine step: 1024 -> 528 + 496 (43.9 + 32.0 ms; dense: one 55.8 ms step), 4096 -> 3696 + 400
+  (263 + 41 ms; dense 265), 32768 -> 4 x 7920 + 1056 + 32 (the 32-token tail: 31.5 ms). Source:
+  `Scheduler._mamba_block_aligned_split` (align mode writes the state only at chunk ends, so chunk ends
+  must be block aligned, and the prompt is stopped at its last cacheable boundary). In serving the 2048
+  budget becomes 1584 (3 x 528) per chunk, so a 4K chat prompt takes ~4 steps where the dense model takes 2.
+  Each extra step pays the hybrid small-step floor (~24-31 ms, above).
+- **Prior work for the split (rule c).** vLLM 0.32 already avoids it for Mamba2 (`num_prefill_checkpoint_blocks=1`,
+  alignment 1, ops/ssd_checkpoint.py) and FlashKDA (alignment 16, kda_checkpoint.py): the backend exports
+  the block-boundary state from inside the final chunk. GDN (qwen_gdn_linear_attn.py) has no exporter, so
+  Qwen3-Next / Qwen3.5 always split. Porting it to GDN is a real fix but an engineering one (an existing
+  upstream mechanism, new backend); FLA's chunk kernel keeps states only at 64-token chunk ends and
+  528 is not a multiple of 64, so it is not a one-liner. Upstream PR search still to do.
+- **micro_gdn_prefill_paths is invalid**: the two kernels' outputs disagree (rel err 1-90, one nan), so
+  the inputs do not match what one of them expects (head mapping or state layout), and its chunk timings
+  (0.4 ms per layer at T=1) are 10x the in-engine ones. Not used. The in-engine traces already answer the
+  question it was for: at a 256-token prefill the GDN kernels are 1.9 ms of GPU time per step, the step is
+  31 ms with the GPU busy 50%: the floor is launch / host time, not GDN math, so a faster GDN kernel alone
+  will not remove it; fewer launches (graph capture, fusion) or fewer steps (no split) would.
+- Queue: multi-turn pair moved ahead of the dense serving run (now prio 3; dense c=256 reasoning dropped, it
+  only thrashes at ~25 requests of capacity); prefix on/off prefill scans around block multiples queued
+  (f7). Harness: jobs now run in their own process group and a timeout kills the group (a killed serving
+  job used to leave its server holding the GPU).

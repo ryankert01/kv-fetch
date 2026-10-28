@@ -1,0 +1,40 @@
+note: 'follow-up 7 (03:45): align-mode prefill split. With prefix caching on (mamba_cache_mode align), vLLM 0.32 cuts every
+  hybrid prefill at the last 528-token block boundary (scheduler._mamba_block_aligned_split): 1024 -> 528 + 496,
+  4096 -> 3696 + 400, 32768 -> 4 x 7920 + 1056 + 32; each tail is a whole engine step (31-41 ms). Mamba2 and FlashKDA export
+  the checkpoint inside the final chunk (num_prefill_checkpoint_blocks > 0) and skip the split; GDN does not. Measure the
+  batch-1 prefill latency with prefix caching on vs off around block multiples (same job settings, same GPU).'
+jobs:
+- id: split_scan_prefix_on_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 4
+  timeout_s: 3600
+  flags: [--skip-profile]
+  sets:
+  - profile.prefill_lengths=[256,512,528,600,1024,1056,1100,2048,2112,4096,4224,8192]
+  - profile.repeats=5
+  - profile.decode_contexts=[]
+  why: batch-1 prefill latency, prefix caching on (align split)
+- id: split_scan_prefix_off_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 4
+  timeout_s: 3600
+  flags: [--skip-profile]
+  sets:
+  - profile.prefill_lengths=[256,512,528,600,1024,1056,1100,2048,2112,4096,4224,8192]
+  - profile.repeats=5
+  - profile.decode_contexts=[]
+  - profile.engine.enable_prefix_caching=false
+  why: batch-1 prefill latency, prefix caching off (no split)
+- id: split_scan_qwen3_4b
+  kind: engine
+  model: qwen3_4b
+  priority: 4
+  timeout_s: 3600
+  flags: [--skip-profile]
+  sets:
+  - profile.prefill_lengths=[256,512,528,600,1024,1056,1100,2048,2112,4096,4224,8192]
+  - profile.repeats=5
+  - profile.decode_contexts=[]
+  why: dense reference at the same lengths

@@ -5,6 +5,7 @@ CUDA_VISIBLE_DEVICES set to the GPU it was given, in <runs>/<id>/ (log in job.lo
   engine  scripts/profile/engine_profile.py on one model (+ --set overrides, flags), then parse_trace.py
   serve   scripts/profile/serve_bench.py (models, settings)
   cmd     any command; "{out}" in it becomes the run directory
+Each job runs in its own process group, killed as a whole on timeout.
 GPU policy (configs/harness.yaml): only `allowed` GPUs; a GPU is free when its memory use and utilisation
 stay under the thresholds over several samples; while the `watch` GPU (GPU 0) is in use by others, at
 most `max_concurrent_when_watch_busy` jobs run, otherwise `max_concurrent`.
@@ -19,6 +20,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -120,7 +122,7 @@ def run(cfg: dict, until: dt.datetime):
         for jid, (p, job, t0) in list(procs.items()):
             if p.poll() is None:
                 if time.time() - t0 > job.get("timeout_s", hc["default_timeout_s"]):
-                    p.kill()
+                    os.killpg(p.pid, signal.SIGKILL)      # the whole job, servers and engine processes included
                     note(f"{jid} timeout, killed")
                 continue
             job.update(returncode=p.returncode, finished=now(), seconds=round(time.time() - t0))
@@ -149,7 +151,7 @@ def run(cfg: dict, until: dt.datetime):
                 env = {**os.environ, **{k: str(v) for k, v in job.get("env", {}).items()}, "CUDA_VISIBLE_DEVICES": str(gpu)}
                 job.update(gpu=gpu, started=now(), out=str(out.relative_to(REPO)), watch_busy=watch_busy)
                 p = subprocess.Popen(command(job, out, hc), cwd=REPO, env=env,
-                                     stdout=open(out / "job.log", "w"), stderr=subprocess.STDOUT)
+                                     stdout=open(out / "job.log", "w"), stderr=subprocess.STDOUT, start_new_session=True)
                 procs[job["id"]] = (p, job, time.time())
                 q.move(job, "pending", "running")
                 note(f"{job['id']} start on GPU {gpu} (watch busy {watch_busy})")
