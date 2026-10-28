@@ -186,9 +186,9 @@ Unprofiled prefill latency, median of 5, LLM class (8192-token budget), GPU 6.
 | dense, prefix on ms | 19.6 | 38.9 | 48.7 | 49.0 | 78.5 | 80.1 | 82.6 | 158.8 | 152.9 | 326.7 | 333.1 | 717.9 |
 | on / off | 1.01 | 0.99 | 0.99 | 1.21 | 1.12 | 1.19 | 1.03 | 1.10 | 1.04 | 1.02 | 1.07 | 1.00 |
 
-- Up to one block (<= 528) nothing is split and on = off. Past it the split adds 3-23 ms (median ~10%
-  at 0.6-2K tokens, 2-7% at 4K, ~0 at 8K where the 7920-token chunk forces two steps either way... off is
-  one 8192 step here, so ~0 is within scatter). Without prefix caching the hybrid matches the dense model
+- Up to one block (<= 528) nothing is split and on = off. Past it the split adds 3-23 ms (~10% at
+  0.6-2K tokens, 2-7% at 4K). At 8192 on (7920 + 272, two steps) and off (one 8192 step) are equal;
+  not explained, within run-to-run scatter of a few ms. Without prefix caching the hybrid matches the dense model
   from 512 tokens up (0.97-1.12x) and is 1.29x slower only at 256 tokens (the small-step floor).
 - Same size as upstream's claim for the merged FlashInfer version (#60050: TTFT -10 to -20% at 8K on a
   35B MoE where a second full pass costs more); the FLA version (#60659) is open. Confirms the lead is
