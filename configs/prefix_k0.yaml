@@ -1,0 +1,60 @@
+inherit: hybrid.yaml
+
+# K0 (EXPERIMENTS.md, "Prefix caching for hybrid models"): trace-driven simulator of vLLM's hybrid prefix
+# cache, CPU only (scripts/k0_simulate.py, .venv). Every number here was fixed before the first run.
+k0:
+  traces:                            # Mooncake FAST'25 release (github.com/kvcache-ai/Mooncake), traces/ is untracked
+    toolagent: {path: traces/mooncake/toolagent_trace.jsonl, sha256: 48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71}
+    conversation: {path: traces/mooncake/conversation_trace.jsonl, sha256: b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df}
+  block_tokens: 512                  # the traces' hash block, used as the cache block (vLLM: 528 for Qwen3.5-4B)
+  model: qwen35_4b
+
+  bytes:
+    kv_per_token: 32768              # 8 attention layers x 4 KV heads x 256 x (K, V) x bf16
+    checkpoint:                      # all 24 GDN layers; conv state stays bf16 (49,152 B per layer)
+      fp32: 51511296                 # 24 x (32 x 128 x 128 x 4 B + 49,152)
+      fp8: 13959168                  # 24 x (32 x 128 x 128 x 1 B + 4,096 bf16 row scales + 49,152)
+
+  # Serving setup: the trace is a cluster workload (57K input tokens/s for toolagent), so it is split over
+  # `instances` vLLM instances with session-affine routing. A request's session key is its shortest
+  # hash-id prefix shared by at most `session_key_max_share` of the trace's requests (skips common
+  # system prompts); shard = key mod instances. Each instance has its own GPU prefix cache and host pool.
+  instances: 8
+  session_key_max_share: 0.01
+  gpu_cache_GiB: [10, 20, 30]        # GPU memory left to the prefix cache per instance
+  host_per_gpu: 4                    # host pool = 4 x GPU cache per instance
+  prefill_chunk_tokens: 2048         # vllm serve's max_num_batched_tokens on these GPUs: prefill chunk ends
+  periodic_tokens: [2048, 4096, 8192]   # prefix_cache_retention_interval > 0 settings tried; best one counts
+
+  # Prefill cost, fitted to results/prefix/pilot/recompute_probe.json (ReplaySSM fork, A6000, one request):
+  # ms = fixed + sum over computed positions t of (a + b t). The fixed term (scheduling, one decode step)
+  # is shared by a batch in a loaded server, so the gated time excludes it; it is reported alongside.
+  cost:
+    a_ms: 0.07127
+    b_ms: 1.872e-6
+    fixed_ms: 60.66
+    h2d_GBps: 25.5                   # results/prefix/pilot/pcie_a6000.json, pinned host -> GPU
+
+  # Policies. placement: which checkpoints a request keeps (see the script); precision: checkpoint format;
+  # host: none, "vllm" (OffloadingConnector today: write-through of prompt blocks only, junctions only from GPU lookups)
+  # or "fixed" (junctions also from host lookups, decode blocks and states stored too).
+  existing:                          # vLLM configurations; the best of these is the gate's reference
+    - {placement: retention0, precision: fp32, host: vllm}
+    - {placement: dense, precision: fp32, host: vllm}
+    - {placement: periodic, precision: fp32, host: vllm}
+  ours: {placement: oracle, precision: fp8, host: fixed}
+  ablations:                         # reported, not gated
+    - {placement: retention0, precision: fp32, host: none}
+    - {placement: dense, precision: fp32, host: none}
+    - {placement: retention0, precision: fp32, host: fixed}
+    - {placement: retention0, precision: fp8, host: vllm}
+    - {placement: retention0, precision: fp8, host: fixed}
+    - {placement: oracle, precision: fp32, host: fixed}
+    - {placement: online, precision: fp32, host: fixed}
+    - {placement: online, precision: fp8, host: fixed}
+    - {placement: oracle, precision: fp8, host: none}
+
+  gate:
+    min_cut: 0.20                    # 1 - T(ours) / min T(existing), gated prefill time
+    rule: "both traces pass at the same GPU cache size, for at least one size"
+  workers: 16

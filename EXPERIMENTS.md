@@ -307,3 +307,27 @@ checkpoints) and issue #63565 (the offload tier keeps only the replay boundary).
 Unchanged rules: never GPU 0; every script takes a config and records provenance; audits by independent
 agents before numbers are used. The pilot scripts and results move from the scratchpad into the repo
 with K0.
+
+## Prefix-caching status
+
+- K0 (2026-10-28; scripts/k0_simulate.py, configs/prefix_k0.yaml; results/prefix/k0_v2.json, v1 = before
+  the audit): FAILED. The oracle (checkpoints exactly where later requests hit, fp8, host tier with
+  junctions from host lookups and decode blocks stored) cuts gated prefill time vs the best existing vLLM
+  setting (retention 0, periodic or dense, each with host offload) by 5.5 / 4.5 / 2.6% on toolagent and
+  3.8 / 4.2 / 3.4% on conversation at 10 / 20 / 30 GiB per instance. With infinite memory and every
+  reusable boundary checkpointed it would be 14.0 / 5.6 / 2.9% and 15.8 / 7.4 / 4.8%
+  (results/prefix/k0_v2_ceiling.json): no placement, precision or tier passes on these traces.
+  - Why: only 57.5% / 38.0% of prompt tokens are reusable at all; 94-97% of hits extend an earlier
+    prompt and outputs are 2-3% of input tokens (means 182 / 343), so retention 0's replay boundary
+    already sits at the hit; under it checkpoints are 15-23% of GPU cache bytes; host offload recovers
+    most of what capacity costs. Against vLLM's default without offload the oracle is 18-25% faster, but
+    that gain is the host tier, which vLLM already has.
+  - Audit (independent agent, no blocker; it reproduced v1 exactly): output aliasing let several
+    follow-ups claim one output block, vLLM's default offload_prompt_only was not modelled, periodic
+    retention kept prefill states vLLM never exports (only chunk ends exist), output blocks should be
+    (L+O-1)//B -- all fixed in v2 (cuts moved by at most 0.5 points). Not changed: sequential replay
+    ignores concurrency (-0.1 to -0.4 points as a bound); cost-model sensitivity <= 0.6 points; 4 instances
+    give up to 6.1%, 16 instances 0.9-4.7%.
+  - Not covered by these traces: long outputs (thinking models in tool loops), where retention 0
+    recomputes every step's output (pilot: 316 vs 115 ms per turn). There dense or periodic retention is
+    the existing fix; what is left is the bytes they spend.
