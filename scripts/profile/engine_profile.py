@@ -61,9 +61,11 @@ def main():
     import vllm
     from vllm import LLM, SamplingParams
 
+    kind = pc.get("profiler", "torch")   # "cuda": start/stop_profile bracket an nsys capture range instead
+    prof_cfg = ({"profiler": "torch", "torch_profiler_dir": str(trace_root / "_tmp"), "torch_profiler_with_stack": False}
+                if kind == "torch" else {"profiler": kind})
     llm = LLM(model=mc["name"], **{**pc["engine"], **mc.get("engine", {})}, disable_log_stats=False,
-              profiler_config={"profiler": "torch", "torch_profiler_dir": str(trace_root / "_tmp"),
-                               "torch_profiler_with_stack": False})
+              profiler_config=prof_cfg)
     vc = llm.llm_engine.vllm_config
     cache = vc.cache_config
     capacity = cache.num_gpu_blocks * cache.block_size
@@ -110,6 +112,7 @@ def main():
     if not args.skip_profile:
         def profile(name: str, fn):
             tmp = trace_root / "_tmp"
+            tmp.mkdir(exist_ok=True)
             for f in tmp.glob("*"):
                 f.unlink()
             llm.start_profile()

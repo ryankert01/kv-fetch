@@ -1,0 +1,26 @@
+note: 'follow-up 1 (00:50): nsys of the decode gap'
+jobs:
+- id: nsys_gap_qwen35_4b_b1
+  kind: cmd
+  cmd: /opt/nvidia/nsight-systems/2025.5.1/bin/nsys profile --trace=cuda,nvtx,osrt --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop --force-overwrite=true -o {out}/nsys {py}
+    scripts/profile/engine_profile.py configs/harness.yaml {out} --model qwen35_4b --skip-sweep --set profile.profiler=cuda --set 'profile.profile_prefill=[]' --set 'profile.profile_decode=[[8192,1]]' &&
+    /opt/nvidia/nsight-systems/2025.5.1/bin/nsys stats --report cuda_api_sum,cuda_gpu_kern_sum,osrt_sum,nvtx_sum --format csv --output {out}/stats {out}/nsys.nsys-rep
+  priority: 3
+  timeout_s: 3600
+  why: 'decode GPU idle ~1.5 ms/step (14% at b=1 on qwen35_4b): what the CPU does in the gap; qwen35_4b C=8192 b=1'
+- id: nsys_gap_qwen3_4b_b1
+  kind: cmd
+  cmd: /opt/nvidia/nsight-systems/2025.5.1/bin/nsys profile --trace=cuda,nvtx,osrt --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop --force-overwrite=true -o {out}/nsys {py}
+    scripts/profile/engine_profile.py configs/harness.yaml {out} --model qwen3_4b --skip-sweep --set profile.profiler=cuda --set 'profile.profile_prefill=[]' --set 'profile.profile_decode=[[8192,1]]' &&
+    /opt/nvidia/nsight-systems/2025.5.1/bin/nsys stats --report cuda_api_sum,cuda_gpu_kern_sum,osrt_sum,nvtx_sum --format csv --output {out}/stats {out}/nsys.nsys-rep
+  priority: 3
+  timeout_s: 3600
+  why: 'decode GPU idle ~1.5 ms/step (14% at b=1 on qwen35_4b): what the CPU does in the gap; qwen3_4b C=8192 b=1'
+- id: nsys_gap_qwen35_4b_b16
+  kind: cmd
+  cmd: /opt/nvidia/nsight-systems/2025.5.1/bin/nsys profile --trace=cuda,nvtx,osrt --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop --force-overwrite=true -o {out}/nsys {py}
+    scripts/profile/engine_profile.py configs/harness.yaml {out} --model qwen35_4b --skip-sweep --set profile.profiler=cuda --set 'profile.profile_prefill=[]' --set 'profile.profile_decode=[[8192,16]]'
+    && /opt/nvidia/nsight-systems/2025.5.1/bin/nsys stats --report cuda_api_sum,cuda_gpu_kern_sum,osrt_sum,nvtx_sum --format csv --output {out}/stats {out}/nsys.nsys-rep
+  priority: 4
+  timeout_s: 3600
+  why: 'decode GPU idle ~1.5 ms/step (14% at b=1 on qwen35_4b): what the CPU does in the gap; qwen35_4b C=8192 b=16'

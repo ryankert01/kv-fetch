@@ -9,7 +9,7 @@ harness:
   max_attempts: 2
   poll_s: 30
   gpus:                                  # never GPU 0; while GPU 0 is in use by others, one card only
-    allowed: [1, 2, 3, 4, 5, 6]
+    allowed: [4, 5, 6]                   # RTX 6000 Ada only: runs stay comparable with each other and the ceilings
     watch: 0
     max_mem_MiB: 1500
     max_util: 10

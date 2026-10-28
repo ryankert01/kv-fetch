@@ -75,7 +75,9 @@ def decode_rows(prof: dict, C: int, mc: dict, bw: float, peak: float) -> dict:
             r["efficiency"] = r["ideal_ms"] / r["ms"] if r["ms"] else None
     idle = g["gap_ms_per_step"] + (1 - g["busy_share"]) * g["span_ms_per_step"]
     rows["gpu_idle"] = {"ms": idle, "share": idle / step, "overhead": True}
-    return {"batch": b, "context": C, "step_ms": step, "rows": rows, "weight_bytes": wbytes}
+    total = wbytes + b * C * mc["kv_per_token"] + b * 2 * (mc["ssm_bytes"] + mc["conv_bytes"])   # every byte a step must move
+    return {"batch": b, "context": C, "step_ms": step, "rows": rows, "weight_bytes": wbytes, "step_bytes": total,
+            "step_ideal_ms": total / bw * 1e3, "step_efficiency": total / bw * 1e3 / step}
 
 
 def main():
@@ -99,7 +101,7 @@ def main():
                 continue
             res = json.load(open(f))
             engine_runs[m].append((jid, job, res))
-            out["sweeps"][jid] = {"model": m, "sets": job.get("sets", []), "engine": res["engine"],
+            out["sweeps"][jid] = {"model": m, "sets": job.get("sets", []), "engine": res["engine"], "gpu": res["provenance"].get("gpu"),
                                   "decode": [{k: d[k] for k in ("context", "batch", "step_ms", "tokens_per_s")} for d in res["decode"]],
                                   "prefill": [{k: d[k] for k in ("prompt_tokens", "median_s", "tokens_per_s")} for d in res["prefill"]]}
             if not kf.exists():
@@ -153,10 +155,11 @@ def main():
         base = next(((j, r) for j, job, r in rs if not job.get("sets")), None)
         if base is None:
             continue
+        gpu = base[1]["provenance"].get("gpu")
         bd = {(d["context"], d["batch"]): d["step_ms"] for d in base[1]["decode"]}
         bp = {d["prompt_tokens"]: d["median_s"] for d in base[1]["prefill"]}
         for j, job, r in rs:
-            if not job.get("sets"):
+            if not job.get("sets") or r["provenance"].get("gpu") != gpu:   # compare on the same GPU type only
                 continue
             dd = [{"context": d["context"], "batch": d["batch"], "step_ms": d["step_ms"],
                    "delta": d["step_ms"] / bd[(d["context"], d["batch"])] - 1} for d in r["decode"] if (d["context"], d["batch"]) in bd]
@@ -168,7 +171,7 @@ def main():
     for h, d in cfg["profile"].get("pairs", []):
         hb = next((r for j, job, r in engine_runs.get(h, []) if not job.get("sets")), None)
         db = next((r for j, job, r in engine_runs.get(d, []) if not job.get("sets")), None)
-        if hb and db:
+        if hb and db and hb["provenance"].get("gpu") == db["provenance"].get("gpu"):
             hd_ = {(x["context"], x["batch"]): x["tokens_per_s"] for x in hb["decode"]}
             dd_ = {(x["context"], x["batch"]): x["tokens_per_s"] for x in db["decode"]}
             maxb = lambda r, C: max([x["batch"] for x in r["decode"] if x["context"] == C] or [0])
@@ -191,13 +194,14 @@ def write_md(o: dict, path: Path):
         eff = f"{c['efficiency']:.2f}" if c["efficiency"] is not None else "-"
         L.append(f"| {c['status']} | {c['phase']} | {c['class']} | {c['model']} | {c['point']} | {' '.join(c['sets']) or 'base'} | "
                  f"{c['share']:.2f} | {eff} | {c['gain_bound']:.2f} |")
-    L += ["\n## Decode roofline (per profiled point)\n", "| model | sets | point | step ms | class: ms (share, eff) |", "|---|---|---|---|---|"]
+    L += ["\n## Decode roofline (per profiled point; step eff = all bytes the step must move / read BW / step time)\n",
+          "| model | sets | point | step ms | step eff | class: ms (share, eff) |", "|---|---|---|---|---|---|"]
     for p in o["decode_points"]:
         parts = []
         for k, r in sorted(p["rows"].items(), key=lambda kv: -kv[1]["ms"])[:7]:
             e = f", {r['efficiency']:.2f}" if r.get("efficiency") is not None else ""
             parts.append(f"{k} {r['ms']:.2f} ({r['share']:.0%}{e})")
-        L.append(f"| {p['model']} | {' '.join(p['sets']) or 'base'} | {p['point']} | {p['step_ms']:.2f} | {'; '.join(parts)} |")
+        L.append(f"| {p['model']} | {' '.join(p['sets']) or 'base'} | {p['point']} | {p['step_ms']:.2f} | {p['step_efficiency']:.2f} | {'; '.join(parts)} |")
     L += ["\n## Prefill (per profiled point)\n", "| model | sets | point | step ms | class: ms (share) |", "|---|---|---|---|---|"]
     for p in o["prefill_points"]:
         parts = [f"{k} {r['ms']:.1f} ({r['share']:.0%}" + (f", eff {r['efficiency']:.2f}" if r.get("efficiency") else "") + ")"
