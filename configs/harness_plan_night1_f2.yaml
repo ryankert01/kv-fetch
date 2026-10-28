@@ -1,0 +1,24 @@
+note: 'follow-up 2 (00:47): short-prefill kernel profiles'
+jobs:
+- id: prof_short_prefill_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 4
+  timeout_s: 3600
+  flags:
+  - --skip-sweep
+  sets:
+  - profile.profile_prefill=[1024,2048,4096]
+  - profile.profile_decode=[]
+  why: 'hybrid prefill is slower than dense below 4K (1K: 0.87x, 2K: 0.91x): kernel classes of short prefills'
+- id: prof_short_prefill_qwen3_4b
+  kind: engine
+  model: qwen3_4b
+  priority: 4
+  timeout_s: 3600
+  flags:
+  - --skip-sweep
+  sets:
+  - profile.profile_prefill=[1024,2048,4096]
+  - profile.profile_decode=[]
+  why: 'hybrid prefill is slower than dense below 4K (1K: 0.87x, 2K: 0.91x): kernel classes of short prefills'

@@ -30,3 +30,27 @@ Queued: configs/harness_plan_night1.yaml (24 jobs: base sweeps, serving, 8 ablat
   b=1 and b=16, 0.92 at b=64 (C=8192). Decode is close to bandwidth-optimal for the bytes it moves; the
   headroom left is mostly the inter-step gap. Bigger decode wins need fewer bytes (quantisation, KV or
   state compression, speculative decoding), not faster kernels.
+
+## 00:47 -- base_qwen3_4b (dense pair)
+- Inter-step GPU idle: dense 0.93-0.96 ms/step vs hybrid 1.52-1.57 ms at the same points (C=8192, b=1
+  and 16). The hybrid pays ~0.6 ms more host-side work per decode step -- a hybrid-specific overhead
+  (candidates: Mamba align-mode bookkeeping, several KV-cache groups' block tables, GDN metadata).
+  The nsys captures queued at 00:50 (hybrid b=1/b=16, dense b=1) should show where it goes.
+- Hybrid / dense decode tokens/s: 0.97 at 2K x b=1, 1.87 at 8K x 16, 2.00 at 32K x 4 (KV 4.5x smaller);
+  max batch at 32K: 16 vs 4. Prefill ratio 0.87 at 1K, 0.91 at 2K, 1.08 at 8K, 1.52 at 32K: the hybrid
+  is slower on short prompts. Queued kernel profiles of 1K/2K/4K prefills for both (follow-up 2).
+
+## 00:58 -- correction, and a new lead
+- CORRECTION: the "1.5 ms GPU idle between decode steps" (and the hybrid's extra 0.6 ms) was a parsing
+  artefact. vLLM's GPU annotation covers the model forward only; lm_head and sampling run after it. The
+  nsys capture (nsys_gap_qwen35_4b_b1, scripts/profile/nsys_steps.py) shows the GPU idle only 0.36
+  ms/step under nsys, and an eager 1.36 ms lm_head kernel per step (248K vocabulary, tied embedding).
+  parse_trace.py now gives each step the window from the previous forward's end to its own end; with it,
+  decode GPU idle is ~1% for both models, and the hybrid's extra time is its 1.6x larger lm_head.
+- Decode summary after the fix (C=8192): whole step 0.89-0.95 of the memory roofline, GPU busy 99-100%,
+  GEMMs (incl. lm_head) 0.78-0.96 of the weight-read bound. No decode overhead candidate qualifies.
+- New lead: small prefill steps. A 1-request cache-hit recompute (<= 528 tokens) step: hybrid window
+  39 ms with the GPU busy 65%; dense 24 ms, busy 90%. Hypothesis: the GDN chunked-prefill path launches
+  many Triton kernels per layer outside CUDA graphs (qwen_gdn_attention_core is a graph splitting op), so
+  small or mixed prefill steps are launch-bound on this loaded host. Widened prof_short_prefill_* to
+  256-4096 tokens; queued nsys of one 512-token prefill per model (follow-up 3).

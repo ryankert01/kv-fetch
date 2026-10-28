@@ -1,7 +1,8 @@
 """Automatic analysis of every harness run: candidate bottlenecks under the selection rule, ablation deltas,
 hybrid vs dense, serving metrics. Writes results/profile/findings.json and findings.md.
 
-Decode roofline per profiled point (pure-decode steps): each kernel class's time per step against the
+Decode roofline per profiled point (pure-decode steps, window from the previous step's forward end to this
+one's, so logits and sampling count): each kernel class's time per step against the
 time its bytes need at the measured read bandwidth -- weights for GEMMs (MoE: experts the batch touches),
 KV for attention, recurrent state read + write for GDN, conv state for conv1d; GEMMs also against the
 bf16 FLOP peak. Idle time (gaps between steps, bubbles inside them) is pure overhead. A candidate
@@ -54,7 +55,7 @@ def model_consts(name: str) -> dict:
 def decode_rows(prof: dict, C: int, mc: dict, bw: float, peak: float) -> dict:
     g = prof["decode"]
     b = round(g["gen_tokens_per_step"])
-    step = g["span_ms_per_step"] + g["gap_ms_per_step"]
+    step = g["span_ms_per_step"]                    # window = previous annotation end -> this one's end
     cls = g["class_ms_per_step"]
     wbytes = mc["dense_weights"]
     if mc["experts"]:
@@ -73,7 +74,7 @@ def decode_rows(prof: dict, C: int, mc: dict, bw: float, peak: float) -> dict:
         if ideal.get(k) is not None:
             r["ideal_ms"] = ideal[k] * 1e3
             r["efficiency"] = r["ideal_ms"] / r["ms"] if r["ms"] else None
-    idle = g["gap_ms_per_step"] + (1 - g["busy_share"]) * g["span_ms_per_step"]
+    idle = (1 - g["busy_share"]) * step
     rows["gpu_idle"] = {"ms": idle, "share": idle / step, "overhead": True}
     total = wbytes + b * C * mc["kv_per_token"] + b * 2 * (mc["ssm_bytes"] + mc["conv_bytes"])   # every byte a step must move
     return {"batch": b, "context": C, "step_ms": step, "rows": rows, "weight_bytes": wbytes, "step_bytes": total,
@@ -116,12 +117,12 @@ def main():
                 elif pname.startswith("prefill_") and "prefill" in prof:
                     g = prof["prefill"]
                     T = g["ctx_tokens_per_step"]
-                    step = g["span_ms_per_step"] + g["gap_ms_per_step"]
+                    step = g["span_ms_per_step"]
                     gemm = g["class_ms_per_step"].get("gemm", 0) + g["class_ms_per_step"].get("moe", 0)
                     flops = 2 * (mc["dense_weights"] + mc["expert_weights"] * (mc["topk"] or 0) / (mc["experts"] or 1)) / 2 * T
                     rows = {k: {"ms": v, "share": v / step} for k, v in g["class_ms_per_step"].items()}
                     rows["gemm_all"] = {"ms": gemm, "share": gemm / step, "efficiency": flops / peak * 1e3 / gemm if gemm else None}
-                    idle = g["gap_ms_per_step"] + (1 - g["busy_share"]) * g["span_ms_per_step"]
+                    idle = (1 - g["busy_share"]) * step
                     rows["gpu_idle"] = {"ms": idle, "share": idle / step, "overhead": True}
                     out["prefill_points"].append({"run": jid, "model": m, "kind": models[m]["kind"], "sets": job.get("sets", []),
                                                   "point": pname, "tokens_per_step": T, "step_ms": step, "rows": rows})

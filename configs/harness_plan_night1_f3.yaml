@@ -1,0 +1,18 @@
+note: 'follow-up 3 (00:58): small-prefill launch overhead'
+jobs:
+- id: nsys_prefill512_qwen35_4b
+  kind: cmd
+  cmd: /opt/nvidia/nsight-systems/2025.5.1/bin/nsys profile --trace=cuda,nvtx,osrt --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop --force-overwrite=true -o {out}/nsys {py} scripts/profile/engine_profile.py
+    configs/harness.yaml {out} --model qwen35_4b --skip-sweep --set profile.profiler=cuda --set 'profile.profile_prefill=[512]' --set 'profile.profile_decode=[]' && /opt/nvidia/nsight-systems/2025.5.1/bin/nsys export --type
+    sqlite --force-overwrite=true -o {out}/nsys.sqlite {out}/nsys.nsys-rep ; {py} scripts/profile/nsys_steps.py {out}
+  priority: 4
+  timeout_s: 3600
+  why: launches and GPU idle of one 512-token prefill step (launch-bound small prefills?)
+- id: nsys_prefill512_qwen3_4b
+  kind: cmd
+  cmd: /opt/nvidia/nsight-systems/2025.5.1/bin/nsys profile --trace=cuda,nvtx,osrt --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop --force-overwrite=true -o {out}/nsys {py} scripts/profile/engine_profile.py
+    configs/harness.yaml {out} --model qwen3_4b --skip-sweep --set profile.profiler=cuda --set 'profile.profile_prefill=[512]' --set 'profile.profile_decode=[]' && /opt/nvidia/nsight-systems/2025.5.1/bin/nsys export --type
+    sqlite --force-overwrite=true -o {out}/nsys.sqlite {out}/nsys.nsys-rep ; {py} scripts/profile/nsys_steps.py {out}
+  priority: 4
+  timeout_s: 3600
+  why: launches and GPU idle of one 512-token prefill step (launch-bound small prefills?)
