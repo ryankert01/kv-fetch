@@ -3,8 +3,8 @@
 For each model and server setting, start one server, run every workload at every concurrency (random
 prompts, fixed lengths unless the workload sets its own range_ratio, ignore_eos; num_prompts =
 prompts_per_concurrency x concurrency), save each `vllm bench serve` result together with the change of the
-server's Prometheus counters over the run (preemptions, prompt / cached / recomputed tokens: `metrics` in
-serve_index.json), stop the server.
+server's Prometheus counters over the run (preemptions, prompt / cached tokens: `metrics` in
+serve_index.json, rewritten after every run), stop the server.
 
 Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y] [--workloads w1,w2] [--set k=v]
 """
@@ -75,6 +75,12 @@ def main():
     settings = args.settings.split(",") if args.settings else list(sc["settings"])
     port = sc["port"]
     runs = []
+    import vllm
+    prov = provenance(cfg, model=None, context_length=None, script=str(Path(__file__).resolve()), settings=sc,
+                      vllm=vllm.__version__, load_avg=list(os.getloadavg()))
+
+    def write_index():                    # after every run, so a long job's finished runs are readable
+        json.dump({"provenance": prov, "runs": runs}, open(out / "serve_index.json", "w"), indent=1)
     for mkey in models:
         name = cfg["profile"]["models"][mkey]["name"]
         for sname in settings:
@@ -104,6 +110,7 @@ def main():
                                      "result": fname, "ok": r.returncode == 0, "started": t, "seconds": time.time() - t,
                                      "metrics": {k: v - before.get(k, 0.0) for k, v in after.items()
                                                  if v != before.get(k, 0.0)}})
+                        write_index()
                         print(f"{mkey} {sname} {wname} c={c}: {'ok' if r.returncode == 0 else 'FAILED'} "
                               f"({time.time() - t:.0f}s)", flush=True)
             finally:
@@ -114,10 +121,7 @@ def main():
                     proc.kill()
                 log.close()
                 time.sleep(10)
-    import vllm
-    prov = provenance(cfg, model=None, context_length=None, script=str(Path(__file__).resolve()), settings=sc,
-                      vllm=vllm.__version__, load_avg=list(os.getloadavg()))
-    json.dump({"provenance": prov, "runs": runs}, open(out / "serve_index.json", "w"), indent=1)
+    write_index()
 
 
 if __name__ == "__main__":
