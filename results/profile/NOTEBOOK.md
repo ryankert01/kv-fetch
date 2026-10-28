@@ -54,3 +54,38 @@ Queued: configs/harness_plan_night1.yaml (24 jobs: base sweeps, serving, 8 ablat
   many Triton kernels per layer outside CUDA graphs (qwen_gdn_attention_core is a graph splitting op), so
   small or mixed prefill steps are launch-bound on this loaded host. Widened prof_short_prefill_* to
   256-4096 tokens; queued nsys of one 512-token prefill per model (follow-up 3).
+- 00:55: nsys on the dense Qwen3-4B never opens its capture range (no CUDA activity in the report, twice,
+  with both stop modes); the hybrid captures work. Not pursued: the decode-gap question is settled by the
+  corrected torch-profiler windows (GPU idle ~1% on both). Small-prefill comparisons use the torch traces.
+
+## 00:59 -- small prefill is launch-bound on the hybrid (nsys_prefill512_qwen35_4b)
+- One 512-token prefill: 66 ms window, GPU busy 27 ms (41%), 414 kernels launched outside CUDA graphs
+  (~17 per GDN layer: conv1d, post-conv, cumsum, kkt, 16x16->64x64 inverse, recompute_w_u, chunk h,
+  chunk o, plus elementwise/index ops) and 33 piecewise graph launches. GDN core is a graph splitting op,
+  so its chunked path always runs eagerly. Caveat: the host CPU is oversubscribed (load ~127/96 cores),
+  which inflates launch cost; nsys adds more. Queued unprofiled prefill scans 16-2048 tokens, both models.
+- Why it could matter end to end: any step with prefill tokens (cache-hit recompute, short turns, chunked
+  prefill mixed with decode) takes this path; if it has a launch floor, mixed steps stall every decoding
+  request in the batch. P4 chat (TPOT p99) will show whether it reaches serving.
+- Prior-work check for the small-prefill lead (rule c), 01:05: vLLM 0.32 selects a FlashInfer GDN prefill
+  kernel on SM90 / SM100 / SM120 (qwen_gdn_linear_attn._resolve_gdn_prefill_backend); SM86 / SM89 (our
+  A6000 / RTX 6000 Ada) fall back to the FLA Triton chunk path measured here. Upstream is also reworking
+  CUDA-graph capture for hybrids ("breakable" graphs, VLLM_USE_BREAKABLE_CUDAGRAPH, off by default in
+  0.32; PR 64266 open, which still leaves GDN as an eager break). So the launch-bound path may be specific
+  to pre-Hopper GPUs, and neighbouring work is active: likely fails rule (c) unless it also shows on the
+  FlashInfer path. We have no Hopper GPU to check.
+
+## 01:04 -- small-prefill floor confirmed unprofiled (scan_small_prefill_*)
+| prompt tokens | 16 | 32 | 64 | 128 | 256 | 512 | 1024 | 2048 |
+|---|---|---|---|---|---|---|---|---|
+| Qwen3.5-4B ms | 23.8 | 23.5 | 29.1 | 23.9 | 24.8 | 41.9 | 88.6 | 168.8 |
+| Qwen3-4B ms | 12.4 | 12.4 | 12.7 | 13.5 | 20.2 | 40.0 | 77.5 | 153.8 |
+- The hybrid has a ~24 ms floor up to 256 tokens, ~11 ms above the dense model (1.8-2.3x for <= 128
+  tokens). ~400 eager launches x ~27 us is in line with ordinary Python/Triton launch cost, so probably
+  not just the loaded host. Affects: short turns after a prefix-cache hit, and -- if mixed steps take the
+  chunk path for their prefill part -- every decoding request in a step that carries any prefill tokens.
+- Candidate fixes to test later (not built): for short prefills dispatch GDN to the single-launch
+  fused_recurrent kernel (it takes T > 1; spec-decode verify already does), or capture the chunk path in
+  CUDA graphs per token-count bucket. Rule (c): the FlashInfer GDN prefill on SM90+ may not have the
+  floor; upstream "breakable" graphs leave GDN eager.
+- Gate for pursuing it: P4 must show the floor in serving (TPOT of mixed steps, chat TTFT), else drop.

@@ -1,0 +1,26 @@
+note: 'follow-up 4 (00:59): small-prefill floor, unprofiled'
+jobs:
+- id: scan_small_prefill_qwen35_4b
+  kind: engine
+  model: qwen35_4b
+  priority: 2
+  timeout_s: 3600
+  flags:
+  - --skip-profile
+  sets:
+  - profile.prefill_lengths=[16,32,64,128,256,512,1024,2048]
+  - profile.repeats=5
+  - profile.decode_contexts=[]
+  why: 'unprofiled prefill time vs tokens at batch 1: does the hybrid have a launch floor (nsys: 512-token prefill, 414 eager launches, GPU busy 41%)?'
+- id: scan_small_prefill_qwen3_4b
+  kind: engine
+  model: qwen3_4b
+  priority: 2
+  timeout_s: 3600
+  flags:
+  - --skip-profile
+  sets:
+  - profile.prefill_lengths=[16,32,64,128,256,512,1024,2048]
+  - profile.repeats=5
+  - profile.decode_contexts=[]
+  why: 'unprofiled prefill time vs tokens at batch 1: does the hybrid have a launch floor (nsys: 512-token prefill, 414 eager launches, GPU busy 41%)?'
