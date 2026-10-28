@@ -260,3 +260,50 @@ analysis code before its numbers are used, and every reported number against the
     measured batch 32 (1.26x); with its step time interpolated to its max batch 33, ~980 tokens/s (1.24x). The gain is
     capped by the engine's per-step cost at large batch (GDN layers 2.1 ms each, the engine's ours@512
     attention layer, fp32 means cast to fp8 every step, 8.6 ms at batch 160 vs Quest's 5.0 ms).
+
+# Prefix caching for hybrid models (direction set with the user on 2026-10-28)
+
+Why: the hybrid track drifted from decode-time KV on long reasoning (H0-H4) to prefix-cache checkpoints
+(2026-10-27 pilot, scratchpad ckpt/) without restating the problem. The user then fixed it: the topic
+is prefix caching itself; the headline metric is capacity at no accuracy loss; it must be built on
+vLLM; the venue, hybrid-specificity and the size of the win may be relaxed if they conflict.
+
+## Claim under test
+
+In vLLM, a hybrid model's prefix cache spends most of its bytes on recurrent-state checkpoints.
+Storing them in a format whose error stays at the prefix-cache noise floor, keeping them only where
+hits land, and holding the rest in host memory caches several times more prefix tokens per GPU GiB
+than vLLM's dense setting, without the misses of its retention-0 default and without changing accuracy.
+
+The tension it resolves (Qwen3.5-4B, 528-token blocks; KV 32 KiB/token; GDN checkpoint 49.1 MiB fp32,
+13.3 MiB fp8 per-row incl. scales and conv):
+- dense (fork default, vLLM `prefix_cache_retention_interval=None`): 127 KiB per cached token, 75% of it
+  checkpoints. Hits land anywhere.
+- semantic only (vLLM main default 0): ~38 KiB per cached token for an 8K prompt, but no checkpoint in
+  the generated region: in a 5-turn tool loop each turn recomputes the previous output (pilot: 316 vs
+  115 ms prefill per turn).
+- fp8 checkpoints at dense spacing: 58 KiB per cached token (2.2x dense); every 4th block: 38 KiB (3.3x).
+
+"No accuracy loss" is defined against the rechunk floor (the difference a hit already causes by
+splitting the prefix computation). Pilot (81 checkpoints, 30 traces; thresholds below were set after
+seeing it, so K1's end-to-end test is the blind one): KL vs exact, once / chained every 528 tokens over
+2,048 tokens, as multiples of the floor: fp8-e4m3 per-row 1.02-1.05 / 1.13, int8 per-row 2.36-2.41 /
+3.75, int4-g32 16.6 / 34.1. Offline bar: once <= 1.1x, chained <= 1.25x.
+
+Prior work to beat or build on: Marconi and Sparse Prefix Caching (exact checkpoints, placement and
+eviction), SGLang INT8 checkpoints (PR 28185, separate pool, not combinable with HiCache) and HiCache
+Mamba offload (PR 20457), DASC (head/channel pruning, GPU only), vLLM PR 52962 (draft FP8/INT8 ReplaySSM
+checkpoints) and issue #63565 (the offload tier keeps only the replay boundary). Watch PR 52962.
+
+## Stages and gates (fixed before running)
+
+| Stage | What | Gate |
+|---|---|---|
+| K0 | headroom, CPU only: trace-driven simulator of vLLM's hybrid prefix cache (d0d681e retention semantics: semantic boundaries, periodic, dense; LRU over free blocks; host tier at the measured 2.0 ms per fp32 checkpoint and 25 GB/s; recompute time from the measured fit, results bench/recompute_probe.json). Workloads: Mooncake FAST'25 toolagent and conversation traces (512-token hash blocks, used as blocks; a follow-up that extends an earlier prompt is assumed to carry its output in the next blocks) and the pilot's agent loop. At equal GPU cache memory (10, 20, 30 GiB): vLLM main default, dense, best periodic interval, each with vLLM's host offload as it is today; vs fp8 checkpoints + placement + host tier with an oracle (future hits known) and a simple online rule | the oracle cuts total prefill time by >= 20% vs the best existing configuration on both Mooncake traces at one or more memory sizes; report hit rate, cached tokens per GiB, and the gain split into precision / placement / tier. Fail: capacity does not limit these workloads; report and rethink |
+| K1 | no-loss, GPU (blind): kvfetch/sparse_decode.py with every GDN recurrent state rounded through fp8-e4m3 per-row at every 528-token block during generation (about 60 round trips per 32K trace, far harsher than real hits); H3's full-attention settings, AIME explore 30 problems avg@8; int8 per-row as contrast | fp8 vs full attention, paired by problem: point estimate >= -2 points and 95% CI lower bound >= -5 points |
+| K2 | vLLM implementation (fork): fp8 checkpoint pool apart from the fp32 running state, retention-policy hook, host tier that keeps every retained checkpoint; trace replay on GPUs 1-3 | >= 70% of K0's modelled gain end to end at the same memory |
+| K3 | online policy: per candidate boundary choose drop / GPU / host and format from bytes vs expected recompute saved | within 10 points of the K0 oracle's gain |
+
+Unchanged rules: never GPU 0; every script takes a config and records provenance; audits by independent
+agents before numbers are used. The pilot scripts and results move from the scratchpad into the repo
+with K0.
