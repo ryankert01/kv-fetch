@@ -1,0 +1,16 @@
+note: 'follow-up 9 (04:00): does an existing knob remove the saturation collapse? vLLM 0.32 has a scheduler admission
+  watermark (fraction of blocks kept free when admitting waiting or preempted requests, default 0) and the usual
+  max_num_seqs cap. Same load as f8 at c=256. If either recovers most of the throughput, the collapse is configuration,
+  not a research problem.'
+jobs:
+- id: serve_thrash_knobs_qwen35_4b
+  kind: serve
+  models: [qwen35_4b]
+  settings: [watermark10, seqs128]
+  priority: 6
+  timeout_s: 10800
+  sets:
+  - 'profile.serve.settings.watermark10=["--watermark", "0.1"]'
+  - 'profile.serve.settings.seqs128=["--max-num-seqs", "128"]'
+  - 'profile.serve.workloads={reasoning_var: {input: 1024, output: 8192, range_ratio: 0.5, prompts_per_concurrency: 2, concurrency: [256]}}'
+  why: admission watermark 0.1 and max_num_seqs 128 against the c=256 collapse (prefix caching on)

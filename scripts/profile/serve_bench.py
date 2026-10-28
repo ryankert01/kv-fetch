@@ -101,7 +101,7 @@ def main():
                         after = counters(port)
                         (out / "logs" / f"bench_{fname[:-5]}.log").write_text(r.stdout + r.stderr)
                         runs.append({"model": mkey, "setting": sname, "workload": wname, "concurrency": c,
-                                     "result": fname, "ok": r.returncode == 0, "seconds": time.time() - t,
+                                     "result": fname, "ok": r.returncode == 0, "started": t, "seconds": time.time() - t,
                                      "metrics": {k: v - before.get(k, 0.0) for k, v in after.items()
                                                  if v != before.get(k, 0.0)}})
                         print(f"{mkey} {sname} {wname} c={c}: {'ok' if r.returncode == 0 else 'FAILED'} "
