@@ -144,3 +144,34 @@ pool. Random prompts, fixed lengths, ignore_eos; one run per cell.
   only thrashes at ~25 requests of capacity); prefix on/off prefill scans around block multiples queued
   (f7). Harness: jobs now run in their own process group and a timeout kills the group (a killed serving
   job used to leave its server holding the GPU).
+
+## 04:15 -- multi-turn gate (serve_multiturn_4b_pair) and upstream search: the two prefill leads are taken
+prefix_repetition: 64 shared 4096-token prefixes, 128-token suffix, 256 output, prefix caching on.
+
+| model | c | out tok/s | TTFT p50 / p99 ms | TPOT p50 / p99 ms | ITL p99 ms | prefix hit rate |
+|---|---|---|---|---|---|---|
+| Qwen3.5-4B | 16 | 588 | 605 / 5158 | 23.6 / 31.2 | 147 | |
+| Qwen3-4B | 16 | 444 | 875 / 5628 | 31.7 / 39.0 | 210 | |
+| Qwen3.5-4B | 64 | 1269 | 299 / 15742 | 40.0 / 75.2 | 185 | 70% |
+| Qwen3-4B | 64 | 656 | 996 / 16598 | 90.5 / 104.9 | 332 | 61% |
+
+- The hybrid wins every metric (1.3x / 1.9x output throughput); the dense model's 229K-token pool cannot
+  hold the 64 x 4K prefixes (hit rate 61 vs 70%). So the small-step floor does not decide this workload;
+  capacity does. The gate as stated ("does the floor show in serving") gets a no for hybrid vs dense; how
+  much the hybrid would gain without the floor is not measurable without a fix.
+- Upstream (gh search, vLLM PRs, 04:00):
+  - align split: #52789 (merged 2026-08, FlashKDA, "9-25% TTFT") introduced internal prefill checkpoints;
+    #60050 (merged 2026-10-14) does it for GDN on the FlashInfer prefill backend (Qwen3.5-35B-A3B GB200,
+    TTFT -10 to -20%); #60659 (open, updated 2026-10-28) does it for the Triton/FLA GDN backend, i.e.
+    exactly our Ada case, no kernel changes; #63670 (open draft) removes the split altogether.
+  - small-step floor: #61779 + #61952 (open, 2026-10-16/27) capture the GDN core in breakable CUDA graphs
+    of mixed batches (A100: mixed-step host time 99 -> 55 ms, TPOT -9 to -10%); SGLang issue 35851 is the
+    same per-layer break cost.
+  - preemption at hybrid block transitions: issue #62752 / PR #62878 (open, 2026-10-21) budget the Mamba
+    state transition so decode does not preempt avoidably (CPU reproducer, no serving numbers).
+  - preempt-to-CPU instead of recompute: #32398 (OffloadingConnector preemptions-only mode, closed
+    unmerged 2026-03) and #43839 (preemption_mode="offload", closed unmerged 2026-05); #43797 (merged)
+    skips decode-phase blocks in CPU offload. So in 0.32 a preempted decoding request is recomputed in full.
+- Verdict under rule (c): the align split and the small-step floor both fail (fixes merged or open
+  upstream within the last two weeks). The saturation collapse is the only lead left open; f8 measures it
+  with spread lengths and preemption counters.
