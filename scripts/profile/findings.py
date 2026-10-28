@@ -127,14 +127,23 @@ def main():
                     out["prefill_points"].append({"run": jid, "model": m, "kind": models[m]["kind"], "sets": job.get("sets", []),
                                                   "point": pname, "tokens_per_step": T, "step_ms": step, "rows": rows})
         elif job["kind"] == "serve":
-            for f in sorted(rd.glob("*.json")):
-                if f.name == "serve_index.json":
-                    continue
-                r = json.load(open(f))
-                mkey, setting, wl, conc = re.match(r"(.+)_(default|prefix_off|[a-z0-9]+)_(reasoning|chat|multiturn)_c(\d+)\.json", f.name).groups()
-                out["serve"].append({"run": jid, "model": mkey, "setting": setting, "workload": wl, "concurrency": int(conc),
-                                     **{k: r.get(k) for k in ("completed", "duration", "output_throughput", "total_token_throughput",
-                                                              "median_ttft_ms", "p99_ttft_ms", "median_tpot_ms", "p99_tpot_ms")}})
+            index = rd / "serve_index.json"     # written when the job ends; carries the server counter deltas
+            if index.exists():
+                runs = [r for r in json.load(open(index))["runs"] if r["ok"]]
+            else:                               # job still running or killed: parse the result file names
+                pat = re.compile(r"(.+?)_(" + "|".join(map(re.escape, cfg["profile"]["serve"]["settings"])) + r")_(.+)_c(\d+)\.json")
+                runs = [dict(zip(("model", "setting", "workload", "concurrency"), m.groups()), result=f.name)
+                        for f in sorted(rd.glob("*_c*.json")) if (m := pat.fullmatch(f.name))]
+            for r in runs:
+                res = json.load(open(rd / r["result"]))
+                met = r.get("metrics", {})
+                out["serve"].append({"run": jid, "model": r["model"], "setting": r["setting"], "workload": r["workload"],
+                                     "concurrency": int(r["concurrency"]),
+                                     **{k: res.get(k) for k in ("completed", "duration", "output_throughput", "total_token_throughput",
+                                                                "median_ttft_ms", "p99_ttft_ms", "median_tpot_ms", "p99_tpot_ms")},
+                                     "preemptions": met.get("vllm:num_preemptions_total"),
+                                     "prefill_computed_tokens": met.get("vllm:request_prefill_kv_computed_tokens_sum"),
+                                     "prompt_tokens": met.get("vllm:prompt_tokens_total")})
     # candidates
     for pts, phase in ((out["decode_points"], "decode"), (out["prefill_points"], "prefill")):
         for p in pts:
@@ -222,11 +231,13 @@ def write_md(o: dict, path: Path):
                      + ", ".join(f"{k} {v:.2f}" for k, v in p["decode_ratio"].items())
                      + "; prefill ratio " + ", ".join(f"{k} {v:.2f}" for k, v in p["prefill_ratio"].items()))
     if o["serve"]:
-        L += ["\n## Serving\n", "| model | setting | workload | conc | out tok/s | TTFT p50 ms | TTFT p99 ms | TPOT p50 ms |", "|---|---|---|---|---|---|---|---|"]
+        L += ["\n## Serving\n", "preemptions: server counter over the run (`-` = not recorded, runs before 04:05)\n",
+              "| model | setting | workload | conc | out tok/s | TTFT p50 ms | TTFT p99 ms | TPOT p50 ms | preemptions |",
+              "|---|---|---|---|---|---|---|---|---|"]
         for s in sorted(o["serve"], key=lambda s: (s["workload"], s["concurrency"], s["model"], s["setting"])):
             f = lambda v, d=0: f"{v:.{d}f}" if isinstance(v, (int, float)) else "-"
             L.append(f"| {s['model']} | {s['setting']} | {s['workload']} | {s['concurrency']} | {f(s['output_throughput'])} | "
-                     f"{f(s['median_ttft_ms'])} | {f(s['p99_ttft_ms'])} | {f(s['median_tpot_ms'], 1)} |")
+                     f"{f(s['median_ttft_ms'])} | {f(s['p99_ttft_ms'])} | {f(s['median_tpot_ms'], 1)} | {f(s.get('preemptions'))} |")
     path.write_text("\n".join(L) + "\n")
 
 
