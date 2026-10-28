@@ -331,3 +331,7 @@ with K0.
   - Not covered by these traces: long outputs (thinking models in tool loops), where retention 0
     recomputes every step's output (pilot: 316 vs 115 ms per turn). There dense or periodic retention is
     the existing fix; what is left is the bytes they spend.
+- Decision (user, 2026-10-28, after K0): stop the prefix-caching research line. K1-K3 will not run. What
+  is left is engineering: the pilot's precision data (fp8-e4m3 per-row at the rechunk floor, int8 per-row
+  2.4x it, chained rounding sublinear) bears on vLLM PR 52962 (draft FP8/INT8 checkpoints). The host-tier
+  junction is already filed upstream with a proposed fix (#63565) and changed K0 by < 0.1%.
