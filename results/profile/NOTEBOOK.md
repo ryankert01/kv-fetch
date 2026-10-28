@@ -193,3 +193,36 @@ Unprofiled prefill latency, median of 5, LLM class (8192-token budget), GPU 6.
 - Same size as upstream's claim for the merged FlashInfer version (#60050: TTFT -10 to -20% at 8K on a
   35B MoE where a second full pass costs more); the FLA version (#60659) is open. Confirms the lead is
   real and already taken. Not pursued.
+
+## 05:45 -- the collapse with spread lengths, and its counters (f8: serve_thrash_qwen35_4b)
+Qwen3.5-4B, `vllm serve` (2048-token budget, 256 seqs), GPU 6, workload reasoning_var: input 1024 and
+output 8192, each uniform in +-50% (`--random-range-ratio 0.5`), 2 prompts per concurrency slot.
+Counters are /metrics deltas over each run; ms/step = run time / `vllm:iteration_tokens_total_count`;
+running and "gen < half its max" from the server's 10-s stats lines (serve_timeline).
+
+| setting | c | out tok/s | TTFT p50 s | TPOT p50 ms | preemptions | steps | ms/step | mean running | gen < half max |
+|---|---|---|---|---|---|---|---|---|---|
+| prefix on (default, align) | 64 | 1744 | 0.37 | 30.0 | 0 | 23499 | 26.9 | 52 | 19% |
+| prefix off | 64 | 1763 | 0.32 | 29.7 | 0 | 23501 | 26.6 | 52 | 20% |
+| prefix on (default, align) | 256 | 1576 | 160 | 92.2 | 3474 | 36551 | 73.9 | 133 | 87% |
+| prefix off | 256 | 2020 | 147 | 69.2 | 800 | 36175 | 58.3 | 132 | 59% |
+
+- The collapse is not an artefact of identical lengths: with spread lengths prefix-on loses more
+  (1576 vs 1698 tok/s with fixed lengths), prefix-off about the same (2020 vs 2057).
+- At c=256 prefix caching on preempts 4.3x as often as off at the same ~133 running requests and the
+  same number of engine steps, each 27% longer; output throughput is 22% lower. At c=64 (no preemption)
+  the two are equal, so the align-mode bookkeeping itself costs nothing; the difference is all in how
+  saturation is handled.
+- The c=64 drop against fixed lengths (1744 vs 2068) is the drain at the end of the run (running falls
+  64 -> 3 over the last 3 minutes as the longest outputs finish), not the scheduler.
+- vLLM's counters do not see recomputation: prompt and iteration token counts equal the dataset's
+  (535,270 prompt + 4,231,042 output tokens in both settings), so the work redone after the 3474 / 800
+  preemptions is invisible. Prefix-cache queries and hits count first prefills only (0 hits).
+- Likely mechanism for the on/off gap (to be measured, f10): in align mode a decoding request crossing a
+  528-token boundary needs a new state block in each of the three Mamba groups as well as the attention
+  block, 4 blocks instead of 1, and the old state blocks are freed only two steps later. Upstream issue
+  #62752 / PR #62878 (open) describes this for speculative decoding on a CPU reproducer, without serving
+  numbers.
+- f10: the same load offline with the scheduler instrumented (scripts/profile/thrash_trace.py): the
+  trigger of every preemption, recomputed tokens, prefix-cache savings on readmission; dense Qwen3-4B at
+  matched pressure (c=80) for whether the on/off gap is hybrid-only.

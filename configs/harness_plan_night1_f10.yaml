@@ -1,0 +1,31 @@
+note: 'follow-up 10 (05:50): f8 found the collapse with varied lengths too, and prefix caching on preempts 4.3x as
+  often as off at c=256 (3474 vs 800) at the same ~133 running, 27% longer engine steps (73.9 vs 58.3 ms), 22% less
+  output. The server counters do not count recomputed tokens. Run the same load offline with the scheduler
+  instrumented: what triggers each preemption (a running decode or a prefill chunk that cannot get a block), how
+  many tokens are recomputed, how much the prefix cache saves on readmission. Dense Qwen3-4B on/off at matched
+  pressure (c=80: in-flight demand / capacity about the hybrid''s at c=256) says whether the on/off gap is hybrid.'
+jobs:
+- id: thrash_trace_qwen35_4b_on
+  kind: cmd
+  cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen35_4b --setting prefix_on'
+  priority: 6.1
+  timeout_s: 5400
+  why: scheduler-instrumented saturation run, hybrid, prefix caching on (align mode)
+- id: thrash_trace_qwen35_4b_off
+  kind: cmd
+  cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen35_4b --setting prefix_off'
+  priority: 6.2
+  timeout_s: 5400
+  why: same, prefix caching off
+- id: thrash_trace_qwen3_4b_on
+  kind: cmd
+  cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen3_4b --setting prefix_on --set profile.thrash.concurrency=80 --set profile.thrash.requests=160'
+  priority: 6.3
+  timeout_s: 3600
+  why: dense control at matched pressure, prefix caching on
+- id: thrash_trace_qwen3_4b_off
+  kind: cmd
+  cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen3_4b --setting prefix_off --set profile.thrash.concurrency=80 --set profile.thrash.requests=160'
+  priority: 6.4
+  timeout_s: 3600
+  why: dense control, prefix caching off

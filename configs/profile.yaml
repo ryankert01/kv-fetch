@@ -65,6 +65,20 @@ profile:
     range_ratio: 0.0                   # fixed lengths
     ready_timeout_s: 1200
 
+  # Serving saturation offline with the scheduler instrumented (scripts/profile/thrash_trace.py): the
+  # reasoning_var workload where serving collapsed (c=256, prefix caching on: 4.3x the preemptions of off)
+  thrash:
+    engine: {max_num_batched_tokens: 2048}   # what `vllm serve` uses on this GPU (the LLM class: 8192)
+    settings:
+      prefix_on: {enable_prefix_caching: true}
+      prefix_off: {enable_prefix_caching: false}
+    input: 1024
+    output: 8192
+    range_ratio: 0.5                   # lengths uniform in [L(1 - r), L(1 + r)], as the bench's random dataset
+    concurrency: 256                   # requests in flight, as `vllm bench serve --max-concurrency`
+    requests: 512
+    seed: 0
+
   # Microbenchmark of the two GDN paths vLLM has (scripts/profile/gdn_prefill_micro.py): the chunked
   # prefill path (FLA Triton, several kernels) vs the fused recurrent update (one kernel, used for decode
   # and spec-decode verify, accepts several tokens per sequence), for T new tokens of one sequence.

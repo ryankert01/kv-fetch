@@ -1,4 +1,4 @@
-note: 'follow-up 9 (04:00): does an existing knob remove the saturation collapse? vLLM 0.32 has a scheduler admission
+note: 'follow-up 9 (03:50): does an existing knob remove the saturation collapse? vLLM 0.32 has a scheduler admission
   watermark (fraction of blocks kept free when admitting waiting or preempted requests, default 0) and the usual
   max_num_seqs cap. Same load as f8 at c=256. If either recovers most of the throughput, the collapse is configuration,
   not a research problem.'
