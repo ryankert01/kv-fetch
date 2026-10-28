@@ -249,3 +249,35 @@ Same server and load as f8 at c=256 (reasoning_var, prefix caching on unless not
   the new requests' prefill chunks inside the 2048-token budget and the end-of-run drain. Not chased.
 - f10 (running) still says why prefix caching on preempts 4.3x as often at watermark 0, and whether the
   dense model shows the same on/off gap (moved ahead of the hybrid prefix-off trace).
+
+## 07:34 -- why prefix caching on thrashes: a readmission ping-pong (f10: thrash_trace_qwen35_4b_on)
+The f8 load offline (in-process LLMEngine, 256 in flight, 512 requests, 2048-token budget, watermark 0,
+prefix caching on = align mode), scheduler instrumented (scripts/profile/thrash_trace.py, summarised by
+thrash_report.py). It reproduces the server run: 3484 preemptions (server: 3474), 1480 output tok/s (1576).
+
+| | |
+|---|---|
+| preemptions | 3484, of 326 requests (up to 61 times one request) |
+| trigger: a decode at a 528-token block boundary cannot get its blocks | 1930 (55%) |
+| trigger: a readmitted request's recompute chunk cannot get its blocks | 1484 (43%) |
+| trigger: a first prefill chunk | 70 |
+| victim is the triggering request itself | 1503 |
+| victim's context (mean) | 2273 tokens, 1842 computed |
+| readmitted requests preempted again | 3158 of 3484, median 2 steps after readmission |
+| prefix-cache hit on readmission | 16% of what the request had computed (369 of 2260 tokens) |
+| tokens: decode / new prefill / recompute | 4.14M / 0.53M / 5.13M (recompute = 9.7x new prefill) |
+| steps with recompute | 4941 of 35997, 147 ms each vs 65 ms decode-only; 26% of the time |
+
+- Mechanism. Preemption is LIFO (`running[-1]`), and a preempted request goes back to the head of the
+  queue. Admission checks that the whole sequence fits (`scheduler_reserve_full_isl`) but reserves
+  nothing; the readmitted request then recomputes in 1584-token chunks (align mode), each needing 3 new
+  blocks, while ~115 decoding requests take blocks at every 528-token boundary (4 blocks each in align
+  mode: attention + one state block per Mamba group). Within ~2 steps a chunk or a boundary crossing
+  fails, and the victim is the newest running request, i.e. the one just readmitted. Its work is lost and
+  it is readmitted again. The long-running requests keep their blocks; short new ones starve.
+- Cost: 5.1M recomputed tokens is more than all decode tokens; the recompute steps take 26% of the
+  time. Removing the extra 82 ms in those steps alone would save ~15% of the run.
+- Why the knobs help (f9): watermark 0.1 makes readmission wait for 194 free blocks, enough to finish the
+  recompute, so the ping-pong stops (128 preemptions). Prefix caching off helps less: recompute chunks of
+  2048 and 1 block per boundary crossing narrow the window (800 preemptions).
+- Next in f10: the dense model at matched pressure, on and off.
