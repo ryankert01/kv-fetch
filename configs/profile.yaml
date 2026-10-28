@@ -79,6 +79,19 @@ profile:
     requests: 512
     seed: 0
 
+  # Speculative decoding, hybrid vs dense (scripts/profile/spec_profile.py): step cost of verifying k draft
+  # tokens. Each model with its own drafter; real-text prompts (AIME problems, chat template), greedy.
+  spec:
+    engine: {}
+    drafters:
+      qwen35_4b: {method: mtp}                                        # the checkpoint's own MTP layer
+      qwen3_4b: {method: eagle3, model: brian920128/Qwen3-4B_eagle3}  # a community EAGLE3 head (the only local one with weights)
+    prompts:
+      parquet: /share2/huggingface/hub/datasets--AI-MO--aimo-validation-aime/snapshots/13f9e12f613e720c2a2b2f345dd04b998a29494d/data/train-00000-of-00001.parquet
+      column: problem
+    batches: [1, 16, 64]
+    output: 1024
+
   # Microbenchmark of the two GDN paths vLLM has (scripts/profile/gdn_prefill_micro.py): the chunked
   # prefill path (FLA Triton, several kernels) vs the fused recurrent update (one kernel, used for decode
   # and spec-decode verify, accepts several tokens per sequence), for T new tokens of one sequence.

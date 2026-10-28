@@ -227,7 +227,7 @@ running and "gen < half its max" from the server's 10-s stats lines (serve_timel
   trigger of every preemption, recomputed tokens, prefix-cache savings on readmission; dense Qwen3-4B at
   matched pressure (c=80) for whether the on/off gap is hybrid-only.
 
-## 06:47 -- an existing knob removes the collapse (f9: serve_thrash_knobs_qwen35_4b)
+## 06:45 -- an existing knob removes the collapse (f9: serve_thrash_knobs_qwen35_4b)
 Same server and load as f8 at c=256 (reasoning_var, prefix caching on unless noted). Rows 1-2 from f8.
 
 | setting | out tok/s | TTFT p50 / p99 s | TPOT p50 ms | e2e p50 s | preemptions | steps | ms/step | mean running | KV >= 97% | gen < half max |

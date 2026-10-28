@@ -14,7 +14,7 @@ jobs:
 - id: thrash_trace_qwen35_4b_off
   kind: cmd
   cmd: '{py} scripts/profile/thrash_trace.py configs/harness.yaml {out} --model qwen35_4b --setting prefix_off'
-  priority: 6.2
+  priority: 6.4
   timeout_s: 5400
   why: same, prefix caching off
 - id: thrash_trace_qwen3_4b_on

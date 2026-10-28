@@ -1,0 +1,18 @@
+note: 'follow-up 11 (06:47): f9 closed the last serving lead (watermark 0.1 removes the collapse). A first look at
+  an area not profiled yet: speculative decoding. Qwen3.5-4B ships an MTP layer; for Qwen3-4B a community EAGLE3
+  head is the only local drafter with weights. Per model, k = 0..3 draft tokens, batch 1 / 16 / 64, 1024 output
+  tokens: ms per engine step at k against k = 0 (the verify cost through GDN vs attention layers) and acceptance.
+  Ahead of the hybrid prefix-off trace, whose baseline f8 already gives in part (800 preemptions).'
+jobs:
+- id: spec_qwen35_4b
+  kind: cmd
+  cmd: 'for k in 0 1 2 3; do {py} scripts/profile/spec_profile.py configs/harness.yaml {out} --model qwen35_4b --k $k || exit 1; done'
+  priority: 6.3
+  timeout_s: 3600
+  why: speculative decoding step cost and acceptance, hybrid (MTP)
+- id: spec_qwen3_4b
+  kind: cmd
+  cmd: 'for k in 0 1 2 3; do {py} scripts/profile/spec_profile.py configs/harness.yaml {out} --model qwen3_4b --k $k || exit 1; done'
+  priority: 6.35
+  timeout_s: 3600
+  why: same, dense (EAGLE3)
