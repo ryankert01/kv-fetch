@@ -35,8 +35,8 @@ def lengths(rng: random.Random, mean: int, ratio: float) -> int:
 class Recorder:
     """Wraps Scheduler.schedule, Scheduler._preempt_request and KVCacheManager.allocate_slots."""
 
-    def __init__(self, sched, num_prompt: dict[str, int]):
-        self.s, self.num_prompt = sched, num_prompt
+    def __init__(self, sched):
+        self.s = sched
         self.max_seen: dict[str, int] = {}          # highest position computed so far, over all lives
         self.steps: list[list] = []                 # [t, running, waiting, decode, new_prefill, recompute, preempted, free_blocks]
         self.preemptions: list[dict] = []
@@ -81,7 +81,7 @@ class Recorder:
                 end = r.num_computed_tokens
                 start = end - n
                 mx = self.max_seen.get(rid, 0)
-                P = self.num_prompt[rid]
+                P = r.num_prompt_tokens
                 rc = max(0, min(end, mx) - start)
                 nw = max(0, min(end, P) - max(start, mx))
                 rec += rc
@@ -134,8 +134,7 @@ def main():
         reqs.append((f"r{i}", [rng.randrange(lo, hi) for _ in range(il)], ol))
     llm.generate([{"prompt_token_ids": reqs[0][1][:256]}], SamplingParams(max_tokens=8, ignore_eos=True), use_tqdm=False)
 
-    num_prompt = {rid: len(p) for rid, p, _ in reqs}
-    recd = Recorder(sched, num_prompt)
+    recd = Recorder(sched)
     pending = list(reqs)
     in_flight, finished, gen_tokens = 0, {}, 0
     t0 = time.perf_counter()
