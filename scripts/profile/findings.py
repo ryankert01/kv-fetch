@@ -231,7 +231,7 @@ def write_md(o: dict, path: Path):
                      + ", ".join(f"{k} {v:.2f}" for k, v in p["decode_ratio"].items())
                      + "; prefill ratio " + ", ".join(f"{k} {v:.2f}" for k, v in p["prefill_ratio"].items()))
     if o["serve"]:
-        L += ["\n## Serving\n", "preemptions: server counter over the run (`-` = not recorded, runs before 04:05)\n",
+        L += ["\n## Serving\n", "preemptions: server counter over the run (`-` = not recorded, runs before 03:41)\n",
               "| model | setting | workload | conc | out tok/s | TTFT p50 ms | TTFT p99 ms | TPOT p50 ms | preemptions |",
               "|---|---|---|---|---|---|---|---|---|"]
         for s in sorted(o["serve"], key=lambda s: (s["workload"], s["concurrency"], s["model"], s["setting"])):

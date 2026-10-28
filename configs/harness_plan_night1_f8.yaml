@@ -1,4 +1,4 @@
-note: 'follow-up 8 (04:05): saturation collapse with varied lengths. P4 reasoning c=256 (identical 1K/8K requests) drained
+note: 'follow-up 8 (03:41): saturation collapse with varied lengths. P4 reasoning c=256 (identical 1K/8K requests) drained
   the running set 256 -> 34 with 222 waiting and fell below c=64 throughput, prefix caching on or off. Is it an artefact of
   identical lengths (lockstep block demand), and how much work goes to recomputing preempted requests? Same load, lengths
   spread +-50% (range_ratio 0.5), server counters (preemptions, recomputed prefill tokens) recorded per run.'

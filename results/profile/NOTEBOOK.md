@@ -98,7 +98,7 @@ Queued: configs/harness_plan_night1.yaml (24 jobs: base sweeps, serving, 8 ablat
 - serve_multiturn_4b_pair: `vllm bench serve` prefix_repetition (64 shared 4K prefixes, 128-token new
   suffix, 256 output), concurrency 16 and 64, hybrid vs dense: every prefill is short and follows a hit.
 
-## 03:50 -- P4 hybrid serving (serve_qwen35_4b), and a hybrid-only extra prefill step
+## 03:38 -- P4 hybrid serving (serve_qwen35_4b), and a hybrid-only extra prefill step
 Qwen3.5-4B, GPU 6, `vllm serve` defaults on this GPU: max_num_batched_tokens 2048 (48 GB card), 905K-token
 pool. Random prompts, fixed lengths, ignore_eos; one run per cell.
 
@@ -145,7 +145,7 @@ pool. Random prompts, fixed lengths, ignore_eos; one run per cell.
   (f7). Harness: jobs now run in their own process group and a timeout kills the group (a killed serving
   job used to leave its server holding the GPU).
 
-## 04:15 -- multi-turn gate (serve_multiturn_4b_pair) and upstream search: the two prefill leads are taken
+## 03:45 -- multi-turn gate (serve_multiturn_4b_pair) and upstream search: the two prefill leads are taken
 prefix_repetition: 64 shared 4096-token prefixes, 128-token suffix, 256 output, prefix caching on.
 
 | model | c | out tok/s | TTFT p50 / p99 ms | TPOT p50 / p99 ms | ITL p99 ms | prefix hit rate |
@@ -159,7 +159,7 @@ prefix_repetition: 64 shared 4096-token prefixes, 128-token suffix, 256 output, 
   hold the 64 x 4K prefixes (hit rate 61 vs 70%). So the small-step floor does not decide this workload;
   capacity does. The gate as stated ("does the floor show in serving") gets a no for hybrid vs dense; how
   much the hybrid would gain without the floor is not measurable without a fix.
-- Upstream (gh search, vLLM PRs, 04:00):
+- Upstream (gh search, vLLM PRs, 03:40):
   - align split: #52789 (merged 2026-08, FlashKDA, "9-25% TTFT") introduced internal prefill checkpoints;
     #60050 (merged 2026-10-14) does it for GDN on the FlashInfer prefill backend (Qwen3.5-35B-A3B GB200,
     TTFT -10 to -20%); #60659 (open, updated 2026-10-28) does it for the Triton/FLA GDN backend, i.e.
@@ -175,3 +175,21 @@ prefix_repetition: 64 shared 4096-token prefixes, 128-token suffix, 256 output, 
 - Verdict under rule (c): the align split and the small-step floor both fail (fixes merged or open
   upstream within the last two weeks). The saturation collapse is the only lead left open; f8 measures it
   with spread lengths and preemption counters.
+
+## 03:50 -- what the align split costs at batch 1 (f7: split_scan_*)
+Unprofiled prefill latency, median of 5, LLM class (8192-token budget), GPU 6.
+
+| prompt tokens | 256 | 512 | 528 | 600 | 1024 | 1056 | 1100 | 2048 | 2112 | 4096 | 4224 | 8192 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid, prefix on (align) ms | 25.5 | 42.4 | 48.3 | 62.2 | 89.8 | 96.9 | 92.4 | 170.9 | 178.5 | 333.8 | 346.2 | 646.7 |
+| hybrid, prefix off ms | 25.3 | 42.9 | 48.9 | 51.3 | 80.2 | 81.7 | 89.4 | 155.4 | 171.9 | 326.1 | 323.4 | 646.3 |
+| dense, prefix on ms | 19.6 | 38.9 | 48.7 | 49.0 | 78.5 | 80.1 | 82.6 | 158.8 | 152.9 | 326.7 | 333.1 | 717.9 |
+| on / off | 1.01 | 0.99 | 0.99 | 1.21 | 1.12 | 1.19 | 1.03 | 1.10 | 1.04 | 1.02 | 1.07 | 1.00 |
+
+- Up to one block (<= 528) nothing is split and on = off. Past it the split adds 3-23 ms (median ~10%
+  at 0.6-2K tokens, 2-7% at 4K, ~0 at 8K where the 7920-token chunk forces two steps either way... off is
+  one 8192 step here, so ~0 is within scatter). Without prefix caching the hybrid matches the dense model
+  from 512 tokens up (0.97-1.12x) and is 1.29x slower only at 256 tokens (the small-step floor).
+- Same size as upstream's claim for the merged FlashInfer version (#60050: TTFT -10 to -20% at 8K on a
+  35B MoE where a second full pass costs more); the FLA version (#60659) is open. Confirms the lead is
+  real and already taken. Not pursued.

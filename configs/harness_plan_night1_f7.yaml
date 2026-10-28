@@ -1,4 +1,4 @@
-note: 'follow-up 7 (03:45): align-mode prefill split. With prefix caching on (mamba_cache_mode align), vLLM 0.32 cuts every
+note: 'follow-up 7 (03:36): align-mode prefill split. With prefix caching on (mamba_cache_mode align), vLLM 0.32 cuts every
   hybrid prefill at the last 528-token block boundary (scheduler._mamba_block_aligned_split): 1024 -> 528 + 496,
   4096 -> 3696 + 400, 32768 -> 4 x 7920 + 1056 + 32; each tail is a whole engine step (31-41 ms). Mamba2 and FlashKDA export
   the checkpoint inside the final chunk (num_prefill_checkpoint_blocks > 0) and skip the split; GDN does not. Measure the
