@@ -690,3 +690,15 @@ Both traces done (64 MATH level 3-5 problems x 8, T = 1, 16K cap; engine 0.85 of
   second clause ("hybrid headroom larger than dense") will be read on this pair; the first (within 15% of
   the bound) on the hybrid's own trace. rollout_replay.py gained --name for the output file.
 - Replays running since 19:01: qwen3_4b m50_wm0 / m50_wm10 / m70_wm0 on GPUs 4-6.
+
+## 20:00 -- first replay (qwen3_4b m70_wm0); bound fit fixed (async lag)
+- qwen3_4b m70_wm0: makespan 3,352 s, 81,066 steps (41.3 ms each), 2,080 preemptions over 448 requests,
+  2.29 M recompute tokens (vs 3.03 M decode), mean running 37.4 (max 512 at the start, admitted then evicted).
+- The per-step fit came out at R2 0.05. Cause: async scheduling records step k's interval while the GPU
+  runs step k-1, so each row's work and time are off by one. The model is additive, so rollout_bound.py now
+  fits on sums over windows of fit_window = 50 steps (config): R2 0.87 / 0.95 / 0.96 at 10 / 50 / 200
+  steps, coefficients stable from 10 up (a 9.2 ms, b 60 us per decode, c 162 ns per context token, d 97
+  us per prefill/recompute token; the per-step fit had d at 14 us, i.e. recompute 7x too cheap).
+- Result with the fixed fit: bound 3,101 s, headroom 7.5% (recompute 221 s, extra steps 34 s). Steps are
+  4.7% above perfect packing (77,399), mean running 37.4 vs the bound's 39.2: the dense model's memory is
+  already packed almost perfectly; what is left is recompute.

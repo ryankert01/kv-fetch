@@ -2,6 +2,10 @@
 
 Step time model, fitted per run by least squares over its own steps (scripts/rl/rollout_replay.py):
     step_s = a + b * decode_tokens + c * context_tokens + d * (new_prefill + recompute tokens)
+The fit is on sums over windows of `fit_window` consecutive steps (config `rollout.bound`): with async
+scheduling a step's recorded interval (schedule to next schedule) carries the previous step's GPU work, so
+per-step rows are off by one and fit badly (R2 0.05 on qwen3_4b m70_wm0); the model is additive, so window
+sums keep it exact while the one-step lag washes out (R2 0.95 at 50 steps).
 a is the per-step fixed cost (weights, launches), b the per-request decode cost (for a hybrid this includes
 the recurrent state round trip), c the attention read per context token, d the prefill cost per token.
 
@@ -29,10 +33,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from kvfetch.config import load_config  # noqa: E402
 
 
-def fit(steps: list[list], makespan: float) -> tuple[np.ndarray, float]:
+def fit(steps: list[list], makespan: float, window: int) -> tuple[np.ndarray, float]:
     t = [s[0] for s in steps] + [makespan]
     dur = np.diff(np.array(t))
     X = np.array([[1.0, s[3], s[8], s[4] + s[5]] for s in steps])
+    n = len(steps) // window * window
+    X, dur = X[:n].reshape(-1, window, 4).sum(1), dur[:n].reshape(-1, window).sum(1)
     coef, *_ = np.linalg.lstsq(X, dur, rcond=None)
     pred = X @ coef
     r2 = 1 - ((dur - pred) ** 2).sum() / ((dur - dur.mean()) ** 2).sum()
@@ -69,15 +75,16 @@ def main():
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     cfg = load_config(args.config, [])
+    bc = cfg["rollout"]["bound"]
     rows = []
     for path in map(Path, args.runs):
         d = json.load(open(path))
         e, s, st = d["engine"], d["summary"], d["steps"]
-        if len(st) < cfg["rollout"]["bound"]["fit_min_steps"]:
+        if len(st) < bc["fit_min_steps"]:
             print(f"{path.name}: {len(st)} steps, too few to fit", file=sys.stderr)
             continue
         trace = json.load(open(d["provenance"]["trace"]))["trace"]
-        coef, r2 = fit(st, s["makespan_s"])
+        coef, r2 = fit(st, s["makespan_s"], bc["fit_window"])
         a, b, c, dd = coef
         bt = bound_terms(trace, e["block_size"], e["state_blocks_per_request"], e["num_gpu_blocks"], e["max_num_seqs"])
         t_bound = a * bt["steps_min"] + b * bt["decode"] + c * bt["context"] + dd * bt["prefill"]
@@ -87,7 +94,7 @@ def main():
             "run": path.stem, "block_size": e["block_size"], "blocks": e["num_gpu_blocks"], "watermark": e["watermark"],
             "makespan_s": s["makespan_s"], "steps": len(st), "preemptions": s["preemptions"], "recompute_tokens": s["recompute_tokens"],
             "mean_running": s["mean_running"], "fit": {"a_ms": a * 1e3, "b_us_per_decode": b * 1e6, "c_ns_per_ctx": c * 1e9,
-                                                       "d_us_per_prefill": dd * 1e6, "r2": r2},
+                                                       "d_us_per_prefill": dd * 1e6, "r2": r2, "window": bc["fit_window"]},
             "model_s": t_model, "bound": bt, "bound_s": t_bound, "headroom": 1 - t_bound / s["makespan_s"],
             "waste_s": {"extra_steps": a * (len(st) - bt["steps_min"]), "recompute": dd * s["recompute_tokens"],
                         "extra_context": c * (ctx_actual - bt["context"])}})

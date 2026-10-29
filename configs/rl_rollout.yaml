@@ -36,3 +36,4 @@ rollout:
       m70_wm20: {gpu_memory_utilization: 0.7, watermark: 0.2}
   bound:
     fit_min_steps: 200                 # least-squares fit of step time needs at least this many steps
+    fit_window: 50                     # fit on sums over this many steps (async scheduling lags a step's time by one)
