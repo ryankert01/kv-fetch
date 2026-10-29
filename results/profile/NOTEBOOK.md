@@ -372,7 +372,7 @@ Same load as the prefix-on trace. Reproduces the server again: 779 preemptions (
 - Harness ends here (runner until 09:30; the 21 jobs still pending were not reached). Morning report:
   results/profile/morning_report_2026-10-29.html.
 
-## 09:46 -- day 2: the 9B pair looks like the 4B pair (d2_base_qwen35_9b, d2_base_qwen3_8b)
+## 09:45 -- day 2: the 9B pair looks like the 4B pair (d2_base_qwen35_9b, d2_base_qwen3_8b)
 User (09:3x): keep looking, with bigger models (plan configs/harness_plan_day2.yaml; runner until 21:00, one
 card while GPU 0 is busy). engine_profile.py now counts a hybrid request's state blocks (3 for Qwen3.5) in its
 capacity check, so the 9B skips points the 4B ran (C=2K x 128, 8K x 64).
