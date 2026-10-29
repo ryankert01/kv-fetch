@@ -314,3 +314,12 @@ about the hybrid's at 256: 232K-token pool, 16-token blocks). Prefix caching on.
   for GDN spec decode (WIP); #53929 adaptive verification for Qwen GDN (open); #55504 (merged) bounds
   GDN spec-decode query widths. So the state-rollback cost of GDN speculative decoding is being worked
   on upstream right now; f11 can size it, but as a research target it likely fails rule (c) too.
+
+## 08:34 -- dense prefix on = off (f10: thrash_trace_qwen3_4b_off)
+- Qwen3-4B at 80 in flight, prefix caching off: 423 preemptions (on: 424), 740 tok/s (on: 751),
+  readmission to next preemption median 108 steps (on: 106), recompute 1.04M tokens (on: 0.86M, the
+  prefix cache saves a little on readmission). So the prefix-caching penalty at saturation (4.3x the
+  preemptions, -22% output in serving) is the hybrid's alone: it comes from align mode, not from prefix
+  caching as such.
+- f11: spec_qwen35_4b failed twice on `import pyarrow` (missing from venv-vllm32; installed with uv at
+  08:32) and was requeued behind spec_qwen3_4b, which runs now.
