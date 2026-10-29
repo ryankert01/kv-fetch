@@ -432,3 +432,38 @@ parse_trace files them under "moe" because of the kernel name), 0.92 of the GPU.
   state (fp32 here) and coarse blocks (784-1056 tokens), which set how many requests fit on one card.
 - Queued: d2_abl_ssm_bf16_qwen35_27b_fp8 (state in bf16: capacity and speed), and the big-model serving
   jobs now also run `--watermark 0.1`, because c = 64 saturates the 27B and the MoE hybrid on one card.
+
+## 10:24 -- MoE short prefill = align split + GDN floor; 27B with a bf16 state (day-2 f1)
+Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
+
+| prompt tokens | 16 | 64 | 256 | 512 | 1024 | 1056 | 1100 | 2048 | 2112 |
+|---|---|---|---|---|---|---|---|---|---|
+| MoE hybrid, prefix on (align, 1056-token blocks) | 27.8 | 28.1 | 36.7 | 46.6 | 74.1 | 75.0 | 99.9 | 147.0 | 147.4 |
+| MoE hybrid, prefix off | 30.1 | 28.6 | 36.2 | 46.0 | 79.5 | 77.5 | 78.4 | 113.1 | 118.7 |
+| MoE dense | 18.9 | 24.2 | 32.0 | 39.5 | 59.7 | 63.5 | 64.2 | 112.9 | 117.5 |
+
+- The 30% gap at 2K is the align split: off, the hybrid equals the dense model (113.1 vs 112.9). With
+  1056-token blocks the split hits every prompt between 1056 and 2112 not on a block boundary (1100: 99.9
+  vs 78.4 ms, +27%). Same lead as night 1 (#60659, open for the FLA GDN backend), larger here because the
+  block doubled.
+- Below 256 tokens the hybrid has a ~28 ms floor vs ~19 ms (30 GDN layers launched outside CUDA graphs):
+  the night-1 floor (#61779 / #61952).
+
+27B, GDN state in bf16 (`--mamba-ssm-cache-dtype bfloat16`, vLLM warns the config says float32):
+
+| | fp32 state (config) | bf16 state |
+|---|---|---|
+| block size / blocks | 784 / 271 | 400 / 478 |
+| state per request (3 blocks) | ~147 MiB | ~75 MiB |
+| requests that fit at 2K / 8K (capacity check) | ~45 / ~19 | ~53 / ~20 |
+| decode 2K x 1 / x 16 ms | 32.2 / 39.6 | 31.9 / 37.2 |
+| prefill 8K ms | 4402 | 4313 |
+| cache-hit recompute step (profile) | 195 ms | 99 ms |
+
+- Halving the state halves the page and so the block, which leaves the pool about the same: +18% requests
+  at 2K, none at 8K, 1-6% faster steps. Not a lever worth a paper (and an accuracy question the vendor
+  answered with float32). The smaller block halves the recompute after a prefix-cache hit.
+- Day-2 engine profiles done: no kernel-level hybrid candidate at 9B / 27B / 35B-A3B. The hybrid-only
+  costs left are all about the block: page size = the state's size, so blocks grow with the model (528 ->
+  784 -> 1056 tokens), and with them the align split, the recompute after a cache hit and the coarse
+  allocation behind the night-1 ping-pong. Serving (d2_serve_*, default and watermark 0.1) runs next.
