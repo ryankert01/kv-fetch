@@ -323,3 +323,32 @@ about the hybrid's at 256: 232K-token pool, 16-token blocks). Prefix caching on.
   caching as such.
 - f11: spec_qwen35_4b failed twice on `import pyarrow` (missing from venv-vllm32; installed with uv at
   08:32) and was requeued behind spec_qwen3_4b, which runs now.
+
+## 08:48 -- speculative decoding: works on the hybrid, no GDN verify bottleneck visible (f11: spec_*)
+LLM class, defaults (Qwen3.5: prefix caching on = align mode), 90 AIME problems with the chat template
+as prompts (cycled), 1024 output tokens each, ignore_eos, greedy. Qwen3.5-4B with its own MTP layer;
+Qwen3-4B with a community EAGLE3 head. Step = wall / `vllm:iteration_tokens_total` count.
+
+| model | k | b=1 step x / speedup | b=16 step x / speedup | b=64 step x / speedup | acceptance (b=1 / 16 / 64) |
+|---|---|---|---|---|---|
+| hybrid, MTP | 1 | 1.27 / 1.55 | 1.26 / 1.51 | 1.58 / 1.19 | 0.97 / 0.94 / 0.94 |
+| hybrid, MTP | 2 | 1.44 / 2.02 | 1.50 / 1.74 | 2.12 / 1.22 | 0.96 / 0.88 / 0.88 |
+| hybrid, MTP | 3 | 1.61 / 2.31 | 1.73 / 1.86 | 2.57 / 1.18 | 0.92 / 0.81 / 0.80 |
+| dense, EAGLE3 | 1 | 1.09 / 1.51 | 1.18 / 1.28 | 1.82 / 0.82 | 0.65 / 0.62 / 0.60 |
+| dense, EAGLE3 | 2 | 1.13 / 1.82 | 1.28 / 1.37 | 2.23 / 0.76 | 0.53 / 0.44 / 0.44 |
+| dense, EAGLE3 | 3 | 1.19 / 1.85 | 1.33 / 1.28 | 2.53 / 0.69 | 0.40 / 0.33 / 0.33 |
+
+(k = 0 step: hybrid 10.16 / 13.01 / 20.87 ms, dense 9.80 / 11.92 / 17.72 ms at b = 1 / 16 / 64.)
+- The hybrid gains more (2.3x at b=1, 1.9x at b=16, still 1.2x at b=64, where the dense EAGLE3 setup
+  loses) because its MTP layer is accepted far more often. Acceptance is inflated for both by ignore_eos
+  (greedy text keeps going, often repetitively, after the answer); the comparison is between drafters,
+  not a clean acceptance measurement.
+- The hybrid's step cost does grow faster with k at small batch: +2.1-2.7 ms per draft token at b=1 vs
+  +0.6-0.9 ms for dense. Most of that is its drafter, not GDN verification: each MTP draft step runs a
+  full decoder layer and the 248K-vocabulary lm_head (1.36 ms per step at b=1 in the nsys capture),
+  against EAGLE3's one layer and 32K draft vocabulary. At b=64 the per-draft-token extra is the same
+  size for both (12-33 ms vs 15-27 ms): verifying 64 x (k + 1) tokens is compute-bound either way.
+- Verdict: no hybrid-specific verify bottleneck at this resolution (kernel traces would be needed to
+  split the MTP layer from GDN verify), and upstream is on the GDN state side already (08:04 entry).
+  A drafter-side observation remains: a sparse or truncated lm_head for MTP drafting (upstream #59740,
+  "context aware sparse LM head", open) would cut most of the small-batch overhead. Not hybrid-specific.
