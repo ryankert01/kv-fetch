@@ -4,7 +4,8 @@ Each engine step carries a GPU annotation `execute_context_<n>(<tokens>)_generat
 around the model forward; logits (lm_head) and sampling run after it, outside the annotation. A step's
 window therefore runs from the end of the previous annotation to the end of its own, and every kernel
 starting in it belongs to the step. Steps are grouped into decode-only (no context request) and
-prefill-only (no generation request); mixed steps are kept apart. Per group: step count, mean window
+prefill-only (no generation request); mixed steps are kept apart. Overlapping annotations are one step
+recorded on two streams (MoE models overlap shared experts on a side stream) and are merged. Per group: step count, mean window
 per step, kernel time per class, GPU busy share of the window (idle = the rest), and the time between
 annotations (`outside_ms_per_step`: logits, sampling and any idle time).
 
@@ -44,8 +45,13 @@ def kclass(name: str) -> str:
 def parse(path: Path) -> dict:
     with gzip.open(path) if path.suffix == ".gz" else open(path) as f:
         ev = json.load(f)["traceEvents"]
-    steps = sorted((e for e in ev if e.get("cat") == "gpu_user_annotation" and STEP.match(e.get("name", ""))),
-                   key=lambda e: e["ts"])
+    steps = []
+    for e in sorted((e for e in ev if e.get("cat") == "gpu_user_annotation" and STEP.match(e.get("name", ""))),
+                    key=lambda e: e["ts"]):
+        if steps and e["ts"] < steps[-1]["ts"] + steps[-1]["dur"]:    # same step annotated on a second stream
+            steps[-1]["dur"] = max(steps[-1]["dur"], e["ts"] + e["dur"] - steps[-1]["ts"])
+        else:
+            steps.append(dict(e))
     kernels = sorted((e for e in ev if e.get("cat") in ("kernel", "gpu_memcpy", "gpu_memset")), key=lambda e: e["ts"])
     groups = defaultdict(lambda: {"steps": 0, "span_us": 0.0, "busy_us": 0.0, "gap_us": 0.0, "class_us": Counter(),
                                   "kernel_us": Counter(), "ctx_tokens": 0, "gen_tokens": 0})
