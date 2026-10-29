@@ -7,15 +7,17 @@ server's Prometheus counters over the run (preemptions, prompt / cached tokens: 
 serve_index.json, rewritten after every run), stop the server. Each (workload, concurrency) gets its own
 bench seed (serve.seed + its index), the same for every model and setting: with one seed, a run's first
 prompts repeat the previous run's (the random dataset draws start offsets in sequence) and hit the prefix
-cache the previous run left behind, the more so the larger the model's KV pool. The server port is
-serve.port + the GPU index, so jobs on different GPUs do not share a server; a run is ok only when the
-bench completed requests with none failed, and the script exits non-zero if any run was not ok.
+cache the previous run left behind, the more so the larger the model's KV pool. The server port is the
+first free one from serve.port + 10 x the GPU index, so jobs on different GPUs do not share a server; a
+run is ok only when the bench completed requests with none failed, and the script exits non-zero if any
+run was not ok.
 
 Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y] [--workloads w1,w2] [--set k=v]
 """
 import argparse
 import json
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -50,6 +52,19 @@ def counters(port: int) -> dict[str, float]:
     return res
 
 
+def free_port(start: int, tries: int = 10) -> int:
+    """First port from `start` nobody listens on (a range per GPU, so parallel jobs never share a server;
+    other users' services hold some ports on this machine)."""
+    for port in range(start, start + tries):
+        with socket.socket() as s:
+            try:
+                s.bind(("", port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError(f"no free port in {start}..{start + tries - 1}")
+
+
 def wait_ready(port: int, proc, name: str, timeout: float):
     """Until our server answers; the model check guards against another job's server on the same port."""
     t = time.time()
@@ -82,7 +97,7 @@ def main():
     (out / "logs").mkdir(parents=True, exist_ok=True)
     models = args.models.split(",") if args.models else sc["models"]
     settings = args.settings.split(",") if args.settings else list(sc["settings"])
-    port = sc["port"] + int(os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(",")[0])   # one port per GPU: parallel jobs
+    port = free_port(sc["port"] + 10 * int(os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(",")[0]))
     runs = []
     import vllm
     prov = provenance(cfg, model=None, context_length=None, script=str(Path(__file__).resolve()), settings=sc,
