@@ -528,3 +528,16 @@ Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
 - The MoE hybrid's default chat c = 64 run had no prefix-cache hits (its pool, 402K tokens, did not keep
   the c = 16 prompts through 154 preemptions), so its f2 rerun is a pure repeat (same seed, fresh server):
   a run-to-run check.
+
+## 13:51 -- 4B decode past batch 128 (probe_b256_qwen35_4b, night-1 queue) and the GDN state round trip
+With the hybrid-aware capacity check, 2K context fits up to b = 160 (192+ skipped): 39.9 ms per step at
+b = 128 (3205 tok/s), 53.3 ms at b = 160 (3001 tok/s), no preemptions. The night-1 pilot's 348 ms at
+b = 256 was preemption.
+- Byte budget at b = 128, 2K: weights ~8 GB, attention KV ~8.6 GB (8 layers x 32 KiB/token), GDN state
+  read + write 2 x 48 MiB x 128 = ~12.9 GB, ~35 ms at ~850 GB/s against 39.9 measured. The fp32 state
+  round trip is the largest single item at high batch (~40%), and it is the part a better algorithm can
+  remove: the night-1 "decode at the roofline" holds only for an engine that stores the full state every
+  step.
+- Upstream: #62004 (open, 2026-10-16, Dao AI Lab + NVIDIA) ReplaySSM for GDN standard decode: keep a ring
+  buffer of recent (k, d, g), write the state back once every L steps; Mamba2 version merged (#48018).
+  Fails rule (c). The bf16-state ablation (abl_ssm_bf16_qwen35_4b, queued) measures the other lever.
