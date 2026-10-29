@@ -1,0 +1,29 @@
+note: 'day 2 follow-up 1 (09:55): the MoE hybrid prefills 1-2K prompts 1.24-1.30x slower than the dense MoE
+  (4B / 9B pairs: ~1.1x). Unprofiled batch-1 scan 16-2048 tokens for the MoE pair (as scan_small_prefill_* on
+  night 1), plus the hybrid with prefix caching off (no align split at 1056-token blocks). Is it the GDN
+  launch floor (30 GDN layers here) or the split?'
+jobs:
+- id: d2_scan_prefill_qwen36_35b_a3b_fp8
+  kind: engine
+  model: qwen36_35b_a3b_fp8
+  priority: 5.5
+  timeout_s: 3600
+  flags: [--skip-profile]
+  sets: ['profile.prefill_lengths=[16,32,64,128,256,512,1024,1056,1100,2048,2112]', 'profile.repeats=5', 'profile.decode_contexts=[]', 'profile.engine.gpu_memory_utilization=0.92']
+  why: short-prefill latency, MoE hybrid, prefix caching on (align)
+- id: d2_scan_prefill_off_qwen36_35b_a3b_fp8
+  kind: engine
+  model: qwen36_35b_a3b_fp8
+  priority: 5.6
+  timeout_s: 3600
+  flags: [--skip-profile]
+  sets: ['profile.prefill_lengths=[16,32,64,128,256,512,1024,1056,1100,2048,2112]', 'profile.repeats=5', 'profile.decode_contexts=[]', 'profile.engine.gpu_memory_utilization=0.92', 'profile.engine.enable_prefix_caching=false']
+  why: same, prefix caching off
+- id: d2_scan_prefill_qwen3_30b_a3b_fp8
+  kind: engine
+  model: qwen3_30b_a3b_fp8
+  priority: 5.7
+  timeout_s: 3600
+  flags: [--skip-profile]
+  sets: ['profile.prefill_lengths=[16,32,64,128,256,512,1024,1056,1100,2048,2112]', 'profile.repeats=5', 'profile.decode_contexts=[]', 'profile.engine.gpu_memory_utilization=0.92']
+  why: same, dense MoE

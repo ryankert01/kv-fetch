@@ -390,3 +390,27 @@ capacity check, so the 9B skips points the 4B ran (C=2K x 128, 8K x 64).
 - The one hybrid-only cost that grows: a prefix-cache hit recomputes up to one 528-token block (align
   mode) where the dense model recomputes < 16 tokens, 57 vs 30 ms here. That is the prefix-caching line
   stopped on 10-28; noted, not pursued.
+
+## 09:55 -- the MoE pair (d2_base_qwen36_35b_a3b_fp8, d2_base_qwen3_30b_a3b_fp8)
+Qwen3.6-35B-A3B-FP8 (40 layers: 30 GDN + 10 attention, 256 experts top-8, shared expert) vs
+Qwen3-30B-A3B-Instruct-2507-FP8 (48 attention layers, 128 experts top-8), 0.92 of the GPU. On Ada vLLM 0.32
+runs these block-FP8 checkpoints as weight-only FP8 through Marlin ("GPU does not have native support for
+FP8 computation"), the same for both.
+
+| | MoE hybrid | MoE dense | hybrid / dense |
+|---|---|---|---|
+| pool | 381 blocks x 1056 tokens (3 state blocks = 63 MiB per request) | 8551 x 16 = 136,816 tokens | |
+| prefill 1K / 2K / 4K / 8K / 32K ms | 74 / 146 / 238 / 476 / 2422 | 60 / 112 / 241 / 569 / 4735 | 1.24 / 1.30 / 0.99 / 0.84 / 0.51 |
+| decode 2K x 1 / x 4 / x 16 ms | 6.04 / 9.82 / 16.82 | 6.14 / 8.07 / 13.63 | 0.98 / 1.22 / 1.23 |
+| decode 32K x 1 ms | 6.45 | 9.43 | 0.68 |
+
+- Kernel shares (traces, after the parse_trace fix: this model annotates each step on two streams):
+  decode 8K x 1 6.3 ms = MoE 67%, other GEMM 30%, GDN recurrent 3%; 8K x 16 18.3 ms = MoE 66%, attention
+  16%, GDN 7%; prefill 8K = MoE 62%, GDN chunk 11%, attention 10%; 32K = MoE 48%, attention 31%, GDN 9%.
+- findings.py flags MoE prefill at ~0.48 of the bf16 ceiling and decode at 0.65 of the read bound for
+  both models: the Marlin weight-only FP8 path on Ada, not the hybrid. Not a hybrid candidate.
+- Capacity on one 48 GB card is tight for both. The hybrid's per-request state (63 MiB) roughly cancels
+  its KV advantage at short context: at 2K about 60 requests fit for either; at 8K the hybrid fits ~34,
+  the dense ~16.
+- Open: the hybrid's 1-2K prefill is 24-30% slower (4B / 9B: ~10%). f1 scans 16-2112 tokens for both and
+  the hybrid with prefix caching off (1056-token blocks split a 2048 prompt into two steps).
