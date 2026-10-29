@@ -833,3 +833,24 @@ priority ahead of the R1 leftovers, GPU 2 or an Ada card.
   the gap), so per the plan RL rollouts are dropped as a direction.
 - Still running: R1 cross-trace replays (3 running, 5 pending, GPUs 4-6). They bear only on R1's second
   clause and on the default-watermark issue (not posted; waiting for the user's OK).
+
+## 02:03 -- R1 leftovers: the full watermark curve (own traces)
+All 16 own-trace replays done (qwen3_4b m70_wm20 last, 02:02). results/profile/runs/r1_bound_own.json
+(rollout_bound.py, 50-step window fit, R2 0.90-1.00). Makespan s (headroom to each run's bound):
+
+| model, memory | wm 0 | wm 0.05 | wm 0.1 | wm 0.2 |
+|---|---|---|---|---|
+| hybrid, 0.5 | 4,697 (24.7%) | 3,688 (6.5%) | 3,731 (6.8%) | 3,673 (7.7%) |
+| hybrid, 0.7 | 4,559 (29.5%) | 3,215 (7.1%) | 3,320 (6.4%) | 3,314 (6.5%) |
+| dense, 0.5 | 3,891 (7.6%) | 3,832 (5.2%) | 3,820 (5.0%) | 3,883 (6.3%) |
+| dense, 0.7 | 3,352 (7.5%) | 3,215 (4.1%) | 3,231 (4.0%) | 3,273 (5.2%) |
+
+- Any nonzero watermark removes the hybrid's ping-pong: 0.05 already cuts the makespan 21% (0.5) and 29%
+  (0.7); between 0.05 and 0.2 it moves by at most 3%. Preemptions 5,901 -> 567 / 410 / 265 (0.5), 4,277 ->
+  457 / 339 / 290 (0.7). Larger watermarks trade recompute for extra steps (hybrid 0.5: recompute 149 ->
+  93 s, extra steps 92 -> 189 s).
+- The dense model's curve is flat (within 3-4%); its default costs 1-4%, the hybrid's 21-29%.
+- So the upstream-issue case is the default alone: watermark 0 is fine for a dense model and costs a hybrid
+  a quarter of an RL rollout step; 0.05 recovers it. Not posted (waiting for the user's OK).
+- Cross-trace (hybrid on the dense model's lengths): 1 of 8 done. m50_wm0 headroom 21.8% (dense 7.6% at the
+  same setting, same lengths), 4,322 preemptions, recompute 361 s of 1,922 s. 7 left on GPUs 4-6.
