@@ -512,3 +512,19 @@ Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
   (#32398, #43839 closed unmerged), where the hybrid's fixed-size state (63 MiB MoE, 144 MiB 27B per
   request vs seconds of recompute at 8K) changes the trade-off; the 27B serving run (capacity ~19-45
   requests) shows whether normal load preempts at all.
+
+## 13:47 -- port collision when GPU 0 freed up (harness incident)
+- GPU 0 went idle around 13:43, so the runner went from one job to three (GPUs 4 / 5 / 6, as configured).
+  Every serving job used port 8765: d2_serve_chat64_qwen35_9b and d2_serve_27b could not bind it, found
+  the MoE pair's server answering /health, and sent their benchmarks there (wrong model name: every
+  request 404, `vllm bench serve` still exits 0). Both were recorded "done" with empty results.
+- Fixed in serve_bench: port = serve.port + GPU index; readiness checks /v1/models for our model; a run is
+  ok only with completed > 0 and failed = 0; non-zero exit if any run is not ok. The two jobs' outputs
+  moved to results/profile/runs/_invalid/ and requeued; d2_serve_chat64_qwen36_35b_a3b_fp8 was killed
+  mid-startup (requeued by the runner, attempt 2); d2_serve_27b restarted 13:47 on GPU 6, port 8771.
+- Effect on the MoE pair: its default runs (13:11-13:40) predate the collision. The 1225 rejected
+  requests reached its watermark10 server's API layer only (404 before the engine), during that
+  setting's first runs; noted, not expected to matter (check: watermark10 c = 16 vs default c = 16).
+- The MoE hybrid's default chat c = 64 run had no prefix-cache hits (its pool, 402K tokens, did not keep
+  the c = 16 prompts through 154 preemptions), so its f2 rerun is a pure repeat (same seed, fresh server):
+  a run-to-run check.
