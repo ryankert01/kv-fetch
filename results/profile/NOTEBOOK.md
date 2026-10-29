@@ -502,8 +502,8 @@ Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
   blocks, to 1056 at 1056-token blocks). #63670 (open draft, 2026-10-26) drops the align split altogether
   in favour of backend-internal prefill checkpoints; #40757 (open) fixes a zero-collapse deadlock in the
   same split.
-- Sub-block prefix hits: vLLM 0.32 already has  (checkpoint at the
-  shared-prefix junction, EAGLE/MTP case) and ; open PRs #56142 (bound
+- Sub-block prefix hits: vLLM 0.32 already has `enable_mamba_shared_prefix_checkpoint` (checkpoint at the
+  shared-prefix junction, EAGLE/MTP case) and `prefix_cache_retention_interval`; open PRs #56142 (bound
   shared-prefix checkpoints), #53803 (retain grid and decode-end checkpoints), #52527 (metric for
   shared-prefix tokens lost to a missing checkpoint), #63578 (mamba-aware LRU eviction in offload).
 - Transition accounting behind the ping-pong: #62752 / #62878 (open, night 1).
