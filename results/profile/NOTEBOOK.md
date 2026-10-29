@@ -854,3 +854,28 @@ All 16 own-trace replays done (qwen3_4b m70_wm20 last, 02:02). results/profile/r
   a quarter of an RL rollout step; 0.05 recovers it. Not posted (waiting for the user's OK).
 - Cross-trace (hybrid on the dense model's lengths): 1 of 8 done. m50_wm0 headroom 21.8% (dense 7.6% at the
   same setting, same lengths), 4,322 preemptions, recompute 361 s of 1,922 s. 7 left on GPUs 4-6.
+
+## 03:01 -- R1 leftovers: hybrid on the dense model's lengths (like-for-like, 8 settings)
+results/profile/runs/r1_bound_cross.json (fit R2 0.96-0.99). Makespan s (headroom), hybrid replaying the
+dense trace's lengths vs the dense replays:
+
+| setting | hybrid, dense lengths | dense | hybrid / dense preemptions |
+|---|---|---|---|
+| 0.5, wm 0 | 1,922 (21.8%) | 3,891 (7.6%) | 4,322 / 2,660 |
+| 0.5, wm 0.05 | 1,505 (6.8%) | 3,832 (5.2%) | 234 / 1,300 |
+| 0.5, wm 0.1 | 1,499 (7.1%) | 3,820 (5.0%) | 104 / 998 |
+| 0.5, wm 0.2 | 1,542 (9.1%) | 3,883 (6.3%) | 69 / 818 |
+| 0.7, wm 0 | 1,775 (21.5%) | 3,352 (7.5%) | 3,617 / 2,080 |
+| 0.7, wm 0.05 | 1,307 (6.7%) | 3,215 (4.1%) | 202 / 908 |
+| 0.7, wm 0.1 | 1,293 (7.0%) | 3,231 (4.0%) | 136 / 689 |
+| 0.7, wm 0.2 | 1,363 (8.5%) | 3,273 (5.2%) | 100 / 539 |
+
+- On equal work the default still costs only the hybrid: wm 0 -> 0.05 cuts its makespan 22% (0.5) / 26%
+  (0.7), the dense model's 1.5% / 4.1%. Recompute at wm 0: 361 / 347 s for the hybrid.
+- Tuned, the hybrid sits 6.7-9.1% from its bound vs 4.0-6.3% for the dense model. The second clause
+  (hybrid headroom larger than dense) holds by 1-3 points, but under 15%; the first clause already killed
+  idea 1. What is left for the hybrid is mostly extra steps (1.18-1.41x the perfect-packing minimum, dense
+  1.05-1.16x; 67-130 s), not recompute (9-28 s).
+- Same lengths, same memory share: the hybrid finishes the rollout step in 1,293-1,542 s (tuned), the dense
+  model in 3,215-3,883 s; its pool holds ~3x the tokens (memory-bound minimum 42,334 vs 127,629 steps at
+  0.5). All R1 runs are now done.

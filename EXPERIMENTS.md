@@ -400,6 +400,9 @@ replays, same 8 settings. The first clause is read on the hybrid's own trace. Th
 Killed by the first clause. The hybrid's best setting (watermark 0.1) is 6.8% (0.5) and 6.4% (0.7) from
 the bound; vLLM's default (watermark 0) is 24.7% / 29.5% away, i.e. a tuned existing knob recovers it
 (results/profile/NOTEBOOK.md, 21:19 and 22:07).
+Like-for-like pair (2026-10-30 03:01, results/profile/runs/r1_bound_cross.json): on the dense model's lengths
+the tuned hybrid is 6.7-9.1% from its bound vs 4.0-6.3% for the dense model (second clause holds by 1-3
+points, all under 15%); watermark 0 costs the hybrid 22-26% and the dense model 1.5-4.1%.
 
 # RL rollouts: kill test R2 (2026-10-29)
 
