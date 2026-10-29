@@ -414,3 +414,21 @@ FP8 computation"), the same for both.
   the dense ~16.
 - Open: the hybrid's 1-2K prefill is 24-30% slower (4B / 9B: ~10%). f1 scans 16-2112 tokens for both and
   the hybrid with prefix caching off (1056-token blocks split a 2048 prompt into two steps).
+
+## 10:08 -- Qwen3.5-27B-FP8 (d2_base_qwen35_27b_fp8)
+64 layers (48 GDN + 16 attention), hidden 5120, FP8 linears through Marlin on Ada (`MarlinFP8ScaledMMLinearKernel`;
+parse_trace files them under "moe" because of the kernel name), 0.92 of the GPU.
+
+- Pool: 271 blocks x 784 tokens. Each request holds 3 state blocks: vLLM takes the GDN state dtype from the
+  config's `mamba_ssm_dtype: float32` (model_executor/models/config.py; it warns on an override), so the
+  state is 48 x 48 heads x 128 x 128 x 4 B = 144 MiB per request, as much as 2.3K tokens of this model's KV
+  (64 KiB / token). Fits about 45 requests at 2K context, 19 at 8K.
+- prefill 1K / 2K / 8K / 32K: 522 / 1083 / 4402 / 19658 ms (~100-106 TFLOP/s through the Marlin dequant path);
+  decode 2K x 1 / x 4 / x 16: 32.2 / 34.9 / 39.6 ms; 32K x 4: 43.1 ms. Decode at b = 1 is at the read bound
+  (~29.5 GB of weights in 32.2 ms).
+- Kernel shares: prefill 8K = FP8 GEMM 89%, attention 4%, GDN chunk 3%; decode 8K x 1 = GEMM 94%, GDN 1%.
+- Day-2 picture so far: as models grow, GDN's share of step time falls to 1-11%; kernel time is GEMM / MoE
+  (and the Marlin FP8 path on Ada for both hybrid and dense). What stays hybrid-only is memory: per-request
+  state (fp32 here) and coarse blocks (784-1056 tokens), which set how many requests fit on one card.
+- Queued: d2_abl_ssm_bf16_qwen35_27b_fp8 (state in bf16: capacity and speed), and the big-model serving
+  jobs now also run `--watermark 0.1`, because c = 64 saturates the 27B and the MoE hybrid on one card.
