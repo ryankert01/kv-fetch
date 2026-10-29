@@ -152,7 +152,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-
   <div class="verdict">
     <div class="eyebrow">結論</div>
     <p><strong>模型放大以後沒有冒出新的 kernel 瓶頸。</strong>GDN 在各尺寸只佔 step 時間的 1–16%，其餘是 GEMM、MoE 和 attention。Serving 在一般負載下 hybrid 全面贏 dense（1.16–2.5 倍），贏在記憶體池能裝的 token 多。</p>
-    <p><strong>隨模型變嚴重的只有一件事：block 變大。</strong>vLLM 讓每個 block 和一個 state 一樣大，所以 block 從 4B 的 528 token 長到 27B 的 784、MoE 的 1056；fp8 KV 也會讓它翻倍。block 越大，align 切段、cache 命中後的重算、配置粒度（昨晚的搶占乒乓）都跟著變大。MoE 和 27B 在 c=64 就已經乒乓。</p>
+    <p><strong>隨模型變嚴重的只有一件事：block 變大。</strong>vLLM 讓每個 block 和一個 state 一樣大，所以 block 從 4B 的 528 token 長到 27B 的 784、MoE 的 1056；fp8 KV 也會讓它翻倍。block 越大，align 切段、cache 命中後的重算、配置粒度（昨晚的搶占乒乓）都跟著變大。MoE 和 27B 在 c=64 就已經乒乓：vLLM 的預設設定讓它們少了 9–22% 的吞吐量，dense 模型不受影響。</p>
     <p><strong>但這些成本每一項上游兩週內都有 PR 在處理，</strong>最後一節逐項列出來。照規則 (c)，今天也沒有合格的候選。</p>
     <p class="muted">規則：(a) 佔 step 時間 ≥ 15%；(b) 是純 overhead，或端到端 ≥ 10%；(c) 上游還沒修、也沒有現成開關能消掉。</p>
   </div>
@@ -250,7 +250,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-
     <figcaption id="cap-preempt">每個模型 128 個 request。MoE hybrid 預設搶占 645 次（每個 request 5.0 次），dense MoE 346 次（2.7 次）：昨晚 4B 在 c=256 才出現的乒乓，MoE 在 c=64 就出現了。watermark 0.1 把它壓到 28 次，輸出 +10%，TTFT 中位數 27 → 12 秒；對 dense MoE 吞吐量沒有變化。</figcaption>
   </figure>
   <div class="prose">
-    <p id="serve-27b"><b>27B：</b>池只有 199K token，c=64 時預設設定搶占 1006 次（每個 request 7.9 次），TTFT 中位數 580 秒，TPOT p99 290 ms。watermark 0.1 的那一輪還在跑。</p>
+    <p id="serve-27b"><b>27B：</b>池只有 199K token，c=64 時同時只跑得動約 25 個 request。預設設定搶占 1006 次（每個 request 7.9 次），TPOT p99 290 ms；watermark 0.1 壓到 46 次，輸出 346 → 443 tok/s（+28%），TPOT 中位數 83 → 57 ms。TTFT 中位數兩邊都在 560–580 秒，是排隊。這裡沒有同尺寸的 dense FP8 checkpoint 可以對照。</p>
     <p><b>量測上的兩個修正：</b>(1) 原本所有 bench 都用 seed 0，random dataset 的前 64 個 prompt 在 c=16 和 c=64 一模一樣，9B hybrid 的大池子還留著上一輪的 prompt，chat c=64 有 23% 的 prefill 是免費的。換新 server 重跑後是 1.42 倍，不是 1.72 倍；現在每個（workload, c）各用自己的 seed。(2) GPU 0 空出來、harness 改成三張卡並行時，所有 serving job 都用 port 8765，兩個 job 打到了 MoE 的 server。已改成每張卡各自找空的 port，受影響的 run 都重跑或標成無效。</p>
   </div>
 </section>
@@ -287,18 +287,18 @@ footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-
   <div class="prose" id="reco">
     <p>兩天、四個尺寸、單卡上的 vLLM：每個 hybrid 專屬的成本都是真的，但每一個上游都已經有人在做，剩下的差距是 hybrid 佔優勢的容量。「profile vLLM、找一個 hybrid 瓶頸、修掉它」這個方法在這台機器上很難再產出一篇論文：我們修好的，上游幾週內大概也會有。</p>
     <ol>
-      <li><b>半天、確定能做：把乒乓寫成上游 issue。</b>今天的證據更強了：預設設定、一般負載（c=64）下，MoE hybrid 搶占次數是 dense 的 1.9 倍，27B 搶占 1006 次，watermark 0.1 就消掉。資料、離線重現、dense 對照都在 repo 裡。要你同意我才會貼。</li>
+      <li><b>半天、確定能做：把乒乓寫成上游 issue。</b>今天的證據更強了：預設設定、一般負載（c=64）下，MoE hybrid 搶占次數是 dense 的 1.9 倍，27B 搶占 1006 次；watermark 0.1 就消掉，27B 的吞吐量多 28%。資料、離線重現、dense 對照都在 repo 裡。要你同意我才會貼。</li>
       <li><b>如果還想做 hybrid 的論文：把「block 綁住 state 大小」當成一個設計問題。</b>上游是一項一項打補丁（#61878、#63670、#56142…），還沒有人把 page 大小的耦合當成一件事處理：state checkpoint 和 attention block 分開管理，cache 粒度、切段和配置粒度可以一起解決。風險是 prior work：Jenga（異質 page 的記憶體配置）和 Marconi（hybrid 的 prefix caching）都很接近，要先讀清楚差在哪。而且今天量到的收益是特定情況下的 10–30%，不是全面的大贏。</li>
       <li><b>換層級：多卡或 PD 分離下的 hybrid state。</b>今天完全沒量（GPU 0 有人用時只能用單卡），上游也已經有人在做（#64397、#58413），風險同樣在擁擠度。</li>
     </ol>
-    <p><b>我的建議：</b>先做 1；要不要做 2，等我把 Jenga 和 Marconi 讀完、確認差異再決定。harness 跑到 21:00，剩下的是 2B / 1.7B / OLMo-hybrid 的 base profile 和 9B 的 ablation，不會改變結論。</p>
+    <p><b>我的建議：</b>先做 1；要不要做 2，等我把 Jenga 和 Marconi 讀完、確認差異再決定。harness 的佇列 16:41 已經清空；最後幾個 job（2B / 1.7B 的 base profile、9B 的 ablation）都沒有改變結論，OLMo-hybrid 本機沒有權重、沒跑。</p>
   </div>
 </section>
 
 <footer>
   <span>數字都出自 phase0 branch 上的 run 目錄（results/profile/runs/），每個結果檔都帶 provenance；完整紀錄在 results/profile/NOTEBOOK.md。</span>
   <span>前一份：今天早上的〈Qwen3.5 瓶頸夜巡〉。</span>
-  <span id="updated">更新：16:30（27B 的 watermark 輪還在跑）</span>
+  <span id="updated">更新：16:45（harness 佇列已清空）</span>
 </footer>
 </div>
 <script>
@@ -327,7 +327,7 @@ const D = {
   preempt: [   // reasoning_var c=64: [name, default, watermark 0.1, out default, out wm]
     ["9B hybrid", 0, 0, 1262, 1260], ["8B dense", 336, 76, 544, 577],
     ["MoE hybrid", 645, 28, 995, 1094], ["MoE dense", 346, 110, 718, 717],
-    ["27B hybrid", 1006, null, 346, null],
+    ["27B hybrid", 1006, 46, 346, 443],
   ],
   dec: [   // ms per step, 4B decode 8K x 64 trace
     { name: "fp32 state（預設）", attn: 17.66, gemm: 11.69, gdn: 5.72, other: 1.02 },
