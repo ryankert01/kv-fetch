@@ -592,3 +592,31 @@ dense 139,872. Output tok/s (preemptions):
   at 13:47). Not rerun: at c = 16 neither setting preempts, so the watermark does not matter there.
 - abl_eager_qwen35_4b (night-1 queue; CUDA graphs off): decode 2.1-3.1x slower at b = 1-16, 1.08x at
   b = 64; no dense counterpart, so nothing hybrid-specific.
+
+## 16:08 -- night-1 ablations of the 4B (abl_*), and a correction to the state-traffic estimate
+Each against base_qwen35_4b (night 1, same config). Prefill is 3-10% slower in every ablation, including
+ones that cannot touch prefill: a constant offset against the night-1 baseline, not an effect.
+
+| ablation | decode step vs base | note |
+|---|---|---|
+| eager (no CUDA graphs) | 2.1-3.1x at b <= 16, 1.08x at b = 64 | launch overhead |
+| FlashInfer attention | 0.78 at 2K x 64, 0.84 at 32K x 16, ~1.0 elsewhere | head_dim 256 decode |
+| fp8 KV | 0.70 at 32K x 16, 0.79 at 8K x 64 | block 528 -> 1056 (see below) |
+| max_num_batched_tokens 16K | ~1.0 | |
+| no async scheduling | 1.04-1.23 | CPU work per step exposed |
+| GDN state in bf16 | 0.87 at 8K x 64, 0.91 at 32K x 16, 0.93-0.97 at b = 16-64 | block 528 -> 272 |
+
+- Correction to the 13:51 entry (4B decode past batch 128). The trace at 8K x 64 (span 36.3 ms per
+  step): attention 17.7 ms (48%, FA2 split-KV at ~970 GB/s on 17.2 GB of KV), GEMM 11.7 ms (32%), GDN recurrent decode 5.7 ms (16%;
+  bf16 state: 2.3 ms). So the state round trip is ~16% of decode at 8K x 64; the ~40% byte estimate holds
+  only at short context and large batch (2K x 128, where the KV is small). ReplaySSM (#62004) saves at
+  most the store half of it.
+- fp8 KV halves the attention bytes per token, so the attention page halves and vLLM doubles the block to
+  1056 tokens to stay >= the (unchanged) state page: token capacity doubles (986K -> 1.95M) at the same
+  number of blocks (1868 -> 1847). A request still holds 3 state blocks, so at 2K context it goes from 7
+  blocks to 5 (+38% requests), where a dense model gets 2x. Compressing attention makes the hybrid's
+  blocks coarser: the page-size coupling again.
+- bf16 state goes the other way (block 528 -> 272, 3627 blocks, same token capacity) and is also what
+  vLLM warns against for this config.
+- None of these is hybrid-specific without dense counterparts except the two that change the block
+  (fp8 KV, bf16 state), and both are existing flags.
