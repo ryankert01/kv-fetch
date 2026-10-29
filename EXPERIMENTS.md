@@ -390,3 +390,8 @@ In one synchronous GRPO rollout step under a memory budget, how much time is los
 Kill idea 1 if, for the hybrid, the best setting's makespan is within 15% of the bound at both memory
 shares, or if the hybrid's headroom is not larger than the dense model's. Otherwise design the policy.
 Next if killed: R2, stale recurrent state across a weight update (kept vs recomputed, continuation KL).
+
+Amendment (19:35, after both traces, before any replay result): the hybrid's responses are about twice
+as long (mean 11,187 vs 5,923 tokens; 46% vs 5% capped), so the second clause is read on a like-for-like
+pair: the hybrid replayed on the dense model's lengths (scripts/rl/cross_trace.py) against the dense
+replays, same 8 settings. The first clause is read on the hybrid's own trace. Thresholds unchanged.
