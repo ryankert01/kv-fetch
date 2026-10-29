@@ -479,7 +479,7 @@ Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
 | chat | 16 | 353 | 305 | 1.16 | 1.95 / 1.95 | 41.0 / 48.2 | 0 |
 | chat | 64 | 571* | 332 | 1.72* | 2.55 / 51.5 | 122.6 / 108.7 | 24 |
 
-- The hybrid never preempts at c <= 64; the dense model runs ~27 of 64 requests at 86-89% KV and queues
+- The hybrid never preempts at c <= 64; the dense model runs 27-34 of 64 requests at 80-89% KV and queues
   the rest (TTFT 21-52 s). Capacity decides it, as for the 4B pair. --watermark 0.1 changes nothing for
   the hybrid (nothing to protect) and for the dense model trades preemptions for queueing (reasoning_var
   c = 64: 336 -> 76 preemptions, 544 -> 577 tok/s, TTFT p50 21 -> 55 s).
@@ -493,3 +493,22 @@ Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
   confound (its server log shows hit rates up to 17%; it predates the counters), so its prefix on / off
   chat numbers at c >= 64 are not clean; the reasoning_var / thrash runs (spread lengths, so offsets
   differ) had no hits (computed = prompt tokens).
+
+## 13:15 -- upstream check on the "blocks grow with the model" costs (gh search, vLLM PRs)
+- Idle token budget from align chunking: #61878 (open, 2026-10-20) warns at startup when align-mode chunks
+  leave > 1/4 of max_num_batched_tokens idle "with the large blocks hybrid models get after page-size
+  alignment" and reports 1.96x on 1/P90 E2E-per-token for GLM-5.3-Flash on H100 just from setting the
+  budget to a block multiple. Same mechanism we see (budget 2048 - decodes, clipped to 1584 at 528-token
+  blocks, to 1056 at 1056-token blocks). #63670 (open draft, 2026-10-26) drops the align split altogether
+  in favour of backend-internal prefill checkpoints; #40757 (open) fixes a zero-collapse deadlock in the
+  same split.
+- Sub-block prefix hits: vLLM 0.32 already has  (checkpoint at the
+  shared-prefix junction, EAGLE/MTP case) and ; open PRs #56142 (bound
+  shared-prefix checkpoints), #53803 (retain grid and decode-end checkpoints), #52527 (metric for
+  shared-prefix tokens lost to a missing checkpoint), #63578 (mamba-aware LRU eviction in offload).
+- Transition accounting behind the ping-pong: #62752 / #62878 (open, night 1).
+- Verdict under rule (c): every block-size cost has open upstream work from the last two weeks. The theme
+  is real and crowded. What has no open upstream work is preempting by swapping instead of recomputing
+  (#32398, #43839 closed unmerged), where the hybrid's fixed-size state (63 MiB MoE, 144 MiB 27B per
+  request vs seconds of recompute at 8K) changes the trade-off; the 27B serving run (capacity ~19-45
+  requests) shows whether normal load preempts at all.
