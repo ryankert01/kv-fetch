@@ -38,3 +38,9 @@ stale:
     continuation: 1024
     max_probes_per_cut: 12
     bins: [64, 256, 1024]              # continuation position bins (upper edges)
+  gate:                                # EXPERIMENTS.md, R2 gate (fixed before running); read by scripts/rl/stale_report.py
+    max_step: 32                       # amended from 8 before any measurement
+    floor_multiple: 3                  # KL(F||S) must be at least this many times the kernel-path floor
+    rho_alone: 1.0                     # alive if rho >= this ...
+    rho_min: 0.5                       # ... or rho >= max(rho_min, rho_vs_dense * rho_dense)
+    rho_vs_dense: 3
