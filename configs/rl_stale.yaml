@@ -6,8 +6,8 @@ inherit: rl_rollout.yaml
 # scripts/rl/stale_state.py runs the updates and the measurement in HF transformers (.venv-hybrid).
 stale:
   update_rollouts:
-    levels: [1, 2, 3]                  # shorter solutions, so 8K-capped groups get mixed rewards
-    num_prompts: 48
+    levels: [1, 2, 3, 4, 5]            # all levels: Qwen3-4B solves 88% of levels 1-3 (4 mixed groups of 48)
+    num_prompts: 128                   # the probe problems are excluded
     n: 8
     max_tokens: 8192
   probes:
@@ -22,7 +22,7 @@ stale:
     max_num_seqs: 256
   update:
     groups_per_step: 4                 # 4 groups x 8 = 32 sequences per optimizer step
-    steps: 8
+    steps: 32                          # a DAPO-style rollout step is several optimizer steps; AReaL allows 4-8 versions
     lr: 1.0e-6                         # DAPO / verl recipes for 1.5-7B reasoning RL
     betas: [0.9, 0.999]
     eps: 1.0e-8
@@ -33,7 +33,7 @@ stale:
     pad_to: 1024                       # pad sequences to a multiple of this (fewer kernel shapes; padding is masked)
     logit_chunk: 1024                  # tokens per chunk of the log-softmax over the vocabulary
   measure:
-    at_steps: [1, 2, 4, 8]
+    at_steps: [1, 2, 4, 8, 16, 32]
     cuts: [1024, 4096, 8192]
     continuation: 1024
     max_probes_per_cut: 12

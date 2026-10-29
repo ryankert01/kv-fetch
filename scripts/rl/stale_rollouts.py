@@ -1,6 +1,6 @@
 """Kill test R2, step 1: sample the update rollouts and the probe rollouts under the released weights (theta_0).
 
-Update rollouts (config `stale.update_rollouts`): MATH problems of the given levels, n samples each at the RL
+Update rollouts (config `stale.update_rollouts`): MATH problems of the given levels (the probe problems excluded), n samples each at the RL
 temperature, scored 1 if the last \\boxed{} matches the reference answer after normalization. They feed the
 GRPO steps in scripts/rl/stale_state.py. Probes (`stale.probes`): harder problems (R1's levels, R1's 64 skipped),
 long samples whose prefixes are cut and continued under updated weights.
@@ -22,12 +22,12 @@ from kvfetch.config import load_config  # noqa: E402
 from kvfetch.provenance import provenance  # noqa: E402
 
 
-def problems(rc: dict, levels: list[int], skip: int, count: int) -> list[dict]:
+def problems(rc: dict, levels: list[int], skip: int, count: int, exclude: set[str] = frozenset()) -> list[dict]:
     pc = rc["prompts"]
     rows = [json.loads(line) for line in open(pc["jsonl"])]
     rows = [r for r in rows if r.get("level") in levels]
     random.Random(rc["seed"]).shuffle(rows)
-    return rows[skip:skip + count]
+    return [r for r in rows[skip:] if r["unique_id"] not in exclude][:count]
 
 
 def last_boxed(text: str) -> str | None:
@@ -88,9 +88,11 @@ def main():
     enc = lambda p: tok.encode(tok.apply_chat_template([{"role": "user", "content": f"{p[rc['prompts']['field']]}\n{instr}"}],
                                                        tokenize=False, add_generation_prompt=True), add_special_tokens=False)
     res, summary = {}, {}
-    for part, skip in (("update_rollouts", 0), ("probes", sc["probes"]["skip"])):
+    probe_probs = problems(rc, sc["probes"]["levels"], sc["probes"]["skip"], sc["probes"]["num_prompts"])
+    update_probs = problems(rc, sc["update_rollouts"]["levels"], 0, sc["update_rollouts"]["num_prompts"],
+                            {p["unique_id"] for p in probe_probs})
+    for part, probs in (("update_rollouts", update_probs), ("probes", probe_probs)):
         c = sc[part]
-        probs = problems(rc, c["levels"], skip, c["num_prompts"])
         prompts = [enc(p) for p in probs]
         sp = SamplingParams(n=c["n"], temperature=rc["temperature"], top_p=rc["top_p"], max_tokens=c["max_tokens"], seed=rc["seed"])
         t = time.perf_counter()

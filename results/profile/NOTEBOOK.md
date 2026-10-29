@@ -767,3 +767,16 @@ priority ahead of the R1 leftovers, GPU 2 or an Ada card.
   Adam step at lr 1e-6 changes 3.4% of the bf16 weights (5.4% after two): most updates are below bf16
   resolution. At that size KL(F||S) 1.1e-4, KL(F||P) 1.4e-4, floor 1.2e-4: the 1-2 step points sit at the
   noise floor, which is why the gate asks for KL(F||S) >= 3x floor.
+
+## 22:49 -- R2 amended before any measurement: wider update pool, 32 steps
+- r2_rollouts_qwen3_4b (old config) finished: 48 level 1-3 problems x 8, mean 3,025 tokens, 16 capped,
+  reward 0.88, only 4 mixed groups; probes 32 samples, mean 5,101 tokens, 4 at the 9,216 cap. With 4 mixed
+  groups and 4 groups per step every step would reuse one batch. Kept as
+  results/profile/runs/r2_rollouts_qwen3_4b/rollouts_qwen3_4b.v1_levels1-3.json.
+- Change (EXPERIMENTS.md, R2 amendment): update pool 128 problems, all levels, probe problems excluded;
+  32 steps, measured at 1, 2, 4, 8, 16, 32 (a DAPO rollout step is several optimizer steps; AReaL's
+  staleness bound of 4-8 versions is more than 8 optimizer steps). Thresholds unchanged.
+- Jobs: r2_rollouts_qwen35_4b stopped at 22:45 (17 min into the old config) and retried on the new one
+  (GPU 4); r2_stale_qwen35_4b still pending on it (timeout raised to 7 h). r2_stale_qwen3_4b stopped while
+  loading; its retry failed on the moved rollouts file, as intended. Dense pair requeued as
+  r2b_rollouts_qwen3_4b / r2b_stale_qwen3_4b.

@@ -431,8 +431,15 @@ policy change itself?
   continuation) and the sampled token's |log F - log S|.
 
 ## Gate (fixed before running)
-Idea 2 is alive if, for the hybrid at some k <= 8 and cut, KL(F || S) is at least 3x the floor and either
+Idea 2 is alive if, for the hybrid at some k <= 8 (amended: 32) and cut, KL(F || S) is at least 3x the floor and either
 rho >= 1 (the stale state is worse than running the old policy outright) or rho >= max(0.5, 3 rho_dense)
 (keeping stale KV, as PipelineRL does, does not carry over to hybrid state). Otherwise killed: keeping the
 stale state costs no more than the staleness async RL already tolerates, an engineering default at most;
 per the plan, RL rollouts are then dropped as a direction.
+
+Amendment (22:50, before any R2 measurement): the first dense update rollouts (48 problems, levels 1-3)
+were 88% correct, leaving 4 mixed groups, so every step would have reused one 32-sequence batch. The
+update pool is now 128 problems of all levels with the probe problems excluded. The steps extend to 32,
+measured after 1, 2, 4, 8, 16 and 32: a DAPO-style rollout step is several optimizer steps (one per
+mini-batch), and AReaL bounds staleness at 4-8 policy versions, so 8 optimizer steps covered about one
+version. The gate reads "k <= 32"; thresholds unchanged.

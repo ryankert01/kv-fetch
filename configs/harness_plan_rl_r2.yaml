@@ -9,9 +9,18 @@ jobs:
    cmd: '{py} scripts/rl/stale_rollouts.py configs/rl_stale.yaml {out} --model qwen35_4b'}
 - {id: r2_rollouts_qwen3_4b, kind: cmd, priority: 1.1, timeout_s: 5400, gpus: [2, 4, 5, 6], why: 'R2 update + probe rollouts, qwen3_4b',
    cmd: '{py} scripts/rl/stale_rollouts.py configs/rl_stale.yaml {out} --model qwen3_4b'}
-- {id: r2_stale_qwen35_4b, kind: cmd, priority: 1.0, timeout_s: 14400, gpus: [2, 4, 5, 6], after: [r2_rollouts_qwen35_4b],
+- {id: r2_stale_qwen35_4b, kind: cmd, priority: 1.0, timeout_s: 25200, gpus: [2, 4, 5, 6], after: [r2_rollouts_qwen35_4b],
    why: 'R2 GRPO updates + stale-cache KL, qwen35_4b',
    cmd: 'HF_HUB_OFFLINE=1 .venv-hybrid/bin/python scripts/rl/stale_state.py configs/rl_stale.yaml {out} --model qwen35_4b --rollouts results/profile/runs/r2_rollouts_qwen35_4b/rollouts_qwen35_4b.json'}
 - {id: r2_stale_qwen3_4b, kind: cmd, priority: 1.1, timeout_s: 14400, gpus: [2, 4, 5, 6], after: [r2_rollouts_qwen3_4b],
    why: 'R2 GRPO updates + stale-cache KL, qwen3_4b',
    cmd: 'HF_HUB_OFFLINE=1 .venv-hybrid/bin/python scripts/rl/stale_state.py configs/rl_stale.yaml {out} --model qwen3_4b --rollouts results/profile/runs/r2_rollouts_qwen3_4b/rollouts_qwen3_4b.json'}
+# 22:50 amendment (before any R2 measurement): update pool widened (128 problems, all levels, probes excluded) and
+# 32 steps (EXPERIMENTS.md, R2 amendment). r2_rollouts_qwen35_4b was stopped and retried with the new config;
+# r2_rollouts_qwen3_4b had finished on the old config (kept as rollouts_qwen3_4b.v1_levels1-3.json), so the dense
+# pair reruns under new ids; r2_stale_qwen3_4b was stopped and its retry failed on the moved file, as intended.
+- {id: r2b_rollouts_qwen3_4b, kind: cmd, priority: 1.1, timeout_s: 7200, gpus: [2, 4, 5, 6], why: 'R2 update + probe rollouts (widened pool), qwen3_4b',
+   cmd: '{py} scripts/rl/stale_rollouts.py configs/rl_stale.yaml {out} --model qwen3_4b'}
+- {id: r2b_stale_qwen3_4b, kind: cmd, priority: 1.1, timeout_s: 25200, gpus: [2, 4, 5, 6], after: [r2b_rollouts_qwen3_4b],
+   why: 'R2 GRPO updates (32 steps) + stale-cache KL, qwen3_4b',
+   cmd: 'HF_HUB_OFFLINE=1 .venv-hybrid/bin/python scripts/rl/stale_state.py configs/rl_stale.yaml {out} --model qwen3_4b --rollouts results/profile/runs/r2b_rollouts_qwen3_4b/rollouts_qwen3_4b.json'}
