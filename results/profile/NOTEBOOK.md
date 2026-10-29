@@ -352,3 +352,22 @@ Qwen3-4B with a community EAGLE3 head. Step = wall / `vllm:iteration_tokens_tota
   split the MTP layer from GDN verify), and upstream is on the GDN state side already (08:04 entry).
   A drafter-side observation remains: a sparse or truncated lm_head for MTP drafting (upstream #59740,
   "context aware sparse LM head", open) would cut most of the small-batch overhead. Not hybrid-specific.
+
+## 09:24 -- the hybrid with prefix caching off (f10: thrash_trace_qwen35_4b_off)
+Same load as the prefix-on trace. Reproduces the server again: 779 preemptions (server 800), 1928 tok/s (2020).
+
+| hybrid, 256 in flight | prefix on (align) | prefix off |
+|---|---|---|
+| output tok/s | 1480 | 1928 |
+| preemptions | 3484 | 779 |
+| triggers | 55% decode boundary, 43% recompute chunk | 770 of 779 decode boundary |
+| readmitted, preempted again: median steps later | 2 | 44 |
+| recompute tokens per output token | 1.24 | 0.41 (dense: 0.67 / 0.81) |
+| share of time in steps with recompute | 26% | 11% |
+
+- Without align mode the hybrid behaves like the dense model: preemptions come from decode boundary
+  crossings, and a readmitted request finishes its recompute before it is chosen again. The 2-step
+  ping-pong (victims thrown out mid-recompute) is align mode's: 1584-token chunks of 3 blocks and 4 blocks
+  per decode boundary crossing.
+- Harness ends here (runner until 09:30; the 21 jobs still pending were not reached). Morning report:
+  results/profile/morning_report_2026-10-29.html.
