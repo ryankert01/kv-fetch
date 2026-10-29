@@ -564,3 +564,31 @@ b = 256 was preemption.
 - Harness: a retry now logs to job.attempt<N>.log (d2_serve_27b's first attempt after the port fix failed
   at 13:59 after 3 min, rc 1, and its log was overwritten by the retry; likely the previous job's memory
   still held on GPU 6 when the 0.92-utilisation server started 13 s later; not verified).
+
+## 15:33 -- serving the MoE pair (d2_serve_moe_pair)
+`vllm serve` at 0.92 of the GPU, GPU 4, 13:09-15:32. Pools (vLLM's count): hybrid 343,696 tokens,
+dense 139,872. Output tok/s (preemptions):
+
+| workload | c | MoE hybrid default | hybrid --watermark 0.1 | MoE dense default | dense --watermark 0.1 | hybrid / dense (default) |
+|---|---|---|---|---|---|---|
+| reasoning_var | 16 | 705 (0) | invalid* | 606 (0) | 625 (0) | 1.16 |
+| reasoning_var | 64 | 995 (645) | 1094 (28) | 718 (346) | 717 (110) | 1.39 |
+| chat | 16 | 567 (0) | 555 (0) | 485 (0) | 489 (0) | 1.17 |
+| chat | 64 | 653 (154); rerun 706 (106) | 719 (0) | 519 (24) | 539 (0) | 1.26-1.36 |
+
+- TTFT p50 at reasoning_var c = 64: hybrid 27.2 s (watermark 12.0 s), dense 108 s (150 s). Running /
+  waiting (timeline means): hybrid ~39 / ~13 at 82-89% KV, dense ~24 / ~28 at 90-93%.
+- The hybrid wins by less than at 9B (1.16-1.39x vs 1.28-2.32x): at c = 64 on one card both MoE models
+  are out of KV (35 GB of weights leave ~11 GB), so the hybrid's 2.5x pool runs ~39 of 64, not all.
+- At reasoning_var c = 64 the hybrid preempts 645 times for 128 requests (5.0 each) against the dense
+  model's 346 (2.7): the night-1 ping-pong, here at c = 64 because the pool is small, with 1056-token
+  blocks. Watermark 0.1 removes it (28 preemptions, +10% output, TTFT p50 halved); for the dense model it
+  changes throughput by nothing. Same verdict as night 1: real, hybrid-specific, an existing knob removes
+  it.
+- *The hybrid's watermark10 reasoning_var c = 16 run (13:41:54-13:48:53) is invalid: the colliding
+  d2_serve_chat64_qwen36_35b_a3b_fp8 attempt (same model name, so not rejected) sent ~35 chat requests
+  into it at 13:45:30-13:46:30 (67 requests and 312K prompt tokens counted instead of 32 and 34K; the
+  server log shows 30-51 running, 30-50 waiting). Runs from 13:48:53 on are clean (the stray job was killed
+  at 13:47). Not rerun: at c = 16 neither setting preempts, so the watermark does not matter there.
+- abl_eager_qwen35_4b (night-1 queue; CUDA graphs off): decode 2.1-3.1x slower at b = 1-16, 1.08x at
+  b = 64; no dense counterpart, so nothing hybrid-specific.
