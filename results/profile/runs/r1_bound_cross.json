@@ -1,0 +1,43 @@
+{
+ "sources": [
+  "results/profile/runs/r1_replay_qwen35_4b_lens_qwen3_4b_m50_wm0/qwen35_4b_lens_qwen3_4b_m50_wm0.json"
+ ],
+ "runs": [
+  {
+   "run": "qwen35_4b_lens_qwen3_4b_m50_wm0",
+   "block_size": 528,
+   "blocks": 858,
+   "watermark": 0.0,
+   "makespan_s": 1921.5207755109295,
+   "steps": 49276,
+   "preemptions": 4322,
+   "recompute_tokens": 3438675,
+   "mean_running": 61.60638038801851,
+   "fit": {
+    "a_ms": 8.2904415854958,
+    "b_us_per_decode": 189.58320330628518,
+    "c_ns_per_ctx": 42.055143916082656,
+    "d_us_per_prefill": 105.00682004559282,
+    "r2": 0.9804766178834775,
+    "window": 50
+   },
+   "model_s": 1921.4240501277584,
+   "bound": {
+    "steps_min": 42334,
+    "steps_longest": 16384,
+    "steps_memory": 42334,
+    "steps_seqs": 5923,
+    "decode": 3032269,
+    "context": 13569298021,
+    "prefill": 57544
+   },
+   "bound_s": 1502.5361179527995,
+   "headroom": 0.21804846603686745,
+   "waste_s": {
+    "extra_steps": 57.55224548651184,
+    "recompute": 361.0843269202789,
+    "extra_context": 0.25135976816832967
+   }
+  }
+ ]
+}

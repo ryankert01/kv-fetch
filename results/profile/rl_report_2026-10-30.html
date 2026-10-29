@@ -1,0 +1,384 @@
+<title>RL rollout 兩道關卡</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<style>
+/* Layout: one reading column (~68ch) for the memo; figures and tables widen to 940px; a verdict table up top. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --ink: #17202b;
+  --ink-2: #485364;
+  --ink-3: #6f7a8b;
+  --rule: #dde2e8;
+  --accent: #1d5d8a;
+  --s1: #2a78d6;  /* blue */
+  --s2: #eb6834;  /* orange */
+  --s3: #1baf7a;  /* aqua */
+  --good: #0a7d0a;
+  --warn: #8a5a00;
+  --crit: #b42f2f;
+  --chip-good: #e3f2e3;
+  --chip-warn: #fbefd6;
+  --chip-crit: #f8e1e1;
+  --chip-info: #e2ecf6;
+  --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11151b;
+    --surface: #191e26;
+    --ink: #e7ebf0;
+    --ink-2: #b3bcc8;
+    --ink-3: #8b95a5;
+    --rule: #2a313c;
+    --accent: #84b6de;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --good: #5cc45c;
+    --warn: #e2b04a;
+    --crit: #ec7c7c;
+    --chip-good: #1c3020;
+    --chip-warn: #3a2f17;
+    --chip-crit: #3c1f22;
+    --chip-info: #1b2a3a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #191e26;
+  --ink: #e7ebf0;
+  --ink-2: #b3bcc8;
+  --ink-3: #8b95a5;
+  --rule: #2a313c;
+  --accent: #84b6de;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --good: #5cc45c;
+  --warn: #e2b04a;
+  --crit: #ec7c7c;
+  --chip-good: #1c3020;
+  --chip-warn: #3a2f17;
+  --chip-crit: #3c1f22;
+  --chip-info: #1b2a3a;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.8;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.page { max-width: 940px; margin: 0 auto; padding-block: 48px 96px; display: flex; flex-direction: column; gap: 56px; }
+.prose { max-width: 68ch; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.35; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 42px); letter-spacing: 0.01em; }
+h2 { font-size: 25px; }
+h3 { font-size: 18px; margin-top: 8px; }
+p, ul, ol { margin: 0; }
+ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+code, .num { font-family: var(--font-data); font-size: 0.88em; }
+code { background: var(--chip-info); padding: 1px 5px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
+.eyebrow { font-family: var(--font-data); font-size: 13px; letter-spacing: 0.06em; color: var(--ink-3); text-transform: uppercase; }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; }
+header { display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid var(--rule); padding-bottom: 28px; }
+section { display: flex; flex-direction: column; gap: 18px; }
+.sec-head { display: flex; flex-direction: column; gap: 4px; }
+.sec-tag { font-family: var(--font-data); font-size: 13px; color: var(--ink-3); }
+.verdict { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; }
+.verdict p { max-width: 70ch; }
+.verdict strong { color: var(--ink); }
+.muted { color: var(--ink-3); font-size: 14px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14.5px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 500; color: var(--ink-3); font-size: 13px; letter-spacing: 0.04em; background: var(--bg); }
+tr:last-child td { border-bottom: none; }
+td.r, th.r { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.chip.up { background: var(--chip-warn); color: var(--warn); }
+.chip.knob { background: var(--chip-warn); color: var(--warn); }
+.chip.none { background: var(--chip-crit); color: var(--crit); }
+.chip.open { background: var(--chip-good); color: var(--good); }
+.chip.pending { background: var(--chip-info); color: var(--accent); }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px 20px 14px; display: flex; flex-direction: column; gap: 10px; }
+figcaption { font-size: 14px; color: var(--ink-2); max-width: 75ch; }
+figcaption b { color: var(--ink); font-weight: 700; }
+.fig-title { font-weight: 700; font-size: 15px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--ink-2); font-family: var(--font-data); font-size: 12px; }
+.chart .axis line, .chart .grid line { stroke: var(--rule); }
+.chart .axis-label { fill: var(--ink-3); font-size: 11.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.5; padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); font-family: var(--font-data); z-index: 5; }
+.tip[hidden] { display: none; }
+.steps { counter-reset: s; list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.steps li::before { content: counter(s); font-family: var(--font-data); font-size: 13px; color: var(--accent); border: 1px solid var(--rule); border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center; background: var(--surface); }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 14.5px; }
+.kv dt { color: var(--ink-3); }
+.kv dd { margin: 0; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-3); font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) { .chart rect, .chart circle { transition: opacity .15s; } }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<div class="page">
+<header>
+  <div class="eyebrow">2026-10-30 早上 · RL rollout · vLLM 0.32 / HF transformers · RTX 6000 Ada + A6000</div>
+  <h1>RL rollout 兩道關卡</h1>
+  <p class="lede">昨天說好的計畫：先跑 R1，沒過就跑 R2，兩個都沒過就放棄 RL rollout 這個方向。兩個都沒過。這篇說明每個實驗問什麼、怎麼量、數字怎麼看，最後列出接下來可以選的路。</p>
+</header>
+
+<section>
+  <div class="verdict">
+    <div class="eyebrow">結論</div>
+    <p><strong>R1（更好的搶占／admission 策略）：沒過。</strong>Hybrid 在最好的 watermark 設定下，離「知道所有長度的完美排程」只差 6.4–6.8%，門檻是 15%。真正的損失來自 vLLM 的預設值 <code>--watermark 0</code>：hybrid 因此慢 26–37%，調成 0.05 就幾乎全部回來。這是一個現成的開關，不是新方法。</p>
+    <p><strong>R2（換權重後沿用舊的 recurrent state）：沒過。</strong>跑了 32 個真的 GRPO step 之後，沿用舊 cache 造成的 KL 最多只有 bf16 數值雜訊（floor）的 1.74 倍，門檻是 3 倍。扣掉雜訊後只佔 policy 本身變化的 12–16%，dense 模型是 6–18%，兩者分不出差別。</p>
+    <p><strong>所以：</strong>照計畫，RL rollout 這個方向放棄。下一個方向要你決定，選項在最後一節。</p>
+    <p class="muted">兩個門檻都在跑之前寫進 EXPERIMENTS.md；中途的兩次修改（R1 加同長度對照、R2 改成 128 題與 32 步）也都在看到任何結果之前。</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-tag">R1 · 2026-10-29</span><h2>R1：更聰明的搶占能省多少？</h2></div>
+  <div class="prose">
+    <p><b>問題。</b>RL 的一個 rollout step 一次丟出幾百個長回答。這裡是 64 題 MATH-500（level 3–5）、每題 8 個 sample、上限 16K token，共 512 個 request。記憶體不夠時 vLLM 會把 request 踢出去（搶占），之後回來再重算。如果有一個知道每個回答長度的完美排程，能比 vLLM 快多少？差很多，才值得設計新的 admission／搶占策略。</p>
+    <p><b>方法。</b>先讓兩個模型各自真的回答一次，記下每個回答的長度：hybrid 是 Qwen3.5-4B（24 層 GDN + 8 層 attention），dense 是 Qwen3-4B。再把 512 個 request 一次丟給 vLLM 0.32，強制每個都生成到原本的長度，記錄每個 scheduler step。用這些 step 擬合時間模型：固定成本，加上每個 decode、每個 context token、每個 prefill／重算 token 的成本。再算同樣記憶體下最少要幾個 step（完美裝箱、完全不重算）。<code>headroom = 1 − 下限 ÷ 實際時間</code>，是任何策略能贏的上限。</p>
+    <p><b>門檻（事先定好）。</b>Hybrid 最好的設定在記憶體比例 0.5 和 0.7 下都離下限 15% 以內，就放棄。</p>
+  </div>
+  <figure>
+    <div class="fig-title">Headroom（離完美排程還有多遠）對 <code>--watermark</code></div>
+    <div class="legend" id="lg-head"></div>
+    <div class="two">
+      <div><div class="muted">記憶體比例 0.5</div><div class="chart" id="fig-head-m50"></div></div>
+      <div><div class="muted">記憶體比例 0.7</div><div class="chart" id="fig-head-m70"></div></div>
+    </div>
+    <figcaption><b>只要 watermark 不是 0，hybrid 的 headroom 就掉到 6.4–7.7%，跟 dense 的 4–8% 同一個水準。</b>預設值 0 時 hybrid 是 24.7% 和 29.5%。Watermark 從 0.05 調到 0.2，時間最多只差 3.3%。</figcaption>
+  </figure>
+  <figure>
+    <div class="fig-title">時間花在哪裡：下限 + 多出來的 step + 重算（秒）</div>
+    <div class="legend" id="lg-time"></div>
+    <div class="chart" id="fig-time"></div>
+    <figcaption><b>預設值下 hybrid 多出來的 1,160–1,350 秒幾乎全是重算。</b>被踢出去的 request 回來時，prefix cache 只在 528 token 的 block 邊界上存 state，93.5% 的回來完全沒命中，要從頭重算；被踢過的 request 中位數被踢 9 次，最多 70 次。我們之前稱這個現象為「乒乓」。Watermark 0.1 把搶占從 5,901 次降到 410 次。dense 的 block 只有 16 token，只有 11% 的回來完全沒命中。</figcaption>
+  </figure>
+  <div class="prose">
+    <p><b>同長度對照。</b>Hybrid 的回答平均長了將近一倍（11,187 vs 5,923 token，46% vs 5% 撞到上限），所以門檻的第二個條件（hybrid 的 headroom 是否比 dense 大）改成讓 hybrid 照 dense 的長度生成，再跟 dense 比。第一個條件已經判了，這張表只是補齊紀錄；之後如果要開 upstream issue，用的就是這組證據。目前 8 組完成 1 組。</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>設定</th><th class="r">hybrid headroom（dense 的長度）</th><th class="r">dense headroom</th><th class="r">hybrid 搶占</th><th class="r">dense 搶占</th></tr></thead>
+      <tbody id="cross-rows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-tag">R2 · 2026-10-29 → 30</span><h2>R2：換了權重，舊的 state 還能用嗎？</h2></div>
+  <div class="prose">
+    <p><b>問題。</b>非同步 RL 會在回答生成到一半時換上新權重。PipelineRL 和 Magistral 沿用舊權重算出的 KV cache 繼續生成，AReaL 選擇重算，Kimi K3 每輪清空 hybrid 的 state pool。Dense 模型的舊 KV 是每個 token 各自的向量；hybrid 的 recurrent state 卻把整段歷史壓成一個固定大小的矩陣。如果舊權重寫進 state 的誤差比舊 KV 大很多，「怎麼便宜地修好 hybrid 的舊 state」就是 hybrid 專屬的題目。</p>
+    <p><b>方法。</b>從釋出的權重開始跑真的 GRPO：128 題 MATH、每題 8 個 sample，只用有對有錯的題組，DAPO 的 clip（0.2 / 0.28），AdamW lr 1e-6，fp32 master 放 CPU、bf16 放 GPU。第 1、2、4、8、16、32 步之後，拿 32 個舊權重生成的長推理回答，在第 1K、4K、8K token 切開，接下來 1,024 個 token 用 teacher forcing，比較下面幾種 cache 的下一個 token 分佈：</p>
+    <ul>
+      <li><b>F</b>：新權重，新權重算的 cache。換權重後重算，當作標準答案。</li>
+      <li><b>S</b>：新權重，舊權重算的 cache。全部沿用。</li>
+      <li><b>P</b>：舊權重，舊 cache。等於還在用舊 policy。</li>
+      <li><b>floor</b>：新權重一次跑完整段。權重一樣，只是 kernel 路徑不同，代表 bf16 的數值雜訊。</li>
+      <li>Hybrid 另外拆成 <b>S_state</b>（只有 linear-attention 的 state 是舊的）和 <b>S_kv</b>（只有 attention KV 是舊的）。</li>
+    </ul>
+    <p><b>門檻（事先定好）。</b>Hybrid 要在某個 step 和 cut 上，KL(F‖S) 至少是 floor 的 3 倍，而且 ρ = KL(F‖S) ÷ KL(F‖P) ≥ 1，或 ≥ max(0.5, 3 × dense 的 ρ)，才算活著。</p>
+  </div>
+  <figure>
+    <div class="fig-title">KL ÷ floor 對 GRPO step（三個 cut 的平均）</div>
+    <div class="legend" id="lg-r2"></div>
+    <div class="two">
+      <div><div class="muted">hybrid（Qwen3.5-4B）</div><div class="chart" id="fig-r2-hybrid"></div></div>
+      <div><div class="muted">dense（Qwen3-4B）</div><div class="chart" id="fig-r2-dense"></div></div>
+    </div>
+    <figcaption><b>Policy 一直在動，舊 cache 的誤差幾乎沒有跟著長。</b>32 步之後 hybrid 的 policy 變化是雜訊的 5.6–5.8 倍，沿用舊 cache 只有 1.55–1.74 倍，ρ 從第 8 步的 0.67 一路降到 0.28–0.30。第 1–4 步所有條件都在雜訊裡：lr 1e-6 的一步只改到 3% 的 bf16 權重（32 步後 17%），大多數更新小於 bf16 的解析度。Dense 在 8K 只有 7 個 probe 夠長。</figcaption>
+  </figure>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th class="r">cut</th><th class="r">hybrid S</th><th class="r">S_state</th><th class="r">S_kv</th><th class="r">hybrid P</th><th class="r">dense S</th><th class="r">dense P</th><th class="r">hybrid S / floor</th><th class="r">hybrid ρ</th></tr></thead>
+      <tbody id="split-rows"></tbody>
+    </table>
+  </div>
+  <p class="muted">第 32 步，KL 扣掉 floor，單位 1e-4；每格是 12 個 probe 的平均（dense 8K 是 7 個）。</p>
+  <div class="prose">
+    <p><b>三個觀察。</b></p>
+    <ul>
+      <li><b>舊的 recurrent state 不是主要來源。</b>只換 state 和只換 KV 的誤差差不多大（0.5–1.1 vs 0.7–1.2），兩者相加是全部沿用的 70–100%。</li>
+      <li><b>誤差在切點後最大，之後變小。</b>Hybrid 切點後前 64 個 token 是 floor 的 2.2–2.5 倍，第 257–1,024 個 token 降到 1.5–1.7 倍。新 token 不斷寫進 state，舊權重留下的部分被 gate 慢慢衰減，不會累積。</li>
+      <li><b>同樣的 policy 變化下也分不出來。</b>同步數下 hybrid 的 policy 變得比 dense 多（P 超出雜訊 1.4–1.6e-3 vs 0.7e-3）。比 policy 變化差不多的點，hybrid 第 16 步 vs dense 第 32 步，S / floor 是 1.24–1.32 vs 1.06–1.27。</li>
+    </ul>
+    <p>沿用舊 state 跟沿用舊 KV 一樣可以接受。PipelineRL 已經這樣做，這是工程上的預設，不是論文題目。</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-tag">方法上的教訓</span><h2>兩個差點讓結果算錯的地方</h2></div>
+  <div class="prose">
+    <ul>
+      <li><b>Async scheduling 差一步。</b>vLLM 0.32 預設非同步排程，每個 step 記到的時間其實是上一個 step 的 GPU 工作。逐步擬合的 R² 只有 0.05，重算成本被估成 14 µs/token。改成 50 個 step 的視窗加總以後 R² 是 0.90–1.00，重算約 97 µs/token；dense 的 headroom 從 1.7% 修正為 7.5%。</li>
+      <li><b>bf16 的解析度。</b>小 lr 的單步更新多半寫不進 bf16 權重，所以 staleness 實驗只看 1–8 步會得到「全部等於雜訊」。這也是門檻要求「至少 3 倍 floor」、並把步數延長到 32 的原因。</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-tag">下一步</span><h2>要你決定的事</h2></div>
+  <div class="prose">
+    <p>連續三個方向（hybrid 的 prefix caching、vLLM profiling 找瓶頸、RL rollout），看到的差距都已經被現成的開關或上游正在做的 PR 補上。vLLM 對 hybrid 已經調得相當好，從 profiling 找題目的效率很低。可以選的路：</p>
+    <ol class="steps">
+      <li><div><b>開 vLLM upstream issue（小，跟論文無關）。</b>Hybrid 在 RL rollout 這種一次大量長回答的負載下，預設的 watermark 0 讓一個 step 慢 26–37%，調成 0.05 就把時間縮短 21–29%；dense 在預設值下只差 1–4%。資料已經齊了，要你同意才會發。</div></li>
+      <li><div><b>回到唯一過關的結果 H3。</b>Hybrid attention 層的 page 選擇在 512 budget 下比 Quest 多 10.8 分（CI 4.2–18.3）。模擬審稿的主要問題（題目只有 30 題、confirm split 還沒跑、baseline 只有 Quest）都屬於評估範圍。第一步是跑事先保留的 confirm split，一個晚上就知道效果是不是真的。弱點是方法跟 ShadowKV／InfLLM 很像，沒有 hybrid 專屬的部分。</div></li>
+      <li><div><b>換一種找題目的方式。</b>不從 profiling 找瓶頸，改從 hybrid 做不好的地方出發。例如 H-a 看到 hybrid 的 attention 層比 dense 更分散（oracle@512 漏掉 22.7% vs 11.6%），可以從長 context 檢索的準確度找題目。</div></li>
+    </ol>
+    <p><b>我的建議：</b>1 跟其他選項不衝突，可以先做。論文的部分我選 2：它是唯一有效果通過門檻的結果，confirm split 一個晚上就能判斷值不值得繼續。如果 confirm split 沒過，再考慮 3。</p>
+  </div>
+</section>
+
+<footer>
+  <span>數字出自 phase0 branch：results/profile/runs/r1_bound_own.json、r1_bound_cross.json、r2_report.json，每個結果檔都帶 provenance；門檻與修改紀錄在 EXPERIMENTS.md，過程在 results/profile/NOTEBOOK.md。</span>
+  <span>前一份：〈Qwen3.5 放大巡檢〉（2026-10-29 下午）。</span>
+</footer>
+</div>
+<script>
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function tipFor(host) { const t = document.createElement("div"); t.className = "tip"; t.hidden = true; host.appendChild(t); return t; }
+function showTip(t, host, x, y, html) { t.innerHTML = html; t.hidden = false; t.style.left = x + "px"; t.style.top = y + "px"; }
+function legend(id, items) { const L = document.getElementById(id); L.innerHTML = items.map(([c, n]) => `<span><i style="background:var(${c})"></i>${n}</span>`).join(""); }
+function fmt(n) { return n.toLocaleString("en-US"); }
+function widthOf(host) { return Math.max(300, Math.round(host.getBoundingClientRect().width) || 880); }
+
+function hbar(id, rows, opt) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const W = widthOf(host), rowH = 34, left = Math.min(opt.left || 190, W * 0.42), right = opt.right || 110, top = 8, H = top + rows.length * rowH + 26;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opt.label }, host);
+  const max = opt.max || Math.max(...rows.map(r => r.v)) * 1.08;
+  const x = v => left + (W - left - right) * v / max;
+  const g = el("g", { class: "grid" }, svg);
+  for (const t of opt.ticks) { el("line", { x1: x(t), x2: x(t), y1: top, y2: top + rows.length * rowH }, g); const tx = el("text", { x: x(t), y: H - 6, "text-anchor": "middle", class: "axis-label" }, svg); tx.textContent = fmt(t); }
+  const tip = tipFor(host);
+  rows.forEach((r, i) => {
+    const y = top + i * rowH + 7, h = rowH - 14;
+    const lab = el("text", { x: left - 10, y: y + h / 2 + 4, "text-anchor": "end" }, svg); lab.textContent = r.name; lab.style.fill = css("--ink");
+    const bar = el("rect", { x: left, y, width: Math.max(2, x(r.v) - left), height: h, rx: 4, fill: r.color ? css(r.color) : css("--s1") }, svg);
+    const val = el("text", { x: x(r.v) + 8, y: y + h / 2 + 4 }, svg); val.textContent = fmt(r.v);
+    if (r.side) { const s = el("text", { x: W - 4, y: y + h / 2 + 4, "text-anchor": "end" }, svg); s.textContent = r.side; }
+    const hit = el("rect", { x: 0, y: y - 6, width: W, height: rowH, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", ev => { const b = host.getBoundingClientRect(); showTip(tip, host, ev.clientX - b.left, ev.clientY - b.top, r.tip || `${r.name}: ${fmt(r.v)}`); bar.style.opacity = 0.85; });
+    hit.addEventListener("mouseleave", () => { tip.hidden = true; bar.style.opacity = 1; });
+  });
+  if (opt.sideHead) { const s = el("text", { x: W - 4, y: top - 0, "text-anchor": "end", class: "axis-label" }, svg); s.textContent = opt.sideHead; }
+}
+
+function lines(id, series, opt) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const W = widthOf(host), H = opt.h || 230, L = 52, R = 16, T = 14, B = 30;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opt.label }, host);
+  const xmax = opt.xmax, ymax = opt.ymax, ymin = opt.ymin || 0;
+  const xs = v => opt.xcat ? L + (W - L - R) * v / (opt.xcat.length - 1) : L + (W - L - R) * v / xmax;
+  const ys = v => T + (H - T - B) * (1 - (v - ymin) / (ymax - ymin));
+  const g = el("g", { class: "grid" }, svg);
+  for (const t of opt.yticks) { el("line", { x1: L, x2: W - R, y1: ys(t), y2: ys(t) }, g); const tx = el("text", { x: L - 8, y: ys(t) + 4, "text-anchor": "end", class: "axis-label" }, svg); tx.textContent = opt.yfmt ? opt.yfmt(t) : fmt(t); }
+  const xt = opt.xcat ? opt.xcat.map((c, i) => [i, c]) : opt.xticks.map(t => [t, opt.xfmt ? opt.xfmt(t) : t]);
+  for (const [v, s] of xt) { const tx = el("text", { x: xs(v), y: H - 8, "text-anchor": "middle", class: "axis-label" }, svg); tx.textContent = s; }
+  if (opt.ylab) { const t = el("text", { x: L, y: T - 2, class: "axis-label" }, svg); t.textContent = opt.ylab; }
+  if (opt.ref !== undefined) el("line", { x1: L, x2: W - R, y1: ys(opt.ref), y2: ys(opt.ref), stroke: css("--ink-3"), "stroke-dasharray": "4 4" }, svg);
+  if (opt.refLabel) { const t = el("text", { x: W - R, y: ys(opt.ref) - 6, "text-anchor": "end", class: "axis-label" }, svg); t.textContent = opt.refLabel; }
+  for (const s of series) {
+    const d = s.pts.map((p, i) => `${i ? "L" : "M"}${xs(p[0]).toFixed(1)},${ys(p[1]).toFixed(1)}`).join("");
+    el("path", { d, fill: "none", stroke: css(s.color), "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    if (opt.dots) for (const p of s.pts) el("circle", { cx: xs(p[0]), cy: ys(p[1]), r: 4, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2 }, svg);
+  }
+  const tip = tipFor(host);
+  const cross = el("line", { y1: T, y2: H - B, stroke: css("--ink-3"), "stroke-width": 1, opacity: 0 }, svg);
+  const hit = el("rect", { x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent" }, svg);
+  hit.addEventListener("mousemove", ev => {
+    const b = svg.getBoundingClientRect(); const vx = (ev.clientX - b.left) * W / b.width;
+    const ref = series[0].pts; let best = 0;
+    ref.forEach((p, i) => { if (Math.abs(xs(p[0]) - vx) < Math.abs(xs(ref[best][0]) - vx)) best = i; });
+    const px = xs(ref[best][0]); cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("opacity", 0.6);
+    const head = opt.xcat ? opt.xcat[ref[best][0]] : (opt.xfmt ? opt.xfmt(ref[best][0]) : ref[best][0]);
+    const rows = series.map(s => { const p = s.pts.reduce((a, q) => Math.abs(q[0] - ref[best][0]) < Math.abs(a[0] - ref[best][0]) ? q : a); return `${s.name}: ${opt.vfmt ? opt.vfmt(p[1]) : fmt(p[1])}`; });
+    const hb = host.getBoundingClientRect();
+    showTip(tip, host, px * b.width / W, ev.clientY - hb.top, `${opt.xname || ""}${head}<br>` + rows.join("<br>"));
+  });
+  hit.addEventListener("mouseleave", () => { tip.hidden = true; cross.setAttribute("opacity", 0); });
+}
+
+function stacked(id, rows, keys, opt) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const W = widthOf(host), rowH = 40, left = Math.min(opt.left || 170, W * 0.42), right = opt.right || 56, top = 6, H = top + rows.length * rowH + 26;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opt.label }, host);
+  const max = opt.max;
+  const x = v => left + (W - left - right) * v / max;
+  const g = el("g", { class: "grid" }, svg);
+  for (const t of opt.ticks) { el("line", { x1: x(t), x2: x(t), y1: top, y2: top + rows.length * rowH }, g); const tx = el("text", { x: x(t), y: H - 6, "text-anchor": "middle", class: "axis-label" }, svg); tx.textContent = t; }
+  const tip = tipFor(host);
+  rows.forEach((r, i) => {
+    const y = top + i * rowH + 8, h = rowH - 16;
+    const lab = el("text", { x: left - 10, y: y + h / 2 + 4, "text-anchor": "end" }, svg); lab.textContent = r.name; lab.style.fill = css("--ink");
+    let acc = 0;
+    keys.forEach(([k, color, name], j) => {
+      const v = r[k]; if (!v) return;
+      const x0 = x(acc) + (j ? 1 : 0), w = Math.max(1, x(acc + v) - x(acc) - (j ? 1 : 0));
+      const seg = el("rect", { x: x0, y, width: w, height: h, rx: 3, fill: css(color) }, svg);
+      seg.addEventListener("mousemove", ev => { const b = host.getBoundingClientRect(); showTip(tip, host, ev.clientX - b.left, ev.clientY - b.top, `${r.name}<br>${name}: ${opt.dp === 0 ? fmt(Math.round(v)) : v.toFixed(2)}${opt.unit}`); seg.style.opacity = 0.85; });
+      seg.addEventListener("mouseleave", () => { tip.hidden = true; seg.style.opacity = 1; });
+      acc += v;
+    });
+    const tot = el("text", { x: x(acc) + 8, y: y + h / 2 + 4 }, svg); tot.textContent = (opt.dp === 0 ? fmt(Math.round(r.total ?? acc)) : acc.toFixed(2)) + opt.unit;
+  });
+}
+
+const D = {"wm": ["0", "0.05", "0.1", "0.2"], "headroom": {"hybrid_m50": [24.7, 6.5, 6.8, 7.7], "dense_m50": [7.6, 5.2, 5.0, 6.3], "hybrid_m70": [29.5, 7.1, 6.4, 6.5], "dense_m70": [7.5, 4.1, 4.0, 5.2]}, "time": [{"name": "hybrid · 記憶體 0.5 · wm 0", "bound": 3539, "steps": 60, "recompute": 1098, "total": 4697, "preempt": 5901}, {"name": "hybrid · 記憶體 0.5 · wm 0.1", "bound": 3476, "steps": 122, "recompute": 132, "total": 3731, "preempt": 410}, {"name": "dense · 記憶體 0.5 · wm 0", "bound": 3596, "steps": 59, "recompute": 240, "total": 3891, "preempt": 2660}, {"name": "dense · 記憶體 0.5 · wm 0.1", "bound": 3628, "steps": 92, "recompute": 105, "total": 3820, "preempt": 998}, {"name": "hybrid · 記憶體 0.7 · wm 0", "bound": 3214, "steps": 58, "recompute": 1287, "total": 4559, "preempt": 4277}, {"name": "hybrid · 記憶體 0.7 · wm 0.1", "bound": 3107, "steps": 91, "recompute": 121, "total": 3320, "preempt": 339}, {"name": "dense · 記憶體 0.7 · wm 0", "bound": 3101, "steps": 34, "recompute": 221, "total": 3352, "preempt": 2080}, {"name": "dense · 記憶體 0.7 · wm 0.1", "bound": 3101, "steps": 62, "recompute": 71, "total": 3231, "preempt": 689}], "cross": [["記憶體 0.5 · wm 0", 21.8, 7.6, 4322, 2660], ["記憶體 0.5 · wm 0.05", null, 5.2, null, 1300], ["記憶體 0.5 · wm 0.1", null, 5.0, null, 998], ["記憶體 0.5 · wm 0.2", null, 6.3, null, 818], ["記憶體 0.7 · wm 0", null, 7.5, null, 2080], ["記憶體 0.7 · wm 0.05", null, 4.1, null, 908], ["記憶體 0.7 · wm 0.1", null, 4.0, null, 689], ["記憶體 0.7 · wm 0.2", null, 5.2, null, 539]], "r2": {"steps": [1, 2, 4, 8, 16, 32], "hybrid_S": [0.97, 0.97, 0.99, 1.07, 1.28, 1.63], "hybrid_P": [1.0, 1.02, 1.1, 1.62, 3.0, 5.7], "dense_S": [1.02, 1.0, 0.99, 1.03, 1.14, 1.16], "dense_P": [1.0, 1.03, 1.03, 1.06, 1.44, 2.2]}, "split": [[1024, 1.72, 0.46, 0.73, 14.22, 0.47, 7.36, 1.55, 0.28], [4096, 1.84, 0.78, 1.03, 14.46, 0.97, 7.37, 1.61, 0.28], [8192, 2.42, 1.08, 1.2, 15.52, 1.25, 6.95, 1.74, 0.3]], "r1": {}, "cross_done": 1};
+
+function render() {
+  const wmx = D.wm;
+  const H = [["hybrid", "--s2", "hybrid（Qwen3.5-4B）"], ["dense", "--s1", "dense（Qwen3-4B）"]];
+  legend("lg-head", H.map(h => [h[1], h[2]]));
+  for (const mk of ["m50", "m70"]) {
+    lines(`fig-head-${mk}`, H.map(([k, c, n]) => ({ name: n, color: c, pts: D.headroom[`${k}_${mk}`].map((v, i) => [i, v]) })),
+      { label: `headroom，記憶體 ${mk === "m50" ? "0.5" : "0.7"}`, xcat: wmx, ymax: 32, yticks: [0, 10, 20, 30], yfmt: t => t + "%",
+        ref: 15, refLabel: "門檻 15%", dots: true, xname: "watermark ", vfmt: v => v.toFixed(1) + "%", h: 220 });
+  }
+  const K = [["bound", "--ink-3", "下限（完美排程）"], ["steps", "--s3", "多出來的 step"], ["recompute", "--s2", "重算"]];
+  legend("lg-time", K.map(k => [k[1], k[2]]));
+  stacked("fig-time", D.time, K, { label: "rollout step 的時間組成", max: 5000, ticks: [0, 1000, 2000, 3000, 4000, 5000], left: 210, right: 64, unit: " s", dp: 0 });
+  const dash = v => v === null ? '<span class="chip pending">還在跑</span>' : v;
+  document.getElementById("cross-rows").innerHTML = D.cross.map(c => `<tr><td>${c[0]}</td><td class="r">${c[1] === null ? dash(null) : c[1].toFixed(1) + "%"}</td><td class="r">${c[2].toFixed(1)}%</td><td class="r">${c[3] === null ? "—" : fmt(c[3])}</td><td class="r">${fmt(c[4])}</td></tr>`).join("");
+  const R = [["P", "--s1", "policy 變化：KL(F‖P)"], ["S", "--s2", "沿用舊 cache：KL(F‖S)"]];
+  legend("lg-r2", R.map(r => [r[1], r[2]]));
+  for (const m of ["hybrid", "dense"]) {
+    lines(`fig-r2-${m}`, R.map(([q, c, n]) => ({ name: n, color: c, pts: D.r2[`${m}_${q}`].map((v, i) => [i, v]) })),
+      { label: `${m} 的 KL ÷ floor`, xcat: D.r2.steps.map(String), ymin: 0, ymax: 6, yticks: [0, 1, 2, 3, 4, 5, 6], yfmt: t => t + "×",
+        ref: 3, refLabel: "門檻 3×", dots: true, xname: "GRPO step ", vfmt: v => v.toFixed(2) + "× floor", h: 220 });
+  }
+  const e = v => v.toFixed(2);
+  document.getElementById("split-rows").innerHTML = D.split.map(s => `<tr><td class="r">${fmt(s[0])}</td><td class="r">${e(s[1])}</td><td class="r">${e(s[2])}</td><td class="r">${e(s[3])}</td><td class="r">${e(s[4])}</td><td class="r">${e(s[5])}</td><td class="r">${e(s[6])}</td><td class="r">${s[7].toFixed(2)}×</td><td class="r">${s[8].toFixed(2)}</td></tr>`).join("");
+}
+render();
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(render, 150); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+</script>
