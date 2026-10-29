@@ -541,3 +541,26 @@ b = 256 was preemption.
 - Upstream: #62004 (open, 2026-10-16, Dao AI Lab + NVIDIA) ReplaySSM for GDN standard decode: keep a ring
   buffer of recent (k, d, g), write the state back once every L steps; Mamba2 version merged (#48018).
   Fails rule (c). The bf16-state ablation (abl_ssm_bf16_qwen35_4b, queued) measures the other lever.
+
+## 14:54 -- clean chat c = 64 reruns (f2) and the dense 4B serving baseline (serve_qwen3_4b)
+| run | out tok/s | TTFT p50 s | TPOT p50 ms | preemptions | prefix hits |
+|---|---|---|---|---|---|
+| Qwen3.5-9B chat c = 64, d2_serve_9b_pair (cross-run hits) | 571 | 2.55 | 122.6 | 0 | 236544 |
+| Qwen3.5-9B chat c = 64, fresh server (f2) | 471 | 2.65 | 132.8 | 0 | 0 |
+| Qwen3-8B chat c = 64 | 332 | 51.5 | 108.7 | 24 | 0 |
+| Qwen3.6-35B-A3B-FP8 chat c = 64, d2_serve_moe_pair | 653 | 7.94 | 71.2 | 154 | 0 |
+| same, fresh server, same seed (f2) | 706 | 5.91 | 72.4 | 106 | 0 |
+
+- 9B hybrid vs dense at chat c = 64 is 1.42x, not 1.72x: the cross-run hits were worth ~18% of throughput.
+- The MoE repeat differs by 8% with 106 vs 154 preemptions: runs that preempt are noisy at this level;
+  differences under ~10% between such runs are not findings.
+- serve_qwen3_4b (night-1 queue; default setting, reasoning fixed 1024 / 8192 at c = 16 / 64, chat 4096 /
+  512 at c = 16 / 64 / 256) against night 1's serve_qwen35_4b: reasoning 676 vs 1037 (c = 16, hybrid
+  1.53x) and 813 vs 2068 (c = 64, 2.54x; dense 231 preemptions); chat 455 vs 617 (1.36x), 462 vs 850
+  (c = 64, hybrid prefix off, the clean one; 1.84x), 453 vs 761 (c = 256, prefix off). Same picture as
+  the 9B pair: the hybrid's pool decides it.
+- The dense chat c = 64 run shows 4080 prefix hits (255 blocks of 16): `vllm bench serve` sends the first
+  prompt once as a test request before the run. One prompt per run, negligible.
+- Harness: a retry now logs to job.attempt<N>.log (d2_serve_27b's first attempt after the port fix failed
+  at 13:59 after 3 min, rc 1, and its log was overwritten by the retry; likely the previous job's memory
+  still held on GPU 6 when the 0.92-utilisation server started 13 s later; not verified).

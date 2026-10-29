@@ -1,7 +1,8 @@
 """Long-running profiling harness: a job queue that runs on free GPUs and re-analyses after every job.
 
 Jobs are JSON files in <root>/{pending,running,done,failed}/<id>.json. A job runs one command with
-CUDA_VISIBLE_DEVICES set to the GPU it was given, in <runs>/<id>/ (log in job.log). Kinds:
+CUDA_VISIBLE_DEVICES set to the GPU it was given, in <runs>/<id>/ (log in job.log; a retry's in
+job.attempt<N>.log, so the failed attempt's log survives). Kinds:
   engine  scripts/profile/engine_profile.py on one model (+ --set overrides, flags), then parse_trace.py
   serve   scripts/profile/serve_bench.py (models, settings)
   cmd     any command; "{out}" in it becomes the run directory
@@ -150,8 +151,10 @@ def run(cfg: dict, until: dt.datetime):
                 out.mkdir(parents=True, exist_ok=True)
                 env = {**os.environ, **{k: str(v) for k, v in job.get("env", {}).items()}, "CUDA_VISIBLE_DEVICES": str(gpu)}
                 job.update(gpu=gpu, started=now(), out=str(out.relative_to(REPO)), watch_busy=watch_busy)
+                n = job.get("attempts", 1)
                 p = subprocess.Popen(command(job, out, hc), cwd=REPO, env=env,
-                                     stdout=open(out / "job.log", "w"), stderr=subprocess.STDOUT, start_new_session=True)
+                                     stdout=open(out / ("job.log" if n == 1 else f"job.attempt{n}.log"), "w"),
+                                     stderr=subprocess.STDOUT, start_new_session=True)
                 procs[job["id"]] = (p, job, time.time())
                 q.move(job, "pending", "running")
                 note(f"{job['id']} start on GPU {gpu} (watch busy {watch_busy})")
