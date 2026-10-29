@@ -69,13 +69,19 @@ def main():
     vc = llm.llm_engine.vllm_config
     cache = vc.cache_config
     capacity = cache.num_gpu_blocks * cache.block_size
+    # A hybrid request also holds one state block per Mamba group (vLLM groups the linear-attention layers
+    # in groups as large as the attention group: n_linear / n_full of them), which the token count misses.
+    layer_types = getattr(vc.model_config.hf_text_config, "layer_types", None) or []
+    n_full = sum("full" in t for t in layer_types)
+    state_blocks = (len(layer_types) - n_full) // n_full if n_full else 0
+    need = lambda b, C, steps: b * (C + steps + (1 + state_blocks) * cache.block_size)
     engine_info = {"block_size": cache.block_size, "num_gpu_blocks": cache.num_gpu_blocks,
                    "capacity_tokens": capacity, "enable_prefix_caching": cache.enable_prefix_caching,
                    "mamba_cache_mode": getattr(cache, "mamba_cache_mode", None),
                    "max_num_batched_tokens": vc.scheduler_config.max_num_batched_tokens,
                    "max_num_seqs": vc.scheduler_config.max_num_seqs,
                    "cudagraph_mode": str(vc.compilation_config.cudagraph_mode),
-                   "kv_cache_dtype": cache.cache_dtype}
+                   "kv_cache_dtype": cache.cache_dtype, "state_blocks_per_request": state_blocks}
     print("engine:", engine_info, flush=True)
     P = Prompts(*pc["prompt_token_range"], seed=pc["engine"]["seed"])
     one = SamplingParams(max_tokens=1, ignore_eos=True, temperature=0)
@@ -92,7 +98,7 @@ def main():
         gen = SamplingParams(max_tokens=1 + N, ignore_eos=True, temperature=0)
         for C in pc["decode_contexts"]:
             for b in pc["decode_batches"]:
-                if b * (C + N + cache.block_size) > pc["capacity_share"] * capacity:
+                if need(b, C, N) > pc["capacity_share"] * capacity:
                     print(f"decode C={C} b={b}: skipped (capacity)", flush=True)
                     continue
                 prompts = P.make(b, C)
@@ -135,7 +141,7 @@ def main():
         n = pc["profile_decode_steps"]
         gen = SamplingParams(max_tokens=1 + n, ignore_eos=True, temperature=0)
         for C, b in pc["profile_decode"]:
-            if b * (C + n + cache.block_size) > pc["capacity_share"] * capacity:
+            if need(b, C, n) > pc["capacity_share"] * capacity:
                 continue
             prompts = P.make(b, C)
             llm.generate(prompts, one, use_tqdm=False)

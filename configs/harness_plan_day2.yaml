@@ -1,0 +1,23 @@
+note: 'day 2 (09:34, user: keep looking, look at bigger models): the 4B pair gave no qualifying candidate
+  (NOTEBOOK 2026-10-29). Same method on bigger hybrids: engine profiles (P1 sweep + P2 kernel traces) of the
+  9B pair, the MoE pair (Qwen3.6-35B-A3B-FP8 vs Qwen3-30B-A3B-FP8) and Qwen3.5-27B-FP8, then serving at
+  normal load (c = 16, 64; the c = 256 collapse is understood). The FP8 models get 0.92 of the GPU so the
+  weights (29-35 GB) leave room for KV. Replaces the night-1 base_* / serve_9b_pair entries for these
+  models, which never ran. One card while GPU 0 is busy.'
+serve_workloads: &wl 'profile.serve.workloads={reasoning_var: {input: 1024, output: 8192, range_ratio: 0.5, prompts_per_concurrency: 2, concurrency: [16, 64]}, chat: {input: 4096, output: 512, prompts_per_concurrency: 4, concurrency: [16, 64]}}'
+big_server: &big 'profile.serve.server_args=["--gpu-memory-utilization", "0.92", "--max-model-len", "34816", "--max-num-seqs", "256", "--seed", "0"]'
+jobs:
+- {id: d2_base_qwen35_9b, kind: engine, model: qwen35_9b, priority: 1, timeout_s: 3600, why: engine profile, 9B hybrid}
+- {id: d2_base_qwen3_8b, kind: engine, model: qwen3_8b, priority: 2, timeout_s: 3600, why: engine profile, 8B dense}
+- {id: d2_base_qwen36_35b_a3b_fp8, kind: engine, model: qwen36_35b_a3b_fp8, priority: 3, timeout_s: 5400,
+   sets: ['profile.engine.gpu_memory_utilization=0.92'], why: engine profile, MoE hybrid FP8}
+- {id: d2_base_qwen3_30b_a3b_fp8, kind: engine, model: qwen3_30b_a3b_fp8, priority: 4, timeout_s: 5400,
+   sets: ['profile.engine.gpu_memory_utilization=0.92'], why: engine profile, MoE dense FP8}
+- {id: d2_base_qwen35_27b_fp8, kind: engine, model: qwen35_27b_fp8, priority: 5, timeout_s: 5400,
+   sets: ['profile.engine.gpu_memory_utilization=0.92'], why: engine profile, 27B hybrid FP8 (no FP8 dense pair locally)}
+- {id: d2_serve_9b_pair, kind: serve, models: [qwen35_9b, qwen3_8b], settings: [default], priority: 10, timeout_s: 14400,
+   sets: [*wl], why: serving at normal load, 9B pair}
+- {id: d2_serve_moe_pair, kind: serve, models: [qwen36_35b_a3b_fp8, qwen3_30b_a3b_fp8], settings: [default], priority: 11,
+   timeout_s: 14400, sets: [*wl, *big], why: serving at normal load, MoE pair}
+- {id: d2_serve_27b, kind: serve, models: [qwen35_27b_fp8], settings: [default], priority: 12, timeout_s: 10800,
+   sets: [*wl, *big], why: serving at normal load, 27B hybrid}
