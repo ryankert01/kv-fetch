@@ -8,8 +8,9 @@ memory share and admission knobs (config `rollout.replay.settings`). The night-1
 the total context of the running requests (for the step-time fit in rollout_bound.py) and each request's
 finish time. The makespan is the rollout step's time.
 
-Usage (venv-vllm32, one GPU): rollout_replay.py CONFIG OUT_DIR --trace TRACE.json --model KEY --setting NAME [--set k=v]
-Writes OUT_DIR/<model>_<setting>.json.
+Usage (venv-vllm32, one GPU): rollout_replay.py CONFIG OUT_DIR --trace TRACE.json --model KEY --setting NAME
+                              [--name NAME] [--set k=v]
+Writes OUT_DIR/<NAME>.json, NAME = <model>_<setting> by default.
 """
 import argparse
 import json
@@ -34,6 +35,7 @@ def main():
     ap.add_argument("--trace", required=True)
     ap.add_argument("--model", required=True)
     ap.add_argument("--setting", required=True)
+    ap.add_argument("--name")
     ap.add_argument("--set", action="append", default=[])
     args = ap.parse_args()
     cfg = load_config(args.config, args.set)
@@ -107,7 +109,7 @@ def main():
     json.dump({"provenance": prov, "engine": info, "summary": summary, "steps_columns":
                ["t", "running", "waiting", "decode", "new_prefill", "recompute", "preempted", "free_blocks", "context"],
                "steps": st, "preemptions": rec.preemptions, "readmissions": rec.readmissions, "finished_s": finished},
-              open(out / f"{args.model}_{args.setting}.json", "w"))
+              open(out / f"{args.name or f'{args.model}_{args.setting}'}.json", "w"))
 
 
 if __name__ == "__main__":

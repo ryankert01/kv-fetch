@@ -1,0 +1,30 @@
+note: 'R1 control (19:35, added after both traces, before any replay result). The hybrid''s own trace is much
+  longer than the dense model''s (mean 11,187 vs 5,923 tokens, 46% vs 5% at the 16K cap), so comparing their
+  headroom mixes memory layout with workload. Replay the hybrid on the dense model''s lengths (its own prompt ids,
+  same problem and sample index; scripts/rl/cross_trace.py) under the same 8 settings: hybrid vs dense on the
+  same work. Ada cards only, after the main replays.'
+jobs:
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m50_wm0, kind: cmd, priority: 3.00, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m50_wm0',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m50_wm0 --name qwen35_4b_lens_qwen3_4b_m50_wm0'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m50_wm10, kind: cmd, priority: 3.10, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m50_wm10',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m50_wm10 --name qwen35_4b_lens_qwen3_4b_m50_wm10'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m70_wm0, kind: cmd, priority: 3.20, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m70_wm0',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m70_wm0 --name qwen35_4b_lens_qwen3_4b_m70_wm0'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m70_wm10, kind: cmd, priority: 3.30, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m70_wm10',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m70_wm10 --name qwen35_4b_lens_qwen3_4b_m70_wm10'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m50_wm05, kind: cmd, priority: 3.40, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m50_wm05',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m50_wm05 --name qwen35_4b_lens_qwen3_4b_m50_wm05'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m50_wm20, kind: cmd, priority: 3.50, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m50_wm20',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m50_wm20 --name qwen35_4b_lens_qwen3_4b_m50_wm20'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m70_wm05, kind: cmd, priority: 3.60, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m70_wm05',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m70_wm05 --name qwen35_4b_lens_qwen3_4b_m70_wm05'}
+- {id: r1_replay_qwen35_4b_lens_qwen3_4b_m70_wm20, kind: cmd, priority: 3.70, timeout_s: 14400, gpus: [4, 5, 6],
+   why: 'control: hybrid on dense lengths, m70_wm20',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_cross/trace_qwen35_4b_lens_qwen3_4b.json --model qwen35_4b --setting m70_wm20 --name qwen35_4b_lens_qwen3_4b_m70_wm20'}

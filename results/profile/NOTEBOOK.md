@@ -662,3 +662,31 @@ Harness: GPU policy widened per the user ("we can use cards that are not used by
 12:00). Smoke test (4 prompts x 2, 512 tokens) passed for trace, replay and bound; the trace scripts
 encode prompts from the chat template text (apply_chat_template(tokenize=True) returned a dict here).
 Traces started 18:04 on GPU 2 (Qwen3.5-4B) and GPU 4 (Qwen3-4B); 16 replays follow on GPUs 4-6.
+
+## 19:35 -- R1 traces recorded; like-for-like control added
+Both traces done (64 MATH level 3-5 problems x 8, T = 1, 16K cap; engine 0.85 of the GPU):
+
+| | Qwen3-4B (dense) | Qwen3.5-4B (hybrid) |
+|---|---|---|
+| card | GPU 4 (Ada) | GPU 2 (A6000) |
+| prompt tokens, mean | 107.6 | 112.4 |
+| output mean / median / max | 5,923 / 4,834 / 16,384 | 11,187 / 14,302 / 16,384 |
+| at the 16K cap | 25 of 512 (5%) | 235 of 512 (46%) |
+| output tokens | 3.03 M | 5.73 M |
+| wall (not comparable: different cards) | 3,268 s | 5,161 s |
+| preemptions at 0.85 | 1,822 | 3,788 |
+
+- Same problems in the same order (prompt lengths corr 0.999, differ by 1-27 template tokens); per-problem
+  mean response length corr 0.76. The hybrid thinks about twice as long and hits the cap on almost half.
+- Dense bound preview (rollout_bound.bound_terms): memory sets steps_min at both shares, 127,629 steps at
+  0.5 (6,649 blocks) and 77,399 at 0.7 (10,964), vs 16,384 for the longest response; i.e. ~24 / ~39 requests
+  in flight on average. The replays are memory-bound as intended.
+- The hybrid trace engine shows 0.0% prefix hits: a ~112-token prompt is under one 528-token block, so the
+  n = 8 samples share nothing (the dense engine: 81.4%, 16-token blocks).
+- Control added now, after the traces and before any replay result: the two traces differ in workload, so
+  hybrid-vs-dense headroom would mix memory layout with response lengths. scripts/rl/cross_trace.py builds
+  the hybrid's prompts with the dense lengths (results/profile/runs/r1_trace_cross/); 8 more replays of it
+  under the same settings (configs/harness_plan_rl_r1_cross.yaml, Ada cards, after the main 16). The gate's
+  second clause ("hybrid headroom larger than dense") will be read on this pair; the first (within 15% of
+  the bound) on the hybrid's own trace. rollout_replay.py gained --name for the output file.
+- Replays running since 19:01: qwen3_4b m50_wm0 / m50_wm10 / m70_wm0 on GPUs 4-6.
