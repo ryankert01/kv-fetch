@@ -212,7 +212,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-
     <p><b>為什麼 watermark 有用：</b>它讓接納等到有 194 個 block 空著才放行，足夠把重算做完，乒乓就停了（搶占剩 128 次）。關掉 prefix caching 也有幫助但比較少：chunk 變回 2048、跨邊界只要 1 個 block，失敗的窗口比較窄（800 次）。</p>
     <p><b>為什麼不算合格：</b>現成開關就能把吞吐量從 1576 拉到 2128 tok/s、TPOT 從 92 降到 62 ms，不增加 TTFT。剩下的是一個設定上的發現（hybrid 在預設 watermark 0 下飽和時會掉 26%），適合開 issue，不夠撐一篇論文。上游 #62752 / #62878（open）處理的正是 align mode 跨邊界的 block 帳，但只在 CPU 上重現、範圍是 speculative decoding，沒有 serving 數字。</p>
     <p id="dense-note"><b>Dense 對照：</b>Qwen3-4B 在同等記憶體壓力下（80 個 in flight，running 約佔 44%，和 hybrid 的 45% 相當）也會搶占，但不會乒乓。被接回的 request 會先把重算做完，中位數再 decode 106 個 step 才又被選中；hybrid 是 2 個 step。dense 的 victim 幾乎從不是重算到一半的 request（424 次裡 2 次），hybrid 是 3484 次裡 2045 次。差別在 block 的粒度：dense 一個 block 16 token、跨邊界要 1 個；hybrid 一個 block 528 token、跨邊界要 4 個，配置失敗時通常還剩 2 個空 block。</p>
-    <p><b>Prefix caching 本身不是問題：</b>dense 開或關 prefix caching 幾乎一樣（搶占 424 對 423 次、751 對 740 tok/s）。hybrid 開著會多 4.3 倍搶占、少 22% 輸出，是因為它把 hybrid 帶進 align mode。</p>
+    <p><b>Prefix caching 本身不是問題：</b>dense 開或關 prefix caching 幾乎一樣（搶占 424 對 423 次、751 對 740 tok/s）。hybrid 開著會多 4.3 倍搶占、少 22% 輸出，是因為它把 hybrid 帶進 align mode。hybrid 關掉 prefix caching 的離線 trace 也對得上：搶占 779 次、接回後中位數 44 個 step 才又被選中、每個輸出 token 只重算 0.41 個，行為和 dense 一樣。</p>
   </div>
 </section>
 
@@ -285,7 +285,6 @@ footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-
       <li><b>論文題目：往上游還沒在做的層級找。</b>下一晚的 harness 先排更大的 hybrid：Qwen3.6-35B-A3B（MoE，FP8）、Qwen3.5-27B-FP8、9B，以及 TP=2。MoE kernel 和 GDN 的交互、多卡下的 state，今晚完全沒量。佇列裡已經有 9B 的 base 和 ablation job 在等。</li>
       <li><b>要先用一晚檢驗的假設：hybrid 的搶占用換出取代重算。</b>hybrid 的 state 大小固定，換到 host 估計比重算便宜約 50 倍，dense 約 13 倍；V1 只會重算，上游兩次 preempt-offload 的嘗試都沒 merge。可是 watermark 0.1 已經把飽和時的搶占壓到 128 次，所以得先找出搶占在調好的設定下還是很多的負載（長輸出、突發流量），差距夠大才值得做。</li>
     </ol>
-    <p class="muted">Hybrid prefix caching 關閉時的離線 trace（乒乓的對照組）09:30 前後跑完，會補進筆記本。</p>
   </div>
 </section>
 
@@ -300,7 +299,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 20px; color: var(--ink-
 
 <footer>
   <span>數字都出自 phase0 branch 上的 run 目錄（results/profile/runs/），每個結果檔都帶 provenance。</span>
-  <span id="updated">更新：08:49</span>
+  <span id="updated">更新：09:25（harness 已結束）</span>
 </footer>
 </div>
 
@@ -327,6 +326,7 @@ const D = {
   ],
   tokens: [   // per output token (hybrid: 4.14M output; dense: 1.29M)
     { name: "Hybrid · prefix on", decode: 1.0, prefill: 0.128, recompute: 1.239 },
+    { name: "Hybrid · prefix off", decode: 1.0, prefill: 0.128, recompute: 0.408 },
     { name: "Dense · prefix on", decode: 1.0, prefill: 0.132, recompute: 0.667 },
     { name: "Dense · prefix off", decode: 1.0, prefill: 0.132, recompute: 0.806 },
   ],
