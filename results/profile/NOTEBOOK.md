@@ -702,3 +702,28 @@ Both traces done (64 MATH level 3-5 problems x 8, T = 1, 16K cap; engine 0.85 of
 - Result with the fixed fit: bound 3,101 s, headroom 7.5% (recompute 221 s, extra steps 34 s). Steps are
   4.7% above perfect packing (77,399), mean running 37.4 vs the bound's 39.2: the dense model's memory is
   already packed almost perfectly; what is left is recompute.
+
+## 21:19 -- R1: dense replays at 0.5 / 0.7, hybrid at 0.5 (own trace)
+rollout_bound.py (50-step window fit, R2 0.90-0.99). Headroom = 1 - bound / makespan, bound from each run's
+own fit:
+
+| run | blocks | makespan s | bound s | headroom | steps vs min | preempt | recompute tok | waste: recompute / steps s |
+|---|---|---|---|---|---|---|---|---|
+| qwen3_4b m50_wm0 | 6,649 x 16 | 3,891 | 3,596 | 7.6% | 133,511 / 127,629 | 2,660 | 2.43 M | 240 / 59 |
+| qwen3_4b m50_wm10 | 6,649 x 16 | 3,820 | 3,628 | 5.0% | 137,152 / 127,629 | 998 | 1.05 M | 105 / 92 |
+| qwen3_4b m70_wm0 | 10,964 x 16 | 3,352 | 3,101 | 7.5% | 81,066 / 77,399 | 2,080 | 2.29 M | 221 / 34 |
+| qwen35_4b m50_wm0 | 820 x 528 | 4,697 | 3,539 | 24.7% | 124,497 / 118,511 | 5,901 | 12.03 M | 1,098 / 60 |
+| qwen35_4b m50_wm10 | 858 x 528 | 3,731 | 3,476 | 6.8% | 125,521 / 113,263 | 410 | 1.33 M | 132 / 122 |
+
+- Hybrid fit: b 172-182 us per decode token (dense 60-80: the recurrent state round trip), c 32-33 ns per
+  context token (dense 152-162: 8 attention layers of 32), a ~10 ms and d ~95 us for both.
+- Hybrid at vLLM's default (wm0) ping-pongs: 5,901 preemptions over 434 requests (median 9 per preempted
+  request, max 70), 12.0 M recompute tokens for 5.7 M decode, 93.5% of readmissions with zero prefix hit
+  (8.1% of the computed tokens restored; dense m50_wm0: 11.1% zero-hit, 24.5% restored, median 5).
+  Readmission restores almost nothing because the state is cached only at 528-token boundaries.
+- Watermark 0.1 removes most of it: 410 preemptions, 3,731 s (-21% vs wm0), headroom 6.8%. The day-2 27B
+  result (wm 0.1: +28% at c64) again, now on an RL rollout step.
+- Preempted hybrid requests hold 1 state block per Mamba group (396 of 410; 14 hold a transient second), as
+  the bound assumes; attention blocks = ceil(computed / 528) exactly.
+- Gate so far: hybrid best at 0.5 is 6.8% from the bound (< 15%), dense 5.0-7.6%. Waiting for 0.7 and the
+  like-for-like pair.
