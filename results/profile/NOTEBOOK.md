@@ -250,7 +250,7 @@ Same server and load as f8 at c=256 (reasoning_var, prefix caching on unless not
 - f10 (running) still says why prefix caching on preempts 4.3x as often at watermark 0, and whether the
   dense model shows the same on/off gap (moved ahead of the hybrid prefix-off trace).
 
-## 07:34 -- why prefix caching on thrashes: a readmission ping-pong (f10: thrash_trace_qwen35_4b_on)
+## 07:33 -- why prefix caching on thrashes: a readmission ping-pong (f10: thrash_trace_qwen35_4b_on)
 The f8 load offline (in-process LLMEngine, 256 in flight, 512 requests, 2048-token budget, watermark 0,
 prefix caching on = align mode), scheduler instrumented (scripts/profile/thrash_trace.py, summarised by
 thrash_report.py). It reproduces the server run: 3484 preemptions (server: 3474), 1480 output tok/s (1576).
@@ -281,3 +281,26 @@ thrash_report.py). It reproduces the server run: 3484 preemptions (server: 3474)
   recompute, so the ping-pong stops (128 preemptions). Prefix caching off helps less: recompute chunks of
   2048 and 1 block per boundary crossing narrow the window (800 preemptions).
 - Next in f10: the dense model at matched pressure, on and off.
+
+## 08:03 -- the dense model at matched pressure does not ping-pong (f10: thrash_trace_qwen3_4b_on)
+Qwen3-4B, same load and scheduler settings, 80 in flight / 160 requests (in-flight demand over capacity
+about the hybrid's at 256: 232K-token pool, 16-token blocks). Prefix caching on.
+
+| | hybrid, 256 in flight | dense, 80 in flight |
+|---|---|---|
+| mean running / in flight | 115 / 256 (45%) | 35 / 80 (44%) |
+| preemptions per request | 6.8 | 2.7 |
+| triggers | 55% decode at a block boundary, 43% recompute chunk | 422 of 424 decode at a block boundary |
+| free blocks when an allocation fails (median) | 2 (a boundary crossing needs 4) | 0 (needs 1) |
+| victim is the triggering request / victim mid-recompute | 1503 / 2045 of 3484 | 9 / 2 of 424 |
+| readmitted, then preempted again: median steps later | 2 | 106 |
+| recompute tokens per output token | 1.24 | 0.67 |
+| share of time in steps with recompute | 26% | 7% |
+
+- Both preempt under this pressure (watermark 0), but only the hybrid loses the recompute itself: a
+  dense readmission finishes its recompute and decodes for ~100 steps before it is chosen again; a
+  hybrid readmission is usually thrown out mid-recompute within 2 steps. That fast ping-pong is the
+  hybrid-specific part: 528-token blocks, 4 blocks per decode boundary crossing in align mode, and
+  1584-token chunks of 3 blocks each, so the pool runs out in coarse steps.
+- Still fails rule (c) as a research target (watermark 0.1 removes it), but it is a clean hybrid-only
+  scheduler pathology for an upstream issue: default settings + prefix caching + saturation.
