@@ -7,7 +7,9 @@ server's Prometheus counters over the run (preemptions, prompt / cached tokens: 
 serve_index.json, rewritten after every run), stop the server. Each (workload, concurrency) gets its own
 bench seed (serve.seed + its index), the same for every model and setting: with one seed, a run's first
 prompts repeat the previous run's (the random dataset draws start offsets in sequence) and hit the prefix
-cache the previous run left behind, the more so the larger the model's KV pool.
+cache the previous run left behind, the more so the larger the model's KV pool. The server port is
+serve.port + the GPU index, so jobs on different GPUs do not share a server; a run is ok only when the
+bench completed requests with none failed, and the script exits non-zero if any run was not ok.
 
 Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y] [--workloads w1,w2] [--set k=v]
 """
@@ -48,16 +50,20 @@ def counters(port: int) -> dict[str, float]:
     return res
 
 
-def wait_ready(port: int, proc, timeout: float):
+def wait_ready(port: int, proc, name: str, timeout: float):
+    """Until our server answers; the model check guards against another job's server on the same port."""
     t = time.time()
     while time.time() - t < timeout:
         if proc.poll() is not None:
             raise RuntimeError(f"server exited with {proc.returncode}")
         try:
-            urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=5)
-            return
+            models = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=5))
         except Exception:
             time.sleep(5)
+            continue
+        if name not in [m["id"] for m in models["data"]]:
+            raise RuntimeError(f"port {port} serves {models['data']}, not {name}")
+        return
     raise TimeoutError("server not ready")
 
 
@@ -76,7 +82,7 @@ def main():
     (out / "logs").mkdir(parents=True, exist_ok=True)
     models = args.models.split(",") if args.models else sc["models"]
     settings = args.settings.split(",") if args.settings else list(sc["settings"])
-    port = sc["port"]
+    port = sc["port"] + int(os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(",")[0])   # one port per GPU: parallel jobs
     runs = []
     import vllm
     prov = provenance(cfg, model=None, context_length=None, script=str(Path(__file__).resolve()), settings=sc,
@@ -94,7 +100,7 @@ def main():
                    *cfg["profile"]["models"][mkey].get("server_args", []), *sc["settings"][sname]]
             proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=os.environ.copy())
             try:
-                wait_ready(port, proc, sc["ready_timeout_s"])
+                wait_ready(port, proc, name, sc["ready_timeout_s"])
                 for wname, w in sc["workloads"].items():
                     if args.workloads and wname not in args.workloads.split(","):
                         continue
@@ -112,13 +118,15 @@ def main():
                         r = subprocess.run(bench, capture_output=True, text=True)
                         after = counters(port)
                         (out / "logs" / f"bench_{fname[:-5]}.log").write_text(r.stdout + r.stderr)
+                        res = json.load(open(out / fname)) if (out / fname).exists() else {}
+                        ok = r.returncode == 0 and res.get("completed", 0) > 0 and res.get("failed", 1) == 0
                         runs.append({"model": mkey, "setting": sname, "workload": wname, "concurrency": c,
                                      "seed": sc["seed"] + points.index((wname, c)), "result": fname,
-                                     "ok": r.returncode == 0, "started": t, "seconds": time.time() - t,
+                                     "ok": ok, "started": t, "seconds": time.time() - t,
                                      "metrics": {k: v - before.get(k, 0.0) for k, v in after.items()
                                                  if v != before.get(k, 0.0)}})
                         write_index()
-                        print(f"{mkey} {sname} {wname} c={c}: {'ok' if r.returncode == 0 else 'FAILED'} "
+                        print(f"{mkey} {sname} {wname} c={c}: {'ok' if ok else 'FAILED'} "
                               f"({time.time() - t:.0f}s)", flush=True)
             finally:
                 proc.terminate()
@@ -129,6 +137,8 @@ def main():
                 log.close()
                 time.sleep(10)
     write_index()
+    if not all(r["ok"] for r in runs):
+        sys.exit("some benchmark runs failed (serve_index.json: ok false)")
 
 
 if __name__ == "__main__":
