@@ -747,3 +747,23 @@ Hybrid at 0.7 (own trace):
 - Not covered by R1 (other levers, not admission / preemption): the 3 state blocks per request (18% of
   the memory-time at 0.5) and the 528-token page; both change the bound itself.
 - Next, per the plan: R2, stale recurrent state across a weight update.
+
+## 22:26 -- R2 built and queued (stale recurrent state across a weight update)
+Design and gate in EXPERIMENTS.md ("RL rollouts: kill test R2"), written before any R2 run. Config
+configs/rl_stale.yaml; scripts/rl/stale_rollouts.py (vLLM: update + probe rollouts, boxed-answer reward),
+scripts/rl/stale_state.py (HF, .venv-hybrid: GRPO steps with fp32 master + AdamW on the host, bf16 on the
+GPU; continuation KL under caches built by theta_0 vs theta_k). Plan configs/harness_plan_rl_r2.yaml,
+priority ahead of the R1 leftovers, GPU 2 or an Ada card.
+- Checks before the run (GPU 2, A6000): HF Qwen3.5-4B continues correctly from a cache on a multi-token
+  input: cache path vs one pass KL 9.0e-4 (dense Qwen3-4B 9.2e-4: bf16 kernel-path noise); no cache at all
+  0.88; recurrent state zeroed 0.20, so the cached continuation does read the state. The cache is a
+  per-layer list (LinearAttentionLayer: conv_states (1, 8192, 4), recurrent_states (1, 32, 128, 128);
+  DynamicLayer: keys / values), so state and KV can be swapped layer by layer.
+- Training side: fwd+bwd 4,096 tokens 10.9 s (first shape, Triton autotune), 22.5 GB peak with gradient
+  checkpointing; causal_conv1d is not installed (reference PyTorch conv). Prefill 8,192 with cache 0.92 s.
+- vLLM on the A6000 needs /usr/local/cuda-12.8/bin first on PATH (FlashInfer JITs its sampling kernel for
+  sm_86; the default nvcc fails). The runner's environment has it.
+- Smoke (6 problems x 8 at 768 tokens, 2 steps, cut 512, continuation 256): pipeline runs end to end. One
+  Adam step at lr 1e-6 changes 3.4% of the bf16 weights (5.4% after two): most updates are below bf16
+  resolution. At that size KL(F||S) 1.1e-4, KL(F||P) 1.4e-4, floor 1.2e-4: the 1-2 step points sit at the
+  noise floor, which is why the gate asks for KL(F||S) >= 3x floor.

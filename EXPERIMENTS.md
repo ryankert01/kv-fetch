@@ -395,3 +395,44 @@ Amendment (19:35, after both traces, before any replay result): the hybrid's res
 as long (mean 11,187 vs 5,923 tokens; 46% vs 5% capped), so the second clause is read on a like-for-like
 pair: the hybrid replayed on the dense model's lengths (scripts/rl/cross_trace.py) against the dense
 replays, same 8 settings. The first clause is read on the hybrid's own trace. Thresholds unchanged.
+
+## Result (22:07)
+Killed by the first clause. The hybrid's best setting (watermark 0.1) is 6.8% (0.5) and 6.4% (0.7) from
+the bound; vLLM's default (watermark 0) is 24.7% / 29.5% away, i.e. a tuned existing knob recovers it
+(results/profile/NOTEBOOK.md, 21:19 and 22:07).
+
+# RL rollouts: kill test R2 (2026-10-29)
+
+## Question
+When the policy weights change while a response is in flight (partial / async rollouts: PipelineRL and
+Magistral keep the KV cache, AReaL recomputes it, Kimi K3 clears the hybrid state pool every iteration),
+does continuing on the cache computed under the old weights distort the continuation more for a hybrid
+(stale recurrent state) than for a dense model (stale attention KV), measured against the size of the
+policy change itself?
+
+## Method (configs/rl_stale.yaml)
+- Weight updates: real GRPO steps from the released checkpoint (theta_0). Update rollouts: 48 MATH-500
+  problems (levels 1-3) x 8 samples, T = 1, 8K cap; reward 1 if the last \boxed{} matches the answer after
+  normalization; only groups with mixed rewards are used (DAPO dynamic sampling). Token-level mean
+  loss, clip 0.2 / 0.28, AdamW lr 1e-6, betas 0.9 / 0.999, weight decay 0.1, grad clip 1.0; fp32 master
+  weights and optimizer state on the host, a bf16 copy on the GPU (a trainer syncing bf16 weights to the
+  engine). 4 groups (32 sequences) per step, 8 steps (scripts/rl/stale_rollouts.py samples with vLLM,
+  scripts/rl/stale_state.py updates and measures in HF transformers).
+- Probes: 16 MATH-500 problems (levels 3-5, disjoint from R1's 64) x 2 samples from theta_0, 9,216-token
+  cap; cut at T = 1K / 4K / 8K where the sample is long enough; the next 1,024 tokens of the sample are
+  teacher-forced.
+- After k = 1, 2, 4, 8 steps, per probe and cut, the next-token distributions over the continuation:
+  F, theta_k on a cache built by theta_k (recompute on update); S, theta_k on a cache built by theta_0
+  (keep everything); for the hybrid also S_state (recurrent and conv state from theta_0, attention KV from
+  theta_k) and S_kv (the reverse); P, theta_0 on its own cache (the old policy); floor, theta_k over prefix
+  and continuation in one pass, against F (kernel path only).
+- Metric: rho = KL(F || S) / KL(F || P), mean over continuation tokens and probes: the stale cache's
+  distortion as a fraction of the policy change. Also by position (tokens 1-64, 65-256, 257-1024 of the
+  continuation) and the sampled token's |log F - log S|.
+
+## Gate (fixed before running)
+Idea 2 is alive if, for the hybrid at some k <= 8 and cut, KL(F || S) is at least 3x the floor and either
+rho >= 1 (the stale state is worse than running the old policy outright) or rho >= max(0.5, 3 rho_dense)
+(keeping stale KV, as PipelineRL does, does not carry over to hybrid state). Otherwise killed: keeping the
+stale state costs no more than the staleness async RL already tolerates, an engineering default at most;
+per the plan, RL rollouts are then dropped as a direction.

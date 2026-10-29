@@ -1,0 +1,17 @@
+note: 'RL rollouts, kill test R2 (22:30, after R1 was killed; design and gate in EXPERIMENTS.md, fixed before running).
+  Real GRPO updates (lr 1e-6, fp32 master on the host, bf16 on the GPU) from the released Qwen3.5-4B / Qwen3-4B; after
+  1, 2, 4, 8 steps, continuation KL on a cache built by the old weights vs one rebuilt by the new. Rollouts with vLLM
+  (venv-vllm32), updates and measurement in HF transformers (.venv-hybrid). Any idle card among 2, 4-6; ahead of the
+  R1 leftovers. Smoke test (6 problems x 8 at 768 tokens, 2 steps) passed: 3.4% of bf16 weights change after one step;
+  stale KL, policy KL and kernel-path floor all ~1e-4 there.'
+jobs:
+- {id: r2_rollouts_qwen35_4b, kind: cmd, priority: 1.0, timeout_s: 5400, gpus: [2, 4, 5, 6], why: 'R2 update + probe rollouts, qwen35_4b',
+   cmd: '{py} scripts/rl/stale_rollouts.py configs/rl_stale.yaml {out} --model qwen35_4b'}
+- {id: r2_rollouts_qwen3_4b, kind: cmd, priority: 1.1, timeout_s: 5400, gpus: [2, 4, 5, 6], why: 'R2 update + probe rollouts, qwen3_4b',
+   cmd: '{py} scripts/rl/stale_rollouts.py configs/rl_stale.yaml {out} --model qwen3_4b'}
+- {id: r2_stale_qwen35_4b, kind: cmd, priority: 1.0, timeout_s: 14400, gpus: [2, 4, 5, 6], after: [r2_rollouts_qwen35_4b],
+   why: 'R2 GRPO updates + stale-cache KL, qwen35_4b',
+   cmd: 'HF_HUB_OFFLINE=1 .venv-hybrid/bin/python scripts/rl/stale_state.py configs/rl_stale.yaml {out} --model qwen35_4b --rollouts results/profile/runs/r2_rollouts_qwen35_4b/rollouts_qwen35_4b.json'}
+- {id: r2_stale_qwen3_4b, kind: cmd, priority: 1.1, timeout_s: 14400, gpus: [2, 4, 5, 6], after: [r2_rollouts_qwen3_4b],
+   why: 'R2 GRPO updates + stale-cache KL, qwen3_4b',
+   cmd: 'HF_HUB_OFFLINE=1 .venv-hybrid/bin/python scripts/rl/stale_state.py configs/rl_stale.yaml {out} --model qwen3_4b --rollouts results/profile/runs/r2_rollouts_qwen3_4b/rollouts_qwen3_4b.json'}

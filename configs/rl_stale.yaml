@@ -1,0 +1,40 @@
+inherit: rl_rollout.yaml
+
+# Kill test R2 (EXPERIMENTS.md, "RL rollouts: kill test R2"): does a cache built under the old weights distort the
+# continuation more for a hybrid (stale recurrent state) than for a dense model (stale KV) after real GRPO updates?
+# scripts/rl/stale_rollouts.py samples the update and probe rollouts with vLLM under theta_0;
+# scripts/rl/stale_state.py runs the updates and the measurement in HF transformers (.venv-hybrid).
+stale:
+  update_rollouts:
+    levels: [1, 2, 3]                  # shorter solutions, so 8K-capped groups get mixed rewards
+    num_prompts: 48
+    n: 8
+    max_tokens: 8192
+  probes:
+    levels: [3, 4, 5]                  # as R1, the long reasoning traces
+    skip: 64                           # after the shuffle, skip R1's 64 problems
+    num_prompts: 16
+    n: 2
+    max_tokens: 9216                   # longest cut + continuation
+  engine:                              # vLLM engine for both samplings
+    gpu_memory_utilization: 0.85
+    max_model_len: 10240
+    max_num_seqs: 256
+  update:
+    groups_per_step: 4                 # 4 groups x 8 = 32 sequences per optimizer step
+    steps: 8
+    lr: 1.0e-6                         # DAPO / verl recipes for 1.5-7B reasoning RL
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+    weight_decay: 0.1
+    grad_clip: 1.0
+    clip_low: 0.2
+    clip_high: 0.28                    # DAPO clip-higher
+    pad_to: 1024                       # pad sequences to a multiple of this (fewer kernel shapes; padding is masked)
+    logit_chunk: 1024                  # tokens per chunk of the log-softmax over the vocabulary
+  measure:
+    at_steps: [1, 2, 4, 8]
+    cuts: [1024, 4096, 8192]
+    continuation: 1024
+    max_probes_per_cut: 12
+    bins: [64, 256, 1024]              # continuation position bins (upper edges)
