@@ -305,11 +305,11 @@ about the hybrid's at 256: 232K-token pool, 16-token blocks). Prefix caching on.
 - Still fails rule (c) as a research target (watermark 0.1 removes it), but it is a clean hybrid-only
   scheduler pathology for an upstream issue: default settings + prefix caching + saturation.
 
-## 08:10 -- prior work for the speculative-decoding lead (before f11 has numbers)
+## 08:04 -- prior work for the speculative-decoding lead (before f11 has numbers)
 - In 0.32: ReplaySSM (`--use-replayssm`, cache recent SSM inputs and skip the per-step full-state store)
   exists for Mamba2 only (NemotronH is the one model class with `supports_replayssm`); RecoverSSM for
   Kimi KDA. Qwen3.5's GDN runs the default path (all k + 1 states kept for rollback).
-- Upstream for GDN (gh search, 08:08): #58863 RecoverSSM for Qwen GDN (open, updated 2026-10-28);
+- Upstream for GDN (gh search, 08:04): #58863 RecoverSSM for Qwen GDN (open, updated 2026-10-28);
   #49887 ReplaySSM for Gated DeltaNet spec decode (closed 2026-10-12); #56466 ReplaySSM + prefix caching
   for GDN spec decode (WIP); #53929 adaptive verification for Qwen GDN (open); #55504 (merged) bounds
   GDN spec-decode query widths. So the state-rollback cost of GDN speculative decoding is being worked
