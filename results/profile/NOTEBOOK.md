@@ -780,3 +780,22 @@ priority ahead of the R1 leftovers, GPU 2 or an Ada card.
   (GPU 4); r2_stale_qwen35_4b still pending on it (timeout raised to 7 h). r2_stale_qwen3_4b stopped while
   loading; its retry failed on the moved rollouts file, as intended. Dense pair requeued as
   r2b_rollouts_qwen3_4b / r2b_stale_qwen3_4b.
+
+## 00:02 -- R2 hybrid: rollouts done, step 1 sits at the bf16 floor
+- r2_rollouts_qwen35_4b (attempt 2, new config, GPU 4, 4,062 s): update pool 128 problems x 8, mean 6,519
+  tokens, 546 of 1,024 at the 8K cap, reward 0.44, 46 mixed groups (32 steps x 4 groups = 2.8 passes);
+  probes 32 samples, mean 7,709 tokens, 22 at the 9,216 cap (12 probes at every cut).
+- r2_stale_qwen35_4b (GPU 4, from 23:53): step 1 in 294 s (246,891 tokens, grad norm 0.49 before
+  clipping), 3.3% of the bf16 weights changed.
+- Step 1 (mean over 12 probes):
+
+| cut | KL(F||S) | KL(F||P) | KL(F||S_state) | KL(F||S_kv) | floor | rho |
+|---|---|---|---|---|---|---|
+| 1,024 | 2.93e-4 | 3.09e-4 | 2.88e-4 | 2.80e-4 | 3.14e-4 | 0.95 |
+| 4,096 | 2.88e-4 | 2.89e-4 | 2.72e-4 | 2.71e-4 | 2.78e-4 | 1.00 |
+| 8,192 | 3.08e-4 | 3.15e-4 | 3.05e-4 | 3.06e-4 | 3.26e-4 | 0.98 |
+
+- Every condition equals the kernel-path floor: one optimizer step at lr 1e-6 perturbs the bf16 policy no
+  more than reordering the same computation does, so rho ~ 1 here says nothing (both terms are noise).
+  This is why the gate asks KL(F||S) >= 3x floor; the verdict has to come from the later steps. When
+  reading them, (KL - floor) ratios will be reported next to rho.
