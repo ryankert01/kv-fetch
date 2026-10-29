@@ -282,7 +282,7 @@ thrash_report.py). It reproduces the server run: 3484 preemptions (server: 3474)
   2048 and 1 block per boundary crossing narrow the window (800 preemptions).
 - Next in f10: the dense model at matched pressure, on and off.
 
-## 08:03 -- the dense model at matched pressure does not ping-pong (f10: thrash_trace_qwen3_4b_on)
+## 08:02 -- the dense model at matched pressure does not ping-pong (f10: thrash_trace_qwen3_4b_on)
 Qwen3-4B, same load and scheduler settings, 80 in flight / 160 requests (in-flight demand over capacity
 about the hybrid's at 256: 232K-token pool, 16-token blocks). Prefix caching on.
 
