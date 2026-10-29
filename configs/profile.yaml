@@ -63,6 +63,7 @@ profile:
     multiturn_workloads:
       multiturn: {dataset: prefix_repetition, prefix: 4096, suffix: 128, num_prefixes: 64, output: 256, prompts_per_concurrency: 8, concurrency: [16, 64]}
     range_ratio: 0.0                   # fixed lengths
+    seed: 0                            # bench seed of the first (workload, concurrency); each next one +1
     ready_timeout_s: 1200
 
   # Serving saturation offline with the scheduler instrumented (scripts/profile/thrash_trace.py): the

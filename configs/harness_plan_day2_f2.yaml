@@ -1,0 +1,23 @@
+note: 'day 2 follow-up 2 (13:12): in d2_serve_9b_pair the hybrid chat c = 64 run hit the prefix cache for 236544 of
+  its 1048576 prompt tokens (64 prompts x 7 blocks of 528): with bench seed 0 everywhere, its first 64 prompts
+  were the chat c = 16 prompts, still cached in the 674K-token hybrid pool (the dense pool, 171K, had evicted
+  them). serve_bench now gives each (workload, concurrency) its own seed. Rerun chat c = 64 on a fresh server
+  for the hybrids whose runs used one seed (9B; the MoE pair started before the fix).'
+jobs:
+- id: d2_serve_chat64_qwen35_9b
+  kind: serve
+  models: [qwen35_9b]
+  settings: [default]
+  priority: 13
+  timeout_s: 3600
+  sets: ['profile.serve.workloads={chat: {input: 4096, output: 512, prompts_per_concurrency: 4, concurrency: [64]}}']
+  why: chat c64 without cross-run cache hits, 9B hybrid
+- id: d2_serve_chat64_qwen36_35b_a3b_fp8
+  kind: serve
+  models: [qwen36_35b_a3b_fp8]
+  settings: [default]
+  priority: 13.1
+  timeout_s: 3600
+  sets: ['profile.serve.workloads={chat: {input: 4096, output: 512, prompts_per_concurrency: 4, concurrency: [64]}}',
+         'profile.serve.server_args=["--gpu-memory-utilization", "0.92", "--max-model-len", "34816", "--max-num-seqs", "256", "--seed", "0"]']
+  why: chat c64 without cross-run cache hits, MoE hybrid

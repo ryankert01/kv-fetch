@@ -4,7 +4,10 @@ For each model and server setting, start one server, run every workload at every
 prompts, fixed lengths unless the workload sets its own range_ratio, ignore_eos; num_prompts =
 prompts_per_concurrency x concurrency), save each `vllm bench serve` result together with the change of the
 server's Prometheus counters over the run (preemptions, prompt / cached tokens: `metrics` in
-serve_index.json, rewritten after every run), stop the server.
+serve_index.json, rewritten after every run), stop the server. Each (workload, concurrency) gets its own
+bench seed (serve.seed + its index), the same for every model and setting: with one seed, a run's first
+prompts repeat the previous run's (the random dataset draws start offsets in sequence) and hit the prefix
+cache the previous run left behind, the more so the larger the model's KV pool.
 
 Usage (venv-vllm32, CUDA_VISIBLE_DEVICES set to one GPU): serve_bench.py CONFIG OUT_DIR [--models a,b] [--settings x,y] [--workloads w1,w2] [--set k=v]
 """
@@ -79,6 +82,8 @@ def main():
     prov = provenance(cfg, model=None, context_length=None, script=str(Path(__file__).resolve()), settings=sc,
                       vllm=vllm.__version__, load_avg=list(os.getloadavg()))
 
+    points = [(wname, c) for wname, w in sc["workloads"].items() for c in w["concurrency"]]
+
     def write_index():                    # after every run, so a long job's finished runs are readable
         json.dump({"provenance": prov, "runs": runs}, open(out / "serve_index.json", "w"), indent=1)
     for mkey in models:
@@ -98,7 +103,8 @@ def main():
                         bench = ["vllm", "bench", "serve", "--backend", "vllm", "--port", str(port), "--model", name,
                                  *dataset_args(w, sc),
                                  "--num-prompts", str(w["prompts_per_concurrency"] * c), "--max-concurrency", str(c),
-                                 "--ignore-eos", "--seed", "0", "--percentile-metrics", "ttft,tpot,itl,e2el",
+                                 "--ignore-eos", "--seed", str(sc["seed"] + points.index((wname, c))),
+                                 "--percentile-metrics", "ttft,tpot,itl,e2el",
                                  "--metric-percentiles", "50,90,99", "--save-result", "--result-dir", str(out),
                                  "--result-filename", fname, "--disable-tqdm"]
                         t = time.time()
@@ -107,7 +113,8 @@ def main():
                         after = counters(port)
                         (out / "logs" / f"bench_{fname[:-5]}.log").write_text(r.stdout + r.stderr)
                         runs.append({"model": mkey, "setting": sname, "workload": wname, "concurrency": c,
-                                     "result": fname, "ok": r.returncode == 0, "started": t, "seconds": time.time() - t,
+                                     "seed": sc["seed"] + points.index((wname, c)), "result": fname,
+                                     "ok": r.returncode == 0, "started": t, "seconds": time.time() - t,
                                      "metrics": {k: v - before.get(k, 0.0) for k, v in after.items()
                                                  if v != before.get(k, 0.0)}})
                         write_index()

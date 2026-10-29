@@ -467,3 +467,29 @@ Unprofiled batch-1 prefill, median of 5, ms (0.92 of the GPU):
   costs left are all about the block: page size = the state's size, so blocks grow with the model (528 ->
   784 -> 1056 tokens), and with them the align split, the recompute after a cache hit and the coarse
   allocation behind the night-1 ping-pong. Serving (d2_serve_*, default and watermark 0.1) runs next.
+
+## 13:13 -- serving the 9B pair at normal load (d2_serve_9b_pair)
+`vllm serve` (2048-token budget, 256 seqs, 0.85 of the GPU), GPU 5, 10:23-13:09. reasoning_var: 1024 in /
+8192 out, each +-50%; chat: 4096 in / 512 out, fixed. Pools: hybrid 674K tokens, dense 171K.
+
+| workload | c | Qwen3.5-9B out tok/s | Qwen3-8B out tok/s | ratio | TTFT p50 s (hybrid / dense) | TPOT p50 ms | dense preemptions |
+|---|---|---|---|---|---|---|---|
+| reasoning_var | 16 | 551 | 429 | 1.28 | 0.40 / 0.36 | 23.9 / 30.7 | 0 |
+| reasoning_var | 64 | 1262 | 544 | 2.32 | 0.59 / 21.0 | 40.5 / 81.5 | 336 |
+| chat | 16 | 353 | 305 | 1.16 | 1.95 / 1.95 | 41.0 / 48.2 | 0 |
+| chat | 64 | 571* | 332 | 1.72* | 2.55 / 51.5 | 122.6 / 108.7 | 24 |
+
+- The hybrid never preempts at c <= 64; the dense model runs ~27 of 64 requests at 86-89% KV and queues
+  the rest (TTFT 21-52 s). Capacity decides it, as for the 4B pair. --watermark 0.1 changes nothing for
+  the hybrid (nothing to protect) and for the dense model trades preemptions for queueing (reasoning_var
+  c = 64: 336 -> 76 preemptions, 544 -> 577 tok/s, TTFT p50 21 -> 55 s).
+- *Artifact: the hybrid chat c = 64 run hit the prefix cache for 236544 of 1048576 prompt tokens = 64
+  prompts x 7 blocks of 528. With bench seed 0 everywhere, the random dataset's first 64 prompts at c = 64
+  are the c = 16 prompts (it draws start offsets in sequence and, at fixed lengths, nothing else), and the
+  674K-token hybrid pool still held them; the 171K dense pool had evicted them. serve_bench now gives each
+  (workload, concurrency) its own seed (serve.seed + index, same across models and settings);
+  harness_plan_day2_f2 reruns chat c = 64 on fresh servers for the 9B and the MoE hybrid (the MoE pair job
+  started 13:09 with the old code; the 27B job gets the fix). Night 1's serve_qwen35_4b has the same
+  confound (its server log shows hit rates up to 17%; it predates the counters), so its prefix on / off
+  chat numbers at c >= 64 are not clean; the reasoning_var / thrash runs (spread lengths, so offsets
+  differ) had no hits (computed = prompt tokens).
