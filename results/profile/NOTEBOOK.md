@@ -620,3 +620,11 @@ ones that cannot touch prefill: a constant offset against the night-1 baseline, 
   vLLM warns against for this config.
 - None of these is hybrid-specific without dense counterparts except the two that change the block
   (fp8 KV, bf16 state), and both are existing flags.
+
+## 16:15 -- abl_no_prefix_qwen35_4b: the decode method needs prefix caching
+Prefix caching off: decode "step" 1.02x at b <= 16 short context, but 1.55x at 8K x 64 and 1.76x at 32K x
+16. Not a property of the engine: the sweep measures decode as (run with 1 + 128 tokens) - (run with 1
+token) after a cached prefill. Without the cache both runs re-prefill 0.5M tokens, and in the longer run
+the early-finished prefills start decoding while others still prefill, so the difference keeps mixed
+steps. Decode numbers with prefix caching off are not comparable (prefill numbers are). The f7 / f1
+batch-1 scans are the valid prefix-off comparison.
