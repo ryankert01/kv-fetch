@@ -371,3 +371,22 @@ Same load as the prefix-on trace. Reproduces the server again: 779 preemptions (
   per decode boundary crossing.
 - Harness ends here (runner until 09:30; the 21 jobs still pending were not reached). Morning report:
   results/profile/morning_report_2026-10-29.html.
+
+## 09:46 -- day 2: the 9B pair looks like the 4B pair (d2_base_qwen35_9b, d2_base_qwen3_8b)
+User (09:3x): keep looking, with bigger models (plan configs/harness_plan_day2.yaml; runner until 21:00, one
+card while GPU 0 is busy). engine_profile.py now counts a hybrid request's state blocks (3 for Qwen3.5) in its
+capacity check, so the 9B skips points the 4B ran (C=2K x 128, 8K x 64).
+
+| | Qwen3.5-9B | Qwen3-8B | hybrid / dense |
+|---|---|---|---|
+| capacity (blocks x block size) | 673,728 tokens (528-token blocks, 3 state blocks / request) | 171,344 | |
+| prefill 1K / 2K / 8K / 32K ms | 174 / 312 / 1218 / 5470 | 157 / 309 / 1293 / 7342 | 1.11 / 1.01 / 0.94 / 0.75 |
+| decode step 8K x 1 / 8K x 16 / 32K x 4 ms | 18.6 / 25.3 / 23.8 | 18.7 / 38.5 / 38.5 | 1.00 / 0.66 / 0.62 |
+| cache-hit recompute step (decode_8192_b1 profile) | 57 ms, busy 86% | 30 ms, busy 93% | 1.9 |
+
+- Kernel shares: hybrid prefill 85% GEMM, GDN chunk 4.5% at 8K and 4% at 32K, attention 15% at 32K; decode
+  93% GEMM at b=1, at 8K x 16 GEMM 75% / attention 18% / GDN recurrent 4%. Decode at the weight-read
+  bound (18.6 ms for ~17 GB). Nothing near the selection rule; the hybrid-specific kernels shrink with size.
+- The one hybrid-only cost that grows: a prefix-cache hit recomputes up to one 528-token block (align
+  mode) where the dense model recomputes < 16 tokens, 57 vs 30 ms here. That is the prefix-caching line
+  stopped on 10-28; noted, not pursued.
