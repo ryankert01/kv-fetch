@@ -727,3 +727,23 @@ own fit:
   the bound assumes; attention blocks = ceil(computed / 528) exactly.
 - Gate so far: hybrid best at 0.5 is 6.8% from the bound (< 15%), dense 5.0-7.6%. Waiting for 0.7 and the
   like-for-like pair.
+
+## 22:07 -- R1 verdict: idea 1 killed (first clause)
+Hybrid at 0.7 (own trace):
+
+| run | blocks | makespan s | bound s | headroom | steps vs min | preempt | waste: recompute / steps s |
+|---|---|---|---|---|---|---|---|
+| qwen35_4b m70_wm0 | 1,446 x 528 | 4,559 | 3,214 | 29.5% | 74,895 / 67,206 | 4,277 | 1,287 / 58 |
+| qwen35_4b m70_wm10 | 1,446 x 528 | 3,320 | 3,108 | 6.4% | 77,378 / 67,206 | 339 | 121 / 91 |
+
+- Gate (EXPERIMENTS.md, fixed before running): kill if the hybrid's best setting is within 15% of the
+  bound at both memory shares. Best so far: 6.8% at 0.5, 6.4% at 0.7 (both wm 0.1). Killed. The remaining
+  settings (wm 0.05 / 0.2) can only lower the best; the like-for-like pair only bears on the second clause.
+  Both keep running for the record (the watermark curve and hybrid-vs-dense at the default on equal work
+  are what an upstream issue would need).
+- What the hybrid does lose is to vLLM's default: wm0 is +26% (0.5) and +37% (0.7) over wm 0.1, and more
+  memory barely helps at wm0 (4,697 -> 4,559 s; dense 3,891 -> 3,352). A tuned admission knob, not a new
+  policy, recovers it (rule c). Left after tuning: ~120 s recompute + ~90-120 s extra steps of ~3,300-3,700.
+- Not covered by R1 (other levers, not admission / preemption): the 3 state blocks per request (18% of
+  the memory-time at 0.5) and the 528-token page; both change the bound itself.
+- Next, per the plan: R2, stale recurrent state across a weight update.
