@@ -628,3 +628,28 @@ token) after a cached prefill. Without the cache both runs re-prefill 0.5M token
 the early-finished prefills start decoding while others still prefill, so the difference keeps mixed
 steps. Decode numbers with prefix caching off are not comparable (prefill numbers are). The f7 / f1
 batch-1 scans are the valid prefix-off comparison.
+
+## 16:41 -- 27B serving (d2_serve_27b), the 2B pair, last ablations; queue empty
+Qwen3.5-27B-FP8, `vllm serve` at 0.92, GPU 6, 14:00-16:41 (second attempt after the port fixes). Pool
+199,338 tokens (vLLM's count), 784-token blocks. Output tok/s (preemptions):
+
+| workload | c | default | --watermark 0.1 | TPOT p50 ms (default / wm) | e2e p50 s |
+|---|---|---|---|---|---|
+| reasoning_var | 16 | 306 (0) | 307 (0) | 43.1 / 43.1 | 362 / 362 |
+| reasoning_var | 64 | 346 (1006) | 443 (46) | 83.3 / 56.8 | 1306 / 986 |
+| chat | 16 | 147 (0) | 147 (0) | 97.2 / 97.6 | 55 / 56 |
+| chat | 64 | 153 (57) | 163 (0) | 194.7 / 164.9 | 214 / 197 |
+
+- At c = 64 the 27B runs ~25 of 64 at 87-94% KV. Default watermark 0: 1006 preemptions for 128 requests
+  (7.9 each), the ping-pong at normal load; watermark 0.1: 46, +28% output, TPOT p50 -32%, e2e p50 -25%;
+  TTFT p50 stays ~560-580 s (queueing). No dense 27B FP8 checkpoint here to compare against.
+- So vLLM's default costs the big hybrids 9% (MoE) to 22% (27B) of throughput at c = 64 on one card, and
+  the dense models nothing. Still an existing knob (rule c), but the case for an upstream issue (default
+  watermark or victim choice for hybrids in align mode) is now at normal load, not only saturation.
+- base_qwen35_2b vs base_qwen3_1p7b: prefill 1K 1.83x (52.7 vs 28.8 ms: 1024 > one 544-token block, so the
+  align split plus the GDN floor twice), 2K 1.15x, 32K 0.67x; decode 0.22-1.01x. Same two known causes,
+  relatively larger on the smallest model.
+- base_olmo_hybrid_7b failed twice: not in the local HF cache (offline). Not downloaded.
+- abl_ssm_bf16_qwen35_9b: block 528 -> 272 (2478 blocks); decode 0.86 at 2K x 64, 0.96-1.00 elsewhere.
+  abl_no_prefix_qwen35_9b: decode not valid without prefix caching (method, see 16:15).
+- Queue empty at 16:41. Day 2 done: no qualifying candidate (report: day2_report_2026-10-29.html).
