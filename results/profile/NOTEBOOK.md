@@ -799,3 +799,37 @@ priority ahead of the R1 leftovers, GPU 2 or an Ada card.
   more than reordering the same computation does, so rho ~ 1 here says nothing (both terms are noise).
   This is why the gate asks KL(F||S) >= 3x floor; the verdict has to come from the later steps. When
   reading them, (KL - floor) ratios will be reported next to rho.
+
+## 02:01 -- R2 result: killed; with R1, RL rollouts are dropped as a direction
+- r2_stale_qwen35_4b (GPU 4, 6,582 s) and r2b_stale_qwen3_4b (GPU 2, 6,839 s) finished rc=0. Report:
+  results/profile/runs/r2_report.json (scripts/rl/stale_report.py, gate from configs/rl_stale.yaml).
+- Updates: 32 steps, 214K (hybrid) / 229K (dense) tokens per step, 46 / 26 mixed groups; grad norm at most
+  0.66 / 0.39 (the 1.0 clip never binds). bf16 weights changed after 32 steps: 16.9% / 10.7%.
+- Step 32 (mean over probes; 12 per cut, dense 7 at 8K):
+
+| model | cut | KL(F||S) | KL(F||P) | floor | S/floor | rho | rho - floor |
+|---|---|---|---|---|---|---|---|
+| hybrid | 1,024 | 4.82e-4 | 1.73e-3 | 3.10e-4 | 1.55 | 0.28 | 0.12 |
+| hybrid | 4,096 | 4.86e-4 | 1.75e-3 | 3.01e-4 | 1.61 | 0.28 | 0.13 |
+| hybrid | 8,192 | 5.70e-4 | 1.88e-3 | 3.28e-4 | 1.74 | 0.30 | 0.16 |
+| dense | 1,024 | 8.30e-4 | 1.52e-3 | 7.83e-4 | 1.06 | 0.55 | 0.06 |
+| dense | 4,096 | 7.40e-4 | 1.38e-3 | 6.42e-4 | 1.15 | 0.54 | 0.13 |
+| dense | 8,192 | 5.86e-4 | 1.16e-3 | 4.61e-4 | 1.27 | 0.51 | 0.18 |
+
+- No (step, cut) passes: the hybrid's stale cache reaches 1.74x the floor at most (gate 3x) and rho falls
+  as the policy moves (0.67 at step 8, 0.42 at 16, 0.28 at 32; gate 0.5 or 3x dense). Above the floor the
+  stale cache carries 12-16% of the policy change for the hybrid and 6-18% for the dense model: not
+  distinguishable with these probes.
+- Split (hybrid, step 32, KL above the floor): stale linear-attention state 0.5-1.1e-4, stale attention KV
+  0.7-1.2e-4, both 1.7-2.4e-4. The recurrent state is not the dominant part.
+- By position: the excess is largest right after the cut (tokens 1-64: 2.2-2.5x floor for the hybrid,
+  1.1-1.25x for the dense model) and smaller over tokens 257-1,024 (1.5-1.7x / 1.0-1.2x). The stale state's
+  error fades as new tokens enter the state; it does not grow.
+- Caveat: at equal k the hybrid's policy moved further (KL(F||P) above the floor 1.4-1.6e-3 vs 0.7e-3).
+  At about equal policy change (hybrid step 16 vs dense step 32) S/floor is 1.24-1.32 vs 1.06-1.27.
+- Verdict: idea 2 killed. Keeping the stale cache across a weight update costs a hybrid about what it
+  costs a dense model, a small fraction of the staleness async RL already accepts: an engineering default
+  (keep the state, as PipelineRL keeps KV), not a paper. R1 killed idea 1 (a tuned watermark recovers
+  the gap), so per the plan RL rollouts are dropped as a direction.
+- Still running: R1 cross-trace replays (3 running, 5 pending, GPUs 4-6). They bear only on R1's second
+  clause and on the default-watermark issue (not posted; waiting for the user's OK).

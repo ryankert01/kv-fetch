@@ -443,3 +443,10 @@ update pool is now 128 problems of all levels with the probe problems excluded. 
 measured after 1, 2, 4, 8, 16 and 32: a DAPO-style rollout step is several optimizer steps (one per
 mini-batch), and AReaL bounds staleness at 4-8 policy versions, so 8 optimizer steps covered about one
 version. The gate reads "k <= 32"; thresholds unchanged.
+
+## Result (02:01, 2026-10-30)
+Killed: no step or cut passes. After 32 GRPO steps the hybrid's stale cache is 1.55-1.74x the kernel-path
+floor (gate 3x) with rho 0.28-0.30 (gate 0.5); above the floor it carries 12-16% of the policy change,
+the dense model's stale KV 6-18%. The stale linear-attention state and the stale attention KV contribute
+about equally, and the excess fades over the continuation. Per the plan, RL rollouts are dropped as a
+direction (results/profile/runs/r2_report.json; results/profile/NOTEBOOK.md, 02:01).
