@@ -1,0 +1,38 @@
+inherit: harness.yaml
+
+# RL rollouts under memory pressure (EXPERIMENTS.md, "RL rollouts: kill test R1"). A synchronous GRPO rollout step
+# on one engine: P prompts x n samples released together, each run to its length. scripts/rl/rollout_trace.py
+# records the lengths once (real sampling); scripts/rl/rollout_replay.py replays them under a memory budget and
+# vLLM's admission knobs; scripts/rl/rollout_bound.py compares each run with a no-preemption bound.
+rollout:
+  prompts:
+    jsonl: /share2/huggingface/hub/datasets--HuggingFaceH4--MATH-500/snapshots/6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be/test.jsonl
+    field: problem
+    levels: [3, 4, 5]                  # the harder MATH problems: long reasoning traces
+    instruction: "Please reason step by step, and put your final answer within \\boxed{}."
+  num_prompts: 64                      # P
+  n: 8                                 # GRPO group size
+  max_tokens: 16384                    # response cap, as DAPO-style recipes
+  temperature: 1.0                     # RL samples at T = 1, no top-p / top-k
+  top_p: 1.0
+  seed: 0
+  trace_engine:                        # recording the trace: a normal engine, lengths do not depend on it
+    gpu_memory_utilization: 0.85
+    max_model_len: 18432
+    max_num_seqs: 512
+  replay:
+    engine:                            # the rollout engine under test (verl-like: prefix caching on, 8192-token budget)
+      max_model_len: 18432
+      max_num_seqs: 512                # every request of the step may run if memory allows
+      max_num_batched_tokens: 8192
+    settings:                          # memory share left to the rollout engine x admission watermark
+      m50_wm0: {gpu_memory_utilization: 0.5, watermark: 0.0}
+      m50_wm05: {gpu_memory_utilization: 0.5, watermark: 0.05}
+      m50_wm10: {gpu_memory_utilization: 0.5, watermark: 0.1}
+      m50_wm20: {gpu_memory_utilization: 0.5, watermark: 0.2}
+      m70_wm0: {gpu_memory_utilization: 0.7, watermark: 0.0}
+      m70_wm05: {gpu_memory_utilization: 0.7, watermark: 0.05}
+      m70_wm10: {gpu_memory_utilization: 0.7, watermark: 0.1}
+      m70_wm20: {gpu_memory_utilization: 0.7, watermark: 0.2}
+  bound:
+    fit_min_steps: 200                 # least-squares fit of step time needs at least this many steps

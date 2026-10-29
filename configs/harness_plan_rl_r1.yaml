@@ -1,0 +1,59 @@
+note: 'RL rollouts, kill test R1 (18:04, user: "we should do the experiment"). Is there headroom for a hybrid-aware
+  memory policy in a synchronous GRPO rollout step once vLLM''s own knobs are tuned? Record real lengths (64 MATH
+  level 3-5 problems x 8 samples, T = 1, 16K cap) for Qwen3.5-4B (hybrid) and Qwen3-4B (dense), then replay each
+  trace under 0.5 / 0.7 of the GPU and watermark 0 / 0.05 / 0.1 / 0.2, scheduler instrumented; rollout_bound.py
+  compares each makespan with a no-preemption bound. Kill if the best setting is within 15% of the bound.
+  Traces on any free card (lengths do not depend on it); replays on the Ada cards only.'
+jobs:
+- {id: r1_trace_qwen35_4b, kind: cmd, priority: 1, timeout_s: 7200, why: 'GRPO rollout trace, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_trace.py configs/rl_rollout.yaml {out} --model qwen35_4b'}
+- {id: r1_trace_qwen3_4b, kind: cmd, priority: 1, timeout_s: 7200, why: 'GRPO rollout trace, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_trace.py configs/rl_rollout.yaml {out} --model qwen3_4b'}
+- {id: r1_replay_qwen35_4b_m50_wm0, kind: cmd, priority: 2.00, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm0, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m50_wm0'}
+- {id: r1_replay_qwen3_4b_m50_wm0, kind: cmd, priority: 2.05, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm0, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m50_wm0'}
+- {id: r1_replay_qwen35_4b_m50_wm10, kind: cmd, priority: 2.10, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm10, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m50_wm10'}
+- {id: r1_replay_qwen3_4b_m50_wm10, kind: cmd, priority: 2.15, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm10, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m50_wm10'}
+- {id: r1_replay_qwen35_4b_m70_wm0, kind: cmd, priority: 2.20, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm0, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m70_wm0'}
+- {id: r1_replay_qwen3_4b_m70_wm0, kind: cmd, priority: 2.25, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm0, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m70_wm0'}
+- {id: r1_replay_qwen35_4b_m70_wm10, kind: cmd, priority: 2.30, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm10, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m70_wm10'}
+- {id: r1_replay_qwen3_4b_m70_wm10, kind: cmd, priority: 2.35, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm10, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m70_wm10'}
+- {id: r1_replay_qwen35_4b_m50_wm05, kind: cmd, priority: 2.40, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm05, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m50_wm05'}
+- {id: r1_replay_qwen3_4b_m50_wm05, kind: cmd, priority: 2.45, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm05, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m50_wm05'}
+- {id: r1_replay_qwen35_4b_m50_wm20, kind: cmd, priority: 2.50, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm20, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m50_wm20'}
+- {id: r1_replay_qwen3_4b_m50_wm20, kind: cmd, priority: 2.55, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m50_wm20, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m50_wm20'}
+- {id: r1_replay_qwen35_4b_m70_wm05, kind: cmd, priority: 2.60, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm05, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m70_wm05'}
+- {id: r1_replay_qwen3_4b_m70_wm05, kind: cmd, priority: 2.65, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm05, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m70_wm05'}
+- {id: r1_replay_qwen35_4b_m70_wm20, kind: cmd, priority: 2.70, timeout_s: 14400, after: [r1_trace_qwen35_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm20, qwen35_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen35_4b/trace_qwen35_4b.json --model qwen35_4b --setting m70_wm20'}
+- {id: r1_replay_qwen3_4b_m70_wm20, kind: cmd, priority: 2.75, timeout_s: 14400, after: [r1_trace_qwen3_4b], gpus: [4, 5, 6],
+   why: 'replay under m70_wm20, qwen3_4b',
+   cmd: '{py} scripts/rl/rollout_replay.py configs/rl_rollout.yaml {out} --trace results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json --model qwen3_4b --setting m70_wm20'}

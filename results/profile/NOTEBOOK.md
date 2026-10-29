@@ -653,3 +653,12 @@ Qwen3.5-27B-FP8, `vllm serve` at 0.92, GPU 6, 14:00-16:41 (second attempt after 
 - abl_ssm_bf16_qwen35_9b: block 528 -> 272 (2478 blocks); decode 0.86 at 2K x 64, 0.96-1.00 elsewhere.
   abl_no_prefix_qwen35_9b: decode not valid without prefix caching (method, see 16:15).
 - Queue empty at 16:41. Day 2 done: no qualifying candidate (report: day2_report_2026-10-29.html).
+
+## 18:06 -- new direction: RL rollouts; kill test R1 queued
+User picked RL rollouts (after the research map, reports/RL rollout acceleration research map.md) and
+asked to run the one-day test of niche 1. Design and gate in EXPERIMENTS.md ("RL rollouts: kill test R1").
+Harness: GPU policy widened per the user ("we can use cards that are not used by others"): GPUs 1-6, up to
+5 jobs, jobs may pin `gpus` (the replays pin the Ada cards). Runner restarted 18:04 (until 2026-10-30
+12:00). Smoke test (4 prompts x 2, 512 tokens) passed for trace, replay and bound; the trace scripts
+encode prompts from the chat template text (apply_chat_template(tokenize=True) returned a dict here).
+Traces started 18:04 on GPU 2 (Qwen3.5-4B) and GPU 4 (Qwen3-4B); 16 replays follow on GPUs 4-6.

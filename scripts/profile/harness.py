@@ -7,9 +7,10 @@ job.attempt<N>.log, so the failed attempt's log survives). Kinds:
   serve   scripts/profile/serve_bench.py (models, settings)
   cmd     any command; "{out}" in it becomes the run directory
 Each job runs in its own process group, killed as a whole on timeout.
-GPU policy (configs/harness.yaml): only `allowed` GPUs; a GPU is free when its memory use and utilisation
-stay under the thresholds over several samples; while the `watch` GPU (GPU 0) is in use by others, at
-most `max_concurrent_when_watch_busy` jobs run, otherwise `max_concurrent`.
+GPU policy (configs/harness.yaml): only `allowed` GPUs, and of those only the job's `gpus` if it lists them
+(runs that are compared with each other stay on one GPU type); a GPU is free when its memory use and
+utilisation stay under the thresholds over several samples; while the `watch` GPU (GPU 0) is in use by
+others, at most `max_concurrent_when_watch_busy` jobs run, otherwise `max_concurrent`.
 
 Usage (venv-vllm32):
   harness.py CONFIG [--set k=v] enqueue PLAN.yaml        add the plan's jobs not already known
@@ -146,7 +147,12 @@ def run(cfg: dict, until: dt.datetime):
             free, watch_busy = gpu_state(hc, mine)
             cap = hc["max_concurrent_when_watch_busy"] if watch_busy else hc["max_concurrent"]
             while ready and free and len(procs) < cap:
-                job, gpu = ready.pop(0), free.pop(0)
+                job = ready.pop(0)
+                fits = [g for g in free if g in job.get("gpus", free)]   # a job may name the GPUs it can use
+                if not fits:
+                    continue
+                gpu = fits[0]
+                free.remove(gpu)
                 out = q.runs / job["id"]
                 out.mkdir(parents=True, exist_ok=True)
                 env = {**os.environ, **{k: str(v) for k, v in job.get("env", {}).items()}, "CUDA_VISIBLE_DEVICES": str(gpu)}

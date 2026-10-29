@@ -364,3 +364,29 @@ Measurements (configs/profile.yaml, scripts/profile/, results/profile/):
   end, and (c) no merged vLLM/SGLang change or published paper already removes it (checked against PRs,
   issues and arXiv before any building; ReplaySSM, arXiv 2610.13778, already targets GDN state I/O).
   Candidates are then ranked by end-to-end potential and by how hybrid-specific the fix is.
+
+# RL rollouts: kill test R1 (2026-10-29)
+
+Direction chosen by the user after the profiling found no qualifying engine bottleneck: RL rollouts. The
+literature map (reports/RL rollout acceleration research map.md) found rollout at 63-91% of a long-reasoning
+RL step and one open niche that fits a few 48 GB cards: rollout-side management of the hybrid recurrent
+state (admission, preemption, swap) for synchronous GRPO steps.
+
+## Question
+In one synchronous GRPO rollout step under a memory budget, how much time is lost to memory management
+(fewer requests per step than the work allows, recompute after preemption) once vLLM's own knobs
+(watermark) are tuned, and is the loss larger for a hybrid than for a dense model?
+
+## Method (configs/rl_rollout.yaml, configs/harness_plan_rl_r1.yaml)
+- Trace: 64 MATH-500 problems (levels 3-5) x 8 samples, T = 1, 16K cap, chat template; real lengths
+  recorded per model (scripts/rl/rollout_trace.py): Qwen3.5-4B (hybrid), Qwen3-4B (dense).
+- Replay: all 512 requests at once, each forced to its length, in-process engine with the night-1
+  scheduler recorder (scripts/rl/rollout_replay.py); memory share 0.5 / 0.7 x watermark 0 / 0.05 / 0.1 /
+  0.2; RTX 6000 Ada only.
+- Bound (scripts/rl/rollout_bound.py): per-run linear step-time fit; fewest steps any schedule could use
+  with the same pool and known lengths (perfect packing), no recompute.
+
+## Gate (fixed before running)
+Kill idea 1 if, for the hybrid, the best setting's makespan is within 15% of the bound at both memory
+shares, or if the hybrid's headroom is not larger than the dense model's. Otherwise design the policy.
+Next if killed: R2, stale recurrent state across a weight update (kept vs recomputed, continuation KL).
