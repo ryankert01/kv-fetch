@@ -50,18 +50,19 @@ See the table above. On a full GRPO rollout step (64 MATH-500 problems x 8 sampl
 
 ## Environment
 
-- vime version: not used. Measured on vLLM directly; vime forwards `--vllm-watermark` unchanged (checked against `vime/backends/vllm_utils/arguments.py` at d7e40fe8).
+- vime version: d7e40fe8 for the vime run (Additional Context). The repro above uses vLLM only.
 - Python version: 3.12.11
 - PyTorch version: 2.13.0+cu129
 - CUDA/ROCm version: CUDA 12.9, driver 565.57.01
 - GPU type and count: 1x NVIDIA RTX 6000 Ada (48 GB)
 - OS: Ubuntu 22.04.5 LTS
-- vLLM version: 0.32.0
+- vLLM version: 0.32.0 (vime run: vime's pin 43b4aaea with `docker/patch/latest/vllm*.patch`)
 - vllm-router version: n/a
 - Megatron-LM version (if relevant): n/a
 
 ## Additional Context
 
+- Same in vime: one rollout step through `train.py --debug-rollout-only` (same 64 x 8 step, 0.5 memory). Qwen3.5-4B goes from 4,755 s and 5,531 preemptions to 3,960 s and 530 with `--vllm-watermark 0.05`. Qwen3-4B goes from 3,951 s to 3,900 s.
 - The same loop appears when serving larger hybrids at 64 concurrent requests on one GPU. Qwen3.5-27B-FP8 goes from 1,006 to 46 preemptions and gains 28% output throughput with `--watermark 0.1`. Qwen3.6-35B-A3B-FP8 goes from 645 to 28 and gains 10%.
 - vLLM added the watermark in vllm-project/vllm#44594 and benchmarked it on a dense model only (+5% at 0.05).
 - I'll open a small PR that adds the flag to `scripts/run-qwen3.5-27B.sh` and `scripts/run-qwen3-next-80B-A3B.sh` and documents it in `usage.md`.

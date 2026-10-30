@@ -13,23 +13,23 @@ No code changes. vime already forwards `--vllm-watermark` to vLLM.
 
 Fixes #{{ISSUE}}. With vLLM's default watermark of 0, a hybrid model under KV pressure keeps preempting the request it just readmitted. Each readmission recomputes almost the whole sequence, because hybrid state is cached only at block boundaries (528+ tokens).
 
-Repro from the issue (`vllm bench throughput`, one GRPO-style batch of 16 prompts x 8 samples):
+One GRPO rollout step in vime (`train.py --debug-rollout-only`, 64 MATH-500 problems x 8 samples, 16K cap, `--vllm-gpu-memory-utilization 0.5`, 1x RTX 6000 Ada, one run each):
 
-| 1x RTX 6000 Ada, 128 sequences, one run each | `--watermark 0` | `--watermark 0.05` | change |
+| | `--vllm-watermark 0` | `--vllm-watermark 0.05` | change |
 |---|---|---|---|
-| Qwen3.5-4B (hybrid) | 703 s, 1,577 tok/s | 586 s, 1,892 tok/s | -17% time |
-| Qwen3-4B (dense) | 1,486 s, 746 tok/s | 1,502 s, 738 tok/s | +1% time |
+| Qwen3.5-4B (hybrid) | 4,755 s, 5,531 preemptions | 3,960 s, 530 preemptions | -17% time |
+| Qwen3-4B (dense) | 3,951 s, 3,319 preemptions | 3,900 s, 1,451 preemptions | -1% time |
 
-On a full GRPO rollout step (Qwen3.5-4B, 64 prompts x 8 samples, 16K cap), 0.05 cuts step time by 21-29%; for the dense Qwen3-4B it changes by 1-4%. Details are in the issue.
+Sampling is real, so the runs differ a little in work: the 0.05 runs produced 2% (hybrid) and 0.5% (dense) more tokens.
 
 The watermark only delays admitting a request when less than 5% of the KV cache would stay free. It changes nothing when the rollout batch fits.
 
 ## How I verified
 
-- vLLM 0.32.0 on 1x RTX 6000 Ada: the `vllm bench throughput` repro in the issue, and the rollout-step replay.
-- vime's parser: `--vllm-watermark 0.05` gives `vllm_watermark=0.05`, and `watermark` is an `AsyncEngineArgs` field, so `vllm_engine.py` forwards it (default 0.0).
-- `bash -n` on both scripts.
-- Not run end to end in vime: I don't have the GPUs for these recipes. Happy to run a smaller hybrid recipe if you'd like.
+- The vime runs above: this branch on d7e40fe8, vime's pinned vLLM (43b4aaea) with all of `docker/patch/latest/vllm*.patch`, Megatron-LM at the Dockerfile pin. vLLM's `/server_info` reports the scheduler watermark as 0.05 with the flag and 0 without, so the flag reaches the scheduler.
+- Rollout only, outside Docker: the change doesn't touch training, the image needs CUDA 13 (this machine's driver is 565), and the training stack targets sm90+.
+- On vLLM 0.32.0 directly: the repro in the issue, and a rollout-step replay with identical response lengths at each setting (hybrid -21 to -29% step time, dense -1 to -4%).
+- `bash -n` on both scripts. I did not run the 27B and 80B recipes themselves (no H100s).
 
 ## AI assistance
 

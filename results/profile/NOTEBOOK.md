@@ -909,3 +909,21 @@ User's point: the RL framework owns the rollout engine's configuration, so the f
   docs/{en,zh}/get_started/usage.md. Checked vime's parser with vLLM 0.32: --vllm-watermark 0.05 ->
   vllm_watermark=0.05, default 0.0, forwarded as an AsyncEngineArgs field.
 - Drafts: results/profile/upstream/vime_issue_draft.md, vime_pr_draft.md. Nothing posted or pushed upstream.
+
+## 17:18 -- vime end-to-end check of the PR (user asked "verify it with vime")
+- Setup (configs/vime_verify.yaml, scripts/rl/vime_verify.py): vime's own train.py with --debug-rollout-only on the
+  R1 rollout step (same 64 MATH-500 prompts x 8, 16K cap, T = 1, top-p 1, --vllm-gpu-memory-utilization 0.5,
+  vime defaults otherwise: 512 requests in flight per engine), one RTX 6000 Ada per run, one run per setting,
+  private Ray head per run. vime's Docker image needs CUDA 13 (driver here is 565), so the stack is rebuilt
+  without Docker: vLLM at vime's pin 43b4aaea (cu129 wheel, same torch 2.13 as venv-vllm32) with all 18
+  docker/patch/latest/vllm*.patch applied cleanly in the Dockerfile's order, Megatron-LM at the pin + its patch,
+  torch_memory_saver at the pin. The watermark code in that vLLM is the same as in 0.32.0.
+- Evidence the flag reaches the scheduler: vLLM's /server_info in each run reports watermark 0.0 / 0.05.
+- Result (results/profile/runs/vime_verify_report.json):
+  hybrid Qwen3.5-4B 4,755 s -> 3,960 s (-16.7%) with +1.8% output tokens (rate +22.3%), preemptions 5,531 -> 530;
+  dense Qwen3-4B 3,951 s -> 3,900 s (-1.3%), +0.5% tokens, preemptions 3,319 -> 1,451. Agrees with R1's replay
+  (hybrid -21.5% at 0.5 memory, same work; dense -1.5 to -4.1%).
+- Gotchas: /usr/local/cuda is 11.8, so FlashInfer's JIT sampler (vime's health check samples with top_k=1) needs
+  CUDA_HOME=cuda-12.8; vime's vLLM server binds the host's LAN IP (route probe, no override), the router and Ray
+  stay on loopback; vime picks the vLLM port from 15000 well before binding, so concurrent runs take a startup lock.
+- Drafts updated with the vime numbers. Still nothing posted or pushed upstream.
