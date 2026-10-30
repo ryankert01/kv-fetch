@@ -879,3 +879,21 @@ dense trace's lengths vs the dense replays:
 - Same lengths, same memory share: the hybrid finishes the rollout step in 1,293-1,542 s (tuned), the dense
   model in 3,215-3,883 s; its pool holds ~3x the tokens (memory-bound minimum 42,334 vs 127,629 steps at
   0.5). All R1 runs are now done.
+
+## 10:26 -- Where the watermark finding belongs: vime (vllm-project/vime) already exposes the knob
+User's point: the RL framework owns the rollout engine's configuration, so the finding belongs with vime
+(vllm-project/vime, the vLLM project's RL framework built on slime; checked at d7e40fe8, 2026-10-14).
+- vime generates a --vllm-<arg> flag for every vLLM AsyncEngineArgs / FrontendArgs field
+  (vime/backends/vllm_utils/arguments.py) and passes all non-None vllm_* values to the engine
+  (vllm_engine.py), plus per-group overrides via --vllm-config YAML. So --vllm-watermark 0.05 works today;
+  its images build on vllm/vllm-openai:nightly, and the knob exists since vLLM PR #44594 (2026-06-11).
+- vime never sets it: no "watermark" in code, scripts or docs, so rollouts run at vLLM's default 0. Its
+  hybrid examples (scripts/run-qwen3.5-27B.sh, run-qwen3-next-80B-A3B.sh, examples/fully_async 9B) set
+  gpu-memory-utilization 0.7-0.8, MTP, max-num-seqs 256, not the watermark. No vime issue or PR mentions
+  preemption or watermark.
+- Same in verl, SkyRL, NeMo-RL, prime-rl, OpenRLHF, TRL, ROLL, AReaL (their "watermark" hits are replay-
+  buffer / weight-sync bookkeeping). slime and miles use SGLang.
+- vLLM PR #44594 measured a dense model only (Qwen2.5-7B, GB200): best 0.05, +5.1% throughput. On a hybrid
+  RL rollout step we see 22-37%, because readmission after preemption restores almost nothing at 528-token
+  state blocks.
+- Nothing posted; drafting an issue needs the user's OK.
