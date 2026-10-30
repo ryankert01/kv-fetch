@@ -1,0 +1,8 @@
+{
+    "model_id": "Qwen/Qwen3-4B",
+    "elapsed_time": 1502.1641771327704,
+    "num_requests": 16,
+    "total_num_tokens": 1108853,
+    "requests_per_second": 0.010651299134652325,
+    "tokens_per_second": 738.1703124597897
+}

@@ -1,0 +1,17 @@
+note: 'Short repro for the vime issue (2026-10-30): one GRPO-like rollout batch through `vllm bench throughput`
+  (16 prompts x n 8 = 128 sequences, input 256-768, output 4K-12K tokens with ignore_eos, i.e. the batch does
+  not fit in a 0.5 memory share), watermark 0 vs 0.05, hybrid Qwen3.5-4B vs dense Qwen3-4B. Same flags as the
+  command a reviewer would run; preemptions are summed from the engine''s per-interval stats log.'
+jobs:
+- {id: wmrepro_qwen3_4b_wm0, kind: cmd, priority: 1.00, timeout_s: 7200, gpus: [4, 5, 6],
+   why: 'vime issue repro: dense, default watermark',
+   cmd: 'HF_HUB_OFFLINE=1 {py} -m vllm.entrypoints.cli.main bench throughput --model Qwen/Qwen3-4B --dataset-name random --random-input-len 512 --random-output-len 8192 --random-range-ratio 0.5 --num-prompts 16 --n 8 --max-model-len 16384 --gpu-memory-utilization 0.5 --max-num-seqs 256 --max-num-batched-tokens 8192 --seed 0 --watermark 0 --output-json {out}/bench.json'}
+- {id: wmrepro_qwen3_4b_wm05, kind: cmd, priority: 1.10, timeout_s: 7200, gpus: [4, 5, 6],
+   why: 'vime issue repro: dense, watermark 0.05',
+   cmd: 'HF_HUB_OFFLINE=1 {py} -m vllm.entrypoints.cli.main bench throughput --model Qwen/Qwen3-4B --dataset-name random --random-input-len 512 --random-output-len 8192 --random-range-ratio 0.5 --num-prompts 16 --n 8 --max-model-len 16384 --gpu-memory-utilization 0.5 --max-num-seqs 256 --max-num-batched-tokens 8192 --seed 0 --watermark 0.05 --output-json {out}/bench.json'}
+- {id: wmrepro_qwen35_4b_wm0, kind: cmd, priority: 1.20, timeout_s: 7200, gpus: [4, 5, 6],
+   why: 'vime issue repro: hybrid, default watermark',
+   cmd: 'HF_HUB_OFFLINE=1 {py} -m vllm.entrypoints.cli.main bench throughput --model Qwen/Qwen3.5-4B --language-model-only --dataset-name random --random-input-len 512 --random-output-len 8192 --random-range-ratio 0.5 --num-prompts 16 --n 8 --max-model-len 16384 --gpu-memory-utilization 0.5 --max-num-seqs 256 --max-num-batched-tokens 8192 --seed 0 --watermark 0 --output-json {out}/bench.json'}
+- {id: wmrepro_qwen35_4b_wm05, kind: cmd, priority: 1.30, timeout_s: 7200, gpus: [4, 5, 6],
+   why: 'vime issue repro: hybrid, watermark 0.05',
+   cmd: 'HF_HUB_OFFLINE=1 {py} -m vllm.entrypoints.cli.main bench throughput --model Qwen/Qwen3.5-4B --language-model-only --dataset-name random --random-input-len 512 --random-output-len 8192 --random-range-ratio 0.5 --num-prompts 16 --n 8 --max-model-len 16384 --gpu-memory-utilization 0.5 --max-num-seqs 256 --max-num-batched-tokens 8192 --seed 0 --watermark 0.05 --output-json {out}/bench.json'}

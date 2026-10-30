@@ -897,3 +897,15 @@ User's point: the RL framework owns the rollout engine's configuration, so the f
   RL rollout step we see 22-37%, because readmission after preemption restores almost nothing at 528-token
   state blocks.
 - Nothing posted; drafting an issue needs the user's OK.
+
+## 11:10 -- vime issue + PR drafted (user asked); short repro for the issue
+- Repro (configs/harness_plan_watermark_repro.yaml, GPUs 4-6, vLLM 0.32.0): `vllm bench throughput`, random
+  dataset, 16 prompts x n 8, input 256-768, output 4K-12K (ignore_eos), memory 0.5, one run each:
+  hybrid Qwen3.5-4B 703 s -> 586 s with --watermark 0.05 (-17% time, 1,577 -> 1,892 tok/s); dense Qwen3-4B
+  1,486 s -> 1,502 s (+1%). Preemption counts are not in the offline engine's stats log in this build (the
+  running count drops 124 -> 103 in 30 s at wm 0, but no "Preemptions" field), so the issue cites R1's counts.
+- vime PR change (local branch example/hybrid-vllm-watermark in the session scratchpad clone, 1 commit, 4 lines,
+  signed off): --vllm-watermark 0.05 in scripts/run-qwen3.5-27B.sh and run-qwen3-next-80B-A3B.sh, one line in
+  docs/{en,zh}/get_started/usage.md. Checked vime's parser with vLLM 0.32: --vllm-watermark 0.05 ->
+  vllm_watermark=0.05, default 0.0, forwarded as an AsyncEngineArgs field.
+- Drafts: results/profile/upstream/vime_issue_draft.md, vime_pr_draft.md. Nothing posted or pushed upstream.
