@@ -1,0 +1,18 @@
+note: 'vime check of the --vllm-watermark change in the recipes'' engine setup (2026-10-30): MTP speculative
+  decoding (4 tokens, as scripts/run-qwen3.5-27B.sh) on one GPU, and on one engine over 2 GPUs (tensor parallel 2,
+  the 27B recipe''s engine shape). Same rollout step as harness_plan_vime_verify.yaml (64 MATH-500 problems x 8
+  samples, 16K cap, T = 1, 0.5 memory), hybrid Qwen3.5-4B, watermark 0 vs 0.05, all on RTX 6000 Ada. Priorities
+  start each pair''s watermark-0 run first. See configs/vime_verify_mtp.yaml.'
+jobs:
+- {id: vime_mtp_qwen35_4b_wm0, kind: cmd, priority: 1.00, timeout_s: 10800, gpus: [4, 5, 6], ngpus: 1,
+   why: 'vime check, MTP: default watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify_mtp.yaml {out} --model qwen35_4b --watermark 0'}
+- {id: vime_mtp_tp2_qwen35_4b_wm0, kind: cmd, priority: 1.10, timeout_s: 10800, gpus: [4, 5, 6], ngpus: 2,
+   why: 'vime check, MTP + TP2: default watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify_mtp_tp2.yaml {out} --model qwen35_4b --watermark 0'}
+- {id: vime_mtp_qwen35_4b_wm05, kind: cmd, priority: 1.20, timeout_s: 10800, gpus: [4, 5, 6], ngpus: 1,
+   why: 'vime check, MTP: the PR''s watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify_mtp.yaml {out} --model qwen35_4b --watermark 0.05'}
+- {id: vime_mtp_tp2_qwen35_4b_wm05, kind: cmd, priority: 1.30, timeout_s: 10800, gpus: [4, 5, 6], ngpus: 2,
+   why: 'vime check, MTP + TP2: the PR''s watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify_mtp_tp2.yaml {out} --model qwen35_4b --watermark 0.05'}

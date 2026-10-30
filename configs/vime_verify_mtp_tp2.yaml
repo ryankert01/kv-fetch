@@ -1,0 +1,6 @@
+inherit: vime_verify_mtp.yaml
+
+# vime_verify_mtp.yaml on one engine over 2 GPUs (tensor parallel 2), the engine shape of vime's
+# scripts/run-qwen3.5-27B.sh (--rollout-num-gpus-per-engine 2).
+vime:
+  num_gpus: 2

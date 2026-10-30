@@ -14,7 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from kvfetch.config import load_config  # noqa: E402
 from kvfetch.provenance import provenance  # noqa: E402
 
-KEYS = ("rollout_time_s", "output_tokens", "output_tok_s", "preemptions", "response_len_mean", "truncated_ratio")
+KEYS = ("rollout_time_s", "output_tokens", "output_tok_s", "preemptions", "response_len_mean", "truncated_ratio",
+        "num_gpus", "spec_acceptance")      # the last two only in runs from after vime.num_gpus / speculative_config
 
 
 def main():
@@ -30,7 +31,7 @@ def main():
         res = {k: json.load(open(runs / job / "vime_verify.json")) for k, job in ids.items()}
         a, b = res["wm0"]["summary"], res["wm05"]["summary"]
         pairs[model] = {
-            "wm0": {k: a[k] for k in KEYS}, "wm05": {k: b[k] for k in KEYS},
+            "wm0": {k: a.get(k) for k in KEYS}, "wm05": {k: b.get(k) for k in KEYS},
             "engine_watermark": {k: r["evidence"]["server_info_scheduler_watermark"] for k, r in res.items()},
             "step_time_change": b["rollout_time_s"] / a["rollout_time_s"] - 1,
             "output_tokens_change": b["output_tokens"] / a["output_tokens"] - 1,

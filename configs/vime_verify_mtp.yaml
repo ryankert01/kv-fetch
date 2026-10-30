@@ -1,0 +1,14 @@
+inherit: vime_verify.yaml
+
+# vime check of the --vllm-watermark change with MTP speculative decoding, as vime's hybrid recipes run it
+# (scripts/run-qwen3.5-27B.sh, scripts/run-qwen3-next-80B-A3B.sh: method mtp, 4 speculative tokens). The same
+# rollout step as vime_verify.yaml; vime_verify_mtp_tp2.yaml runs it on one engine over 2 GPUs, the 27B
+# recipe's engine shape.
+vime:
+  speculative_config: {method: mtp, num_speculative_tokens: 4}
+  report:
+    pairs:
+      _replace: true
+      qwen35_4b_mtp: {wm0: vime_mtp_qwen35_4b_wm0, wm05: vime_mtp_qwen35_4b_wm05}
+      qwen35_4b_mtp_tp2: {wm0: vime_mtp_tp2_qwen35_4b_wm0, wm05: vime_mtp_tp2_qwen35_4b_wm05}
+    out: results/profile/runs/vime_verify_mtp_report.json

@@ -2,13 +2,15 @@
 
 Checks the vime PR (results/profile/upstream/vime_pr_draft.md) in vime rather than on vLLM directly: vime's own
 train.py with --debug-rollout-only (vime's data loader and chat template, router, vLLM server launch, GRPO
-sampling and reward; no Megatron training step) on one GPU, on the R1 rollout step of configs/rl_rollout.yaml
-(the same prompts, num_prompts x n, max_tokens, temperature), at one `--vllm-watermark`. vime and its pinned,
-patched vLLM run from the env in config `vime`, under a private Ray head (own ports and temp dir, this job's GPU
-only) that is torn down at the end. While the step runs, the vLLM server's /metrics is polled for preemptions,
-and /server_info gives the scheduler config the engine actually runs with.
+sampling and reward; no Megatron training step) on one engine over config vime.num_gpus GPUs (tensor parallel),
+optionally with speculative decoding (vime.speculative_config, as vime's hybrid recipes run MTP), on the R1 rollout
+step of configs/rl_rollout.yaml (the same prompts, num_prompts x n, max_tokens, temperature), at one
+`--vllm-watermark`. vime and its pinned, patched vLLM run from the env in config `vime`, under a private Ray head
+(own ports and temp dir, this job's GPUs only) that is torn down at the end. While the step runs, the vLLM server's
+/metrics is polled for preemptions and draft acceptance, and /server_info gives the config the engine actually
+runs with.
 
-Usage (venv-vllm32, one GPU via CUDA_VISIBLE_DEVICES):
+Usage (venv-vllm32, vime.num_gpus GPUs via CUDA_VISIBLE_DEVICES):
   vime_verify.py CONFIG OUT_DIR --model KEY --watermark W [--set k=v]
 Writes OUT_DIR/prompts.jsonl, train.log, ray_head.log, metrics.jsonl, vime_verify.json.
 """
@@ -39,7 +41,9 @@ SERVER_RE = re.compile(r"Starting vLLM server on (http://\S+)")
 PERF_RE = re.compile(r"perf (\d+): (\{.*\})")
 NP_RE = re.compile(r"np\.\w+\(([^()]*)\)")
 METRICS = ("vllm:num_preemptions_total", "vllm:num_requests_running", "vllm:num_requests_waiting",
-           "vllm:kv_cache_usage_perc", "vllm:generation_tokens_total", "vllm:prompt_tokens_total")
+           "vllm:kv_cache_usage_perc", "vllm:generation_tokens_total", "vllm:prompt_tokens_total",
+           "vllm:spec_decode_num_drafts_total", "vllm:spec_decode_num_draft_tokens_total",
+           "vllm:spec_decode_num_accepted_tokens_total")
 
 
 def write_prompts(rc: dict, path: Path) -> int:
@@ -167,6 +171,9 @@ def main():
     out = Path(args.out_dir).resolve()
     out.mkdir(parents=True, exist_ok=True)
     repo, py = Path(vc["repo"]), vc["python"]
+    ng, spec = vc["num_gpus"], vc["speculative_config"]
+    visible = os.environ.get("CUDA_VISIBLE_DEVICES", "").split(",")
+    assert len(visible) == ng, f"vime.num_gpus is {ng}, CUDA_VISIBLE_DEVICES has {visible}"
 
     from huggingface_hub import snapshot_download
     hf = snapshot_download(mc["name"], local_files_only=True)
@@ -184,20 +191,20 @@ def main():
     head = subprocess.Popen(
         [str(Path(py).parent / "ray"), "start", "--head", "--block", "--port", str(port), "--node-ip-address", "127.0.0.1",
          "--temp-dir", str(ray_tmp),
-         "--num-gpus", "1", "--num-cpus", str(vc["ray"]["num_cpus"]), "--object-store-memory",
+         "--num-gpus", str(ng), "--num-cpus", str(vc["ray"]["num_cpus"]), "--object-store-memory",
          str(vc["ray"]["object_store_bytes"]), "--include-dashboard", "false", "--disable-usage-stats"],
         env=env, stdout=open(out / "ray_head.log", "w"), stderr=subprocess.STDOUT, start_new_session=True)
 
     train_args = [
-        "--debug-rollout-only", "--rollout-num-gpus", "1", "--rollout-num-gpus-per-engine", "1",
-        "--num-gpus-per-node", "1", "--hf-checkpoint", hf, *model_args(repo, vc["model_args"][args.model]),
+        "--debug-rollout-only", "--rollout-num-gpus", str(ng), "--rollout-num-gpus-per-engine", str(ng),
+        "--num-gpus-per-node", str(ng), "--hf-checkpoint", hf, *model_args(repo, vc["model_args"][args.model]),
         "--prompt-data", str(out / "prompts.jsonl"), "--input-key", "prompt", "--label-key", "label",
         "--apply-chat-template", "--rm-type", vc["rm_type"], "--num-rollout", "1",
         "--rollout-batch-size", str(n_prompts), "--n-samples-per-prompt", str(rc["n"]),
         "--rollout-max-response-len", str(rc["max_tokens"]), "--rollout-temperature", str(rc["temperature"]),
         "--rollout-top-p", str(rc["top_p"]), "--global-batch-size", str(vc["global_batch_size"]),
         "--vllm-gpu-memory-utilization", str(vc["gpu_memory_utilization"]), "--vllm-watermark", str(args.watermark),
-    ]
+    ] + (["--vllm-speculative-config", json.dumps(spec)] if spec else [])
     log = out / "train.log"
     poller = Poller(log, out / "metrics.jsonl", vc["metrics_poll_s"])
     rc_train, leftover = None, []
@@ -237,16 +244,23 @@ def main():
     p = perf[-1]
     rollout_time = p["perf/rollout_time"]
     samples = n_prompts * rc["n"]
-    out_tokens = p["perf/tokens_per_gpu_per_sec"] * rollout_time      # one rollout GPU
-    sched_wm = find_key(poller.server_info, "watermark") if poller.server_info else None
-    summary = {"model": args.model, "watermark": args.watermark, "samples": samples,
+    out_tokens = p["perf/tokens_per_gpu_per_sec"] * rollout_time * ng      # vime divides by rollout GPUs
+    info = poller.server_info or {}
+    sched_wm, engine_tp = find_key(info, "watermark"), find_key(info, "tensor_parallel_size")
+    drafts = poller.last.get("vllm:spec_decode_num_draft_tokens_total")
+    accepted = poller.last.get("vllm:spec_decode_num_accepted_tokens_total")
+    summary = {"model": args.model, "watermark": args.watermark, "num_gpus": ng, "speculative_config": spec,
+               "samples": samples,
                "rollout_time_s": rollout_time, "train_py_wall_s": wall, "output_tokens": out_tokens,
                "output_tok_s": out_tokens / rollout_time, "response_len_mean": p.get("rollout/response_len/mean"),
                "response_len_max": p.get("rollout/response_len/max"), "truncated_ratio": p.get("rollout/truncated_ratio"),
                "preemptions": poller.last.get("vllm:num_preemptions_total"),
                "generation_tokens_vllm": poller.last.get("vllm:generation_tokens_total"),
-               "prompt_tokens_vllm": poller.last.get("vllm:prompt_tokens_total")}
-    evidence = {"server_url": poller.url, "server_info_scheduler_watermark": sched_wm, "leftover_pids": leftover}
+               "prompt_tokens_vllm": poller.last.get("vllm:prompt_tokens_total"),
+               "spec_draft_tokens": drafts, "spec_accepted_tokens": accepted,
+               "spec_acceptance": accepted / drafts if drafts else None}
+    evidence = {"server_url": poller.url, "server_info_scheduler_watermark": sched_wm,
+                "server_info_tensor_parallel_size": engine_tp, "leftover_pids": leftover}
     print(json.dumps({**summary, "server_info_scheduler_watermark": sched_wm}, indent=1), flush=True)
     vime_git = {k: subprocess.run(["git", *cmd], cwd=repo, capture_output=True, text=True).stdout.strip()
                 for k, cmd in (("commit", ["rev-parse", "HEAD"]), ("branch", ["branch", "--show-current"]))}
@@ -260,6 +274,10 @@ def main():
                "server_info": poller.server_info}, open(out / "vime_verify.json", "w"), indent=1)
     if sched_wm is not None and abs(float(sched_wm) - args.watermark) > 1e-9:
         sys.exit(f"engine runs watermark {sched_wm}, asked for {args.watermark}")
+    if engine_tp is not None and int(engine_tp) != ng:
+        sys.exit(f"engine runs tensor parallel {engine_tp}, asked for {ng}")
+    if spec and not drafts:
+        sys.exit("speculative decoding configured, but the engine reports no draft tokens")
 
 
 if __name__ == "__main__":

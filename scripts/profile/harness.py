@@ -1,7 +1,7 @@
 """Long-running profiling harness: a job queue that runs on free GPUs and re-analyses after every job.
 
 Jobs are JSON files in <root>/{pending,running,done,failed}/<id>.json. A job runs one command with
-CUDA_VISIBLE_DEVICES set to the GPU it was given, in <runs>/<id>/ (log in job.log; a retry's in
+CUDA_VISIBLE_DEVICES set to the GPU it was given (its `ngpus` GPUs if it asks for more than one), in <runs>/<id>/ (log in job.log; a retry's in
 job.attempt<N>.log, so the failed attempt's log survives). Kinds:
   engine  scripts/profile/engine_profile.py on one model (+ --set overrides, flags), then parse_trace.py
   serve   scripts/profile/serve_bench.py (models, settings)
@@ -143,20 +143,23 @@ def run(cfg: dict, until: dt.datetime):
         done = {p.stem for p in (q.root / "done").glob("*.json")}
         ready = [j for j in pending if all(d in done for d in j.get("after", []))]
         if ready and dt.datetime.now() < until:
-            mine = {job["gpu"] for _, job, _ in procs.values()}
+            mine = {g for _, job, _ in procs.values() for g in job.get("gpus_held", [job["gpu"]])}
             free, watch_busy = gpu_state(hc, mine)
             cap = hc["max_concurrent_when_watch_busy"] if watch_busy else hc["max_concurrent"]
             while ready and free and len(procs) < cap:
                 job = ready.pop(0)
                 fits = [g for g in free if g in job.get("gpus", free)]   # a job may name the GPUs it can use
-                if not fits:
+                k = job.get("ngpus", 1)
+                if len(fits) < k:
                     continue
-                gpu = fits[0]
-                free.remove(gpu)
+                held = fits[:k]
+                for g in held:
+                    free.remove(g)
+                gpu = held[0] if k == 1 else ",".join(map(str, held))
                 out = q.runs / job["id"]
                 out.mkdir(parents=True, exist_ok=True)
                 env = {**os.environ, **{k: str(v) for k, v in job.get("env", {}).items()}, "CUDA_VISIBLE_DEVICES": str(gpu)}
-                job.update(gpu=gpu, started=now(), out=str(out.relative_to(REPO)), watch_busy=watch_busy)
+                job.update(gpu=gpu, gpus_held=held, started=now(), out=str(out.relative_to(REPO)), watch_busy=watch_busy)
                 n = job.get("attempts", 1)
                 p = subprocess.Popen(command(job, out, hc), cwd=REPO, env=env,
                                      stdout=open(out / ("job.log" if n == 1 else f"job.attempt{n}.log"), "w"),

@@ -18,6 +18,8 @@ vime:
     qwen3_4b: scripts/models/qwen3-4B.sh
   rm_type: deepscaler                  # as vime's math recipes
   gpu_memory_utilization: 0.5          # R1's main memory share
+  num_gpus: 1                          # one engine over this many GPUs (tensor parallel); the job's CUDA_VISIBLE_DEVICES
+  speculative_config: null             # --vllm-speculative-config (a dict), e.g. vime_verify_mtp.yaml
   global_batch_size: 512               # num_prompts x n: one rollout step is one training batch
   ray:
     num_cpus: 16
