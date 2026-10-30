@@ -1,0 +1,24 @@
+2026-10-30 20:54:26,545	INFO usage_lib.py:448 -- Usage stats collection is disabled.
+2026-10-30 20:54:26,545	INFO scripts.py:1043 -- [37mLocal node IP[39m: [1m140.113.241.75[22m
+2026-10-30 20:54:26,545	WARNING authentication_token_setup.py:73 -- Token authentication is disabled for this Ray cluster. Anyone with network access to the cluster can run arbitrary code and access its data. To enable token authentication, generate a token with `ray get-auth-token --generate` or set RAY_AUTH_MODE=token. For more information, see https://docs.ray.io/en/latest/ray-security/token-auth.html
+2026-10-30 20:54:27,081	ERROR services.py:1500 -- Failed to bind to 127.0.0.1:8265 because it's already occupied. You can use `ray start --dashboard-port ...` or `ray.init(dashboard_port=...)` to select a different port.
+2026-10-30 20:54:30,685	SUCC scripts.py:1084 -- [32m--------------------[39m
+2026-10-30 20:54:30,685	SUCC scripts.py:1085 -- [32mRay runtime started.[39m
+2026-10-30 20:54:30,685	SUCC scripts.py:1086 -- [32m--------------------[39m
+2026-10-30 20:54:30,685	INFO scripts.py:1088 -- [36mNext steps[39m
+2026-10-30 20:54:30,685	INFO cli_output_helpers.py:16 -- [2mNote: The following commands are intended for use on[22m
+2026-10-30 20:54:30,686	INFO cli_output_helpers.py:17 -- [2mthe head node or within the cluster network.[22m
+2026-10-30 20:54:30,686	INFO scripts.py:1092 -- To add another node to this Ray cluster, run
+2026-10-30 20:54:30,686	INFO scripts.py:1095 -- [1m  ray start --address='140.113.241.75:52187'[22m
+2026-10-30 20:54:30,686	INFO scripts.py:1106 -- To connect to this Ray cluster:
+2026-10-30 20:54:30,686	INFO scripts.py:1108 -- [35mimport[39m[26m ray
+2026-10-30 20:54:30,686	INFO scripts.py:1109 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'140.113.241.75'[39m[26m)
+2026-10-30 20:54:30,686	INFO scripts.py:1142 -- To terminate the Ray runtime, run
+2026-10-30 20:54:30,686	INFO scripts.py:1143 -- [1m  ray stop[22m
+2026-10-30 20:54:30,686	INFO scripts.py:1146 -- To view the status of the cluster, use
+2026-10-30 20:54:30,686	INFO scripts.py:1147 --   [1mray status[22m[26m
+2026-10-30 20:54:30,686	INFO scripts.py:1265 -- [36m[1m--block[22m[39m
+2026-10-30 20:54:30,686	INFO scripts.py:1266 -- This command will now block forever until terminated by a signal.
+2026-10-30 20:54:30,686	INFO scripts.py:1269 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2026-10-30 20:54:30,686	INFO scripts.py:1274 -- Process exit logs will be saved to: [1m/tmp/rv_311564/session_2026-10-30_20-54-26_545918_311568/logs/ray_process_exit.log[22m[26m
+2026-10-30 20:56:20,330	INFO node.py:698 -- Node 716ef6eb708325afcc7115457e677d0848bda39192cbfde922981825 received SIGTERM. Draining for up to 30.0 seconds before shutting down local processes.

@@ -1,7 +1,7 @@
 """Long-running profiling harness: a job queue that runs on free GPUs and re-analyses after every job.
 
 Jobs are JSON files in <root>/{pending,running,done,failed}/<id>.json. A job runs one command with
-CUDA_VISIBLE_DEVICES set to the GPU it was given (its `ngpus` GPUs if it asks for more than one), in <runs>/<id>/ (log in job.log; a retry's in
+CUDA_VISIBLE_DEVICES set to the GPU it was given (its `ngpus` consecutive GPUs if it asks for more than one), in <runs>/<id>/ (log in job.log; a retry's in
 job.attempt<N>.log, so the failed attempt's log survives). Kinds:
   engine  scripts/profile/engine_profile.py on one model (+ --set overrides, flags), then parse_trace.py
   serve   scripts/profile/serve_bench.py (models, settings)
@@ -150,9 +150,11 @@ def run(cfg: dict, until: dt.datetime):
                 job = ready.pop(0)
                 fits = [g for g in free if g in job.get("gpus", free)]   # a job may name the GPUs it can use
                 k = job.get("ngpus", 1)
-                if len(fits) < k:
+                # consecutive card numbers: vime numbers an engine's GPUs from its first one (base + i), so given
+                # "4,6" its second worker lands on GPU 5
+                held = next((fits[i:i + k] for i in range(len(fits) - k + 1) if fits[i + k - 1] - fits[i] == k - 1), None)
+                if held is None:
                     continue
-                held = fits[:k]
                 for g in held:
                     free.remove(g)
                 gpu = held[0] if k == 1 else ",".join(map(str, held))
