@@ -1,0 +1,28 @@
+inherit: rl_rollout.yaml
+
+# vime end-to-end check of the --vllm-watermark change (results/profile/upstream/vime_pr_draft.md). vime's own
+# train.py in rollout-only mode (--debug-rollout-only: vime's data loader and chat template, router, vLLM server
+# launch, GRPO sampling and reward; no Megatron training step, which this change does not touch) runs the R1
+# rollout step of rl_rollout.yaml (same prompts, num_prompts x n, max_tokens, temperature) on one GPU, at one
+# `--vllm-watermark`. scripts/rl/vime_verify.py runs one (model, watermark) setting.
+vime:
+  repo: /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/rlfw/vllm-project_vime
+  # vime's Docker stack without Docker (its image needs CUDA 13, this driver is 565): vLLM at vime's pin
+  # (docker/Dockerfile VLLM_COMMIT, cu129 wheel) with docker/patch/latest/vllm*.patch applied in the
+  # Dockerfile's order, layered on venv-vllm32 for torch; Megatron-LM at MEGATRON_COMMIT + megatron.patch.
+  python: /home/ryankert_l/tmp/vime-env/venv/bin/python
+  megatron: /home/ryankert_l/tmp/vime-env/Megatron-LM
+  cuda_home: /usr/local/cuda-12.8      # FlashInfer JIT (vime's health check samples with top_k=1); /usr/local/cuda is 11.8
+  model_args:                          # vime's model files (MODEL_ARGS), sourced from the repo
+    qwen35_4b: scripts/models/qwen3.5-4B.sh
+    qwen3_4b: scripts/models/qwen3-4B.sh
+  rm_type: deepscaler                  # as vime's math recipes
+  gpu_memory_utilization: 0.5          # R1's main memory share
+  global_batch_size: 512               # num_prompts x n: one rollout step is one training batch
+  ray:
+    num_cpus: 16
+    object_store_bytes: 4000000000
+    temp_root: /tmp                    # Ray's socket paths must stay short
+  metrics_poll_s: 5                    # vLLM /metrics poll while the step runs
+  start_lock: /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/vime_verify_start.lock
+  stop_grace_s: 30                     # SIGTERM to SIGKILL for the private Ray head's processes

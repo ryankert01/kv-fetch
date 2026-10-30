@@ -1,0 +1,17 @@
+note: 'vime end-to-end check of the --vllm-watermark PR (2026-10-30): vime''s train.py in rollout-only mode runs the
+  R1 rollout step (64 MATH-500 problems x 8 samples, 16K cap, T = 1, 0.5 memory) on one RTX 6000 Ada, watermark 0
+  vs 0.05, hybrid Qwen3.5-4B vs dense Qwen3-4B. Real sampling (no replay), so the two runs of a pair do slightly
+  different work; vime_verify.json keeps the output tokens alongside the step time. See configs/vime_verify.yaml.'
+jobs:
+- {id: vime_qwen35_4b_wm0, kind: cmd, priority: 1.00, timeout_s: 10800, gpus: [4, 5, 6],
+   why: 'vime check: hybrid, default watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify.yaml {out} --model qwen35_4b --watermark 0'}
+- {id: vime_qwen35_4b_wm05, kind: cmd, priority: 1.10, timeout_s: 10800, gpus: [4, 5, 6],
+   why: 'vime check: hybrid, the PR''s watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify.yaml {out} --model qwen35_4b --watermark 0.05'}
+- {id: vime_qwen3_4b_wm0, kind: cmd, priority: 1.20, timeout_s: 10800, gpus: [4, 5, 6],
+   why: 'vime check: dense control, default watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify.yaml {out} --model qwen3_4b --watermark 0'}
+- {id: vime_qwen3_4b_wm05, kind: cmd, priority: 1.30, timeout_s: 10800, gpus: [4, 5, 6],
+   why: 'vime check: dense control, the PR''s watermark',
+   cmd: '{py} scripts/rl/vime_verify.py configs/vime_verify.yaml {out} --model qwen3_4b --watermark 0.05'}
