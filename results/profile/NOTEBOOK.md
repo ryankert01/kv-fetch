@@ -927,3 +927,28 @@ User's point: the RL framework owns the rollout engine's configuration, so the f
   CUDA_HOME=cuda-12.8; vime's vLLM server binds the host's LAN IP (route probe, no override), the router and Ray
   stay on loopback; vime picks the vLLM port from 15000 well before binding, so concurrent runs take a startup lock.
 - Drafts updated with the vime numbers. Still nothing posted or pushed upstream.
+
+## 19:42 -- vime check in the recipes' engine setup: MTP spec decode, 1 GPU and TP2 (running)
+
+Why: is vime's shipped recipe setup affected at all, and does the watermark still help with MTP speculative
+decoding and tensor parallel (both used by run-qwen3.5-27B.sh)? Estimate from the model configs (no H100 here):
+the 27B recipe as shipped (8 prompts x 8 samples, 4 engines of 2 GPUs, 0.75 memory) needs ~0.7x of an engine's
+KV pool even if all 16 samples per engine reach the 32K cap, so it never preempts; at the 32 / 128 prompts of
+vime's other recipes it would need 2.7x / 10.9x. The watermark only matters once samples per engine outgrow the
+pool. vLLM keeps watermark 0 because it delays new requests (vllm#44594: TTFT p50 6.6 -> 11.2 s at 0.05); a
+rollout step only ends with its last sample, so TTFT does not matter there.
+
+Setup: configs/vime_verify_mtp.yaml (+ _tp2), plan configs/harness_plan_vime_verify_mtp.yaml; same rollout step
+as the 17:18 entry, Qwen3.5-4B, MTP 4 tokens (as the recipes), watermark 0 vs 0.05, RTX 6000 Ada (GPU 4; 5+6 for
+TP2). Harness jobs can now take `ngpus`.
+
+KV pools (vLLM's "Maximum concurrency for 262,144 tokens per request"): no MTP 1.55x (405,463 tokens; the
+110,816 figure I quoted earlier for the hybrid was the dense Qwen3-4B's pool), MTP 1.26x (the draft layer and
+lookahead take ~19%), MTP + TP2 3.50x (916,455). All 512 samples at the 16K cap would need ~8.47M tokens:
+21x the no-MTP pool, 26x MTP, 9x MTP + TP2 (the TP2 run is near the 128-prompt recipe case).
+
+MTP draft acceptance in the first minutes: mean acceptance length ~3.4-3.6 of 5.
+
+A vime-wide default is one line: `parser.set_defaults(vllm_watermark=0.05)` in add_vllm_arguments
+(vime/backends/vllm_utils/arguments.py, next to the router set_defaults); checked: parse gives 0.05 without the
+flag and 0.0 with `--vllm-watermark 0`; vime forwards every non-None vllm_* arg to the engine.
