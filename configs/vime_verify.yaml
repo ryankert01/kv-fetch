@@ -26,3 +26,9 @@ vime:
   metrics_poll_s: 5                    # vLLM /metrics poll while the step runs
   start_lock: /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/vime_verify_start.lock
   stop_grace_s: 30                     # SIGTERM to SIGKILL for the private Ray head's processes
+  report:                              # scripts/rl/vime_verify_report.py: watermark 0 vs 0.05 per model
+    runs_dir: results/profile/runs
+    pairs:
+      qwen35_4b: {wm0: vime_qwen35_4b_wm0, wm05: vime_qwen35_4b_wm05}
+      qwen3_4b: {wm0: vime_qwen3_4b_wm0, wm05: vime_qwen3_4b_wm05}
+    out: results/profile/runs/vime_verify_report.json
