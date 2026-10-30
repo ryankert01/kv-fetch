@@ -1,0 +1,72 @@
+From 0fb2b8241e0e084364b1e979b6972f571b77ae1a Mon Sep 17 00:00:00 2001
+From: ryankert01 <ryankert01@gmail.com>
+Date: Fri, 30 Oct 2026 10:43:32 +0800
+Subject: [PATCH] [Example][Doc] Set --vllm-watermark 0.05 for hybrid-model
+ rollouts
+
+vLLM's default watermark (0) makes hybrid models (Qwen3.5, Qwen3-Next) re-preempt
+just-readmitted requests under KV pressure; each readmission recomputes almost the
+whole sequence because hybrid state is cached only at block boundaries. Add the flag
+to the two hybrid long-response recipes and document it in usage.md (EN + ZH).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LgES7M7yUtfDfnn5iQhwvF
+Signed-off-by: ryankert01 <ryankert01@gmail.com>
+---
+ docs/en/get_started/usage.md      | 1 +
+ docs/zh/get_started/usage.md      | 1 +
+ scripts/run-qwen3-next-80B-A3B.sh | 1 +
+ scripts/run-qwen3.5-27B.sh        | 1 +
+ 4 files changed, 4 insertions(+)
+
+diff --git a/docs/en/get_started/usage.md b/docs/en/get_started/usage.md
+index 206d7a96..d29ac6ca 100644
+--- a/docs/en/get_started/usage.md
++++ b/docs/en/get_started/usage.md
+@@ -469,6 +469,7 @@ vime runs vLLM in server mode and talks to it over HTTP.
+ vime incorporates almost all vLLM parameters by forwarding vLLM's `EngineArgs` CLI flags. When setting a vLLM parameter, you need to add the `--vllm-` prefix. For example:
+ 
+   - In co-located training and inference, you often need to limit GPU memory utilization. Pass it as `--vllm-gpu-memory-utilization`.
++  - For hybrid models (linear attention or Mamba layers, e.g. Qwen3.5 and Qwen3-Next), set `--vllm-watermark 0.05`. vLLM's default (0) lets a request that was just preempted be readmitted and preempted again; a hybrid model caches its state only at block boundaries (hundreds of tokens), so each readmission recomputes almost the whole sequence. The watermark only delays admitting a request when less than 5% of the KV cache would stay free, so it changes nothing when the rollout batch fits.
+   - During training, if you want vLLM to infer beyond the maximum context length specified in the Hugging Face checkpoint's `config.json`, you need to use `--max-model-len`, which becomes `--vllm-max-model-len` in vime.
+   - For multi-node large EP inference, you might need `--enable-expert-parallel`, `--data-parallel-size`, etc. These can be passed as `--vllm-enable-expert-parallel` and `--vllm-data-parallel-size` respectively.
+ 
+diff --git a/docs/zh/get_started/usage.md b/docs/zh/get_started/usage.md
+index cc5f8105..15459bd5 100644
+--- a/docs/zh/get_started/usage.md
++++ b/docs/zh/get_started/usage.md
+@@ -451,6 +451,7 @@ vime 以 server 模式运行 vLLM，通过 HTTP 与之通信。
+ vime 通过转发 vLLM 的 `EngineArgs` CLI 参数，引入了几乎所有的 vLLM 参数。在设置一个 vLLM 参数的时候，需要在参数前加上 `--vllm-` 的前缀，例如：
+ 
+ - 在训推一体的训练时，往往需要限制 GPU 显存占用，传入 `--vllm-gpu-memory-utilization`；
++- 对于混合模型（含线性注意力或 Mamba 层，如 Qwen3.5、Qwen3-Next），建议设置 `--vllm-watermark 0.05`。vLLM 默认值为 0，刚被抢占的请求会被重新调度、再次被抢占；混合模型只在 block 边界（数百个 token）缓存状态，每次重新调度几乎都要重算整个序列。该参数只在接纳请求后 KV cache 剩余不足 5% 时才推迟接纳，rollout batch 能放进 KV cache 时没有影响；
+ - 在训练中，希望 vLLM 能推理超过 huggingface checkpoint 的 `config.json` 中标识的最长 context length，需要使用 `--max-model-len`，那么在 vime 中需要使用 `--vllm-max-model-len`；
+ - 在进行多机大 ep 推理的时候，需要 `--enable-expert-parallel`、`--data-parallel-size` 等，则可以对应地传入 `--vllm-enable-expert-parallel`、`--vllm-data-parallel-size`。
+ 
+diff --git a/scripts/run-qwen3-next-80B-A3B.sh b/scripts/run-qwen3-next-80B-A3B.sh
+index f15444bb..1fdc9bb1 100755
+--- a/scripts/run-qwen3-next-80B-A3B.sh
++++ b/scripts/run-qwen3-next-80B-A3B.sh
+@@ -126,6 +126,7 @@ WANDB_ARGS=(
+ VLLM_ARGS=(
+    --rollout-num-gpus-per-engine 8
+    --vllm-gpu-memory-utilization 0.8
++   --vllm-watermark 0.05
+    --vllm-enable-expert-parallel
+    --vllm-cudagraph-capture-sizes 5 10 20 40 $(seq 80 40 640)
+ 
+diff --git a/scripts/run-qwen3.5-27B.sh b/scripts/run-qwen3.5-27B.sh
+index eebed1cb..43839b18 100755
+--- a/scripts/run-qwen3.5-27B.sh
++++ b/scripts/run-qwen3.5-27B.sh
+@@ -129,6 +129,7 @@ WANDB_ARGS=(
+ VLLM_ARGS=(
+    --rollout-num-gpus-per-engine 2
+    --vllm-gpu-memory-utilization 0.75
++   --vllm-watermark 0.05
+    --vllm-speculative-config '{"method":"mtp","num_speculative_tokens":4}'
+ )
+ 
+-- 
+2.34.1
+
