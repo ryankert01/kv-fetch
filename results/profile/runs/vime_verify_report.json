@@ -8,11 +8,11 @@
   "page_size": 16,
   "w": 8,
   "git": {
-   "commit": "4a8a5e5fc7c8318730c5e8ed452b33379a5fd6cc",
-   "dirty": false
+   "commit": "3389ce65ad1109b534e2f0b566891e97e0c4929e",
+   "dirty": true
   },
   "config_path": "/home/ryankert_l/kv-fetch/kv-fetch/configs/vime_verify.yaml",
-  "timestamp": "2026-10-30T17:18:07",
+  "timestamp": "2026-10-30T22:18:19",
   "host": "gpuserv4",
   "torch": "2.13.0+cu129",
   "gpu": "NVIDIA RTX A6000",
@@ -1249,6 +1249,8 @@
     },
     "rm_type": "deepscaler",
     "gpu_memory_utilization": 0.5,
+    "num_gpus": 1,
+    "speculative_config": null,
     "global_batch_size": 512,
     "ray": {
      "num_cpus": 16,
@@ -1283,7 +1285,9 @@
     "output_tok_s": 1168.0253407878183,
     "preemptions": 5531.0,
     "response_len_mean": 10848.517578125,
-    "truncated_ratio": 0.44921875
+    "truncated_ratio": 0.44921875,
+    "num_gpus": null,
+    "spec_acceptance": null
    },
    "wm05": {
     "rollout_time_s": 3959.9334242343903,
@@ -1291,11 +1295,25 @@
     "output_tok_s": 1428.0048157863398,
     "preemptions": 530.0,
     "response_len_mean": 11044.5390625,
-    "truncated_ratio": 0.466796875
+    "truncated_ratio": 0.466796875,
+    "num_gpus": null,
+    "spec_acceptance": null
    },
    "engine_watermark": {
     "wm0": 0.0,
     "wm05": 0.05
+   },
+   "saturated": {
+    "wm0": {
+     "polls": 882,
+     "mean_running": 46.97845804988662,
+     "mean_kv_usage": 0.985310383269567
+    },
+    "wm05": {
+     "polls": 730,
+     "mean_running": 45.28767123287671,
+     "mean_kv_usage": 0.9620211209252305
+    }
    },
    "step_time_change": -0.16727847368647064,
    "output_tokens_change": 0.018068964995757497,
@@ -1308,7 +1326,9 @@
     "output_tok_s": 782.4958333030194,
     "preemptions": 3319.0,
     "response_len_mean": 6038.474609375,
-    "truncated_ratio": 0.05859375
+    "truncated_ratio": 0.05859375,
+    "num_gpus": null,
+    "spec_acceptance": null
    },
    "wm05": {
     "rollout_time_s": 3899.7592849731445,
@@ -1316,11 +1336,25 @@
     "output_tok_s": 796.8930318275789,
     "preemptions": 1451.0,
     "response_len_mean": 6069.708984375,
-    "truncated_ratio": 0.056640625
+    "truncated_ratio": 0.056640625,
+    "num_gpus": null,
+    "spec_acceptance": null
    },
    "engine_watermark": {
     "wm0": 0.0,
     "wm05": 0.05
+   },
+   "saturated": {
+    "wm0": {
+     "polls": 719,
+     "mean_running": 25.76912378303199,
+     "mean_kv_usage": 0.9836302927752646
+    },
+    "wm05": {
+     "polls": 704,
+     "mean_running": 25.727272727272727,
+     "mean_kv_usage": 0.9676798900557926
+    }
    },
    "step_time_change": -0.01298755429417675,
    "output_tokens_change": 0.00517256045947545,

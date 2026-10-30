@@ -12,7 +12,8 @@ runs with.
 
 Usage (venv-vllm32, vime.num_gpus GPUs via CUDA_VISIBLE_DEVICES):
   vime_verify.py CONFIG OUT_DIR --model KEY --watermark W [--set k=v]
-Writes OUT_DIR/prompts.jsonl, train.log, ray_head.log, metrics.jsonl, vime_verify.json.
+Writes OUT_DIR/prompts.jsonl, train.log, ray_head.log, metrics.jsonl, vime_verify.json; a retry first renames an
+earlier attempt's logs to NAME.attemptN.
 """
 import argparse
 import ast
@@ -170,6 +171,10 @@ def main():
     mc = pc["models"][args.model]
     out = Path(args.out_dir).resolve()
     out.mkdir(parents=True, exist_ok=True)
+    for name in ("train.log", "ray_head.log", "metrics.jsonl"):     # a retry keeps the earlier attempt's logs
+        if (out / name).exists():
+            (out / name).rename(next(out / f"{name}.attempt{i}" for i in range(1, 100)
+                                     if not (out / f"{name}.attempt{i}").exists()))
     repo, py = Path(vc["repo"]), vc["python"]
     ng, spec = vc["num_gpus"], vc["speculative_config"]
     visible = os.environ.get("CUDA_VISIBLE_DEVICES", "").split(",")

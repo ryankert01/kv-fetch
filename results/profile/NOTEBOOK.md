@@ -952,3 +952,40 @@ MTP draft acceptance in the first minutes: mean acceptance length ~3.4-3.6 of 5.
 A vime-wide default is one line: `parser.set_defaults(vllm_watermark=0.05)` in add_vllm_arguments
 (vime/backends/vllm_utils/arguments.py, next to the router set_defaults); checked: parse gives 0.05 without the
 flag and 0.0 with `--vllm-watermark 0`; vime forwards every non-None vllm_* arg to the engine.
+
+## 22:18 -- MTP / TP2 vime check done: with MTP the watermark still cuts preemptions 15-25x, but step time only 1-7%
+
+`vime_verify_report.py configs/vime_verify_mtp.yaml` (results/profile/runs/vime_verify_mtp_report.json), one run
+per setting, Qwen3.5-4B, same rollout step as the 17:18 entry, MTP 4 tokens. Engine watermark (/server_info)
+0.0 / 0.05 and TP 1 / 2 as configured in every run; draft acceptance 0.58 in all four.
+
+| setup | wm 0 | wm 0.05 | step time | output tokens | rate |
+|---|---|---|---|---|---|
+| no MTP, 1 GPU (17:18) | 4,755 s, 5,531 preempt | 3,960 s, 530 | -16.7% | +1.8% | +22.3% |
+| MTP, 1 GPU | 4,327 s, 2,589 | 4,275 s, 176 | -1.2% | +0.7% | +2.0% |
+| MTP, TP2 | 2,240 s, 1,797 | 2,090 s, 72 | -6.7% | -1.4% | +5.7% |
+
+So the 17% is the no-spec-decode case. With the recipes' MTP the watermark is still never slower and removes
+almost all preemptions, but buys 1-7%. One run each: the 1-GPU MTP -1.2% is within what sampling alone can move
+(output tokens differ by up to 1.8% between runs).
+
+Why MTP shrinks the engine: while requests wait (KV usage 96-98% in all runs), the no-MTP engine runs 47
+requests, the MTP engine 21.6. vLLM gives each hybrid request `num_speculative_blocks` (= 4) extra state blocks
+per linear-attention group (vllm/v1/core/single_type_kv_cache_manager.py, MambaManager). Qwen3.5-4B has 24 GDN +
+8 attention layers, so 3 GDN groups: 15 state blocks per request instead of 3. Check: the no-MTP pool is 768
+blocks of 528 tokens, 47 requests -> 13.3 attention blocks each (~7.0K tokens); the MTP pool is 609 blocks of
+544, 21.6 requests -> 13.2 attention blocks each (~7.2K tokens). Same mean length, so the 12 extra blocks per
+request account for the halved concurrency. Consequence on this KV-bound step: MTP with the watermark (4,275 s)
+is 8% slower than plain decoding with it (3,960 s). I don't have a checked explanation for why the watermark
+gains less once MTP is on; fewer, larger requests per engine is the obvious difference.
+
+Caveat: the TP2 0.05 job first failed twice on GPUs 4,6 (vime put its second worker on GPU 5, busy with the 1-GPU
+MTP 0.05 run: two short CUDA context inits on GPU 5 during that run). That run is within 1.2% of its 0 run,
+so I keep it. Failed try: runs/_invalid/vime_mtp_tp2_qwen35_4b_wm05_gpus46/.
+
+vime_verify.py now renames an earlier attempt's train.log / ray_head.log / metrics.jsonl to NAME.attemptN instead
+of overwriting them (attempt 1's train.log of that failed try was lost). vime_verify_report.py adds the mean
+running requests and KV usage while requests wait, per run.
+
+Possible separate vime bug (not filed): an engine's GPUs are numbered from its first GPU (base + i), so with
+non-consecutive CUDA_VISIBLE_DEVICES ("4,6") a TP2 engine uses GPU 5, outside the visible set.

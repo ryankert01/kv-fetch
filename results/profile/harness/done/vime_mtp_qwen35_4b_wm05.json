@@ -1,0 +1,26 @@
+{
+ "id": "vime_mtp_qwen35_4b_wm05",
+ "kind": "cmd",
+ "priority": 1.2,
+ "timeout_s": 10800,
+ "gpus": [
+  4,
+  5,
+  6
+ ],
+ "ngpus": 1,
+ "why": "vime check, MTP: the PR's watermark",
+ "cmd": "{py} scripts/rl/vime_verify.py configs/vime_verify_mtp.yaml {out} --model qwen35_4b --watermark 0.05",
+ "queued": "2026-10-30T19:33:50",
+ "plan": "configs/harness_plan_vime_verify_mtp.yaml",
+ "gpu": 5,
+ "gpus_held": [
+  5
+ ],
+ "started": "2026-10-30T20:20:24",
+ "out": "results/profile/runs/vime_mtp_qwen35_4b_wm05",
+ "watch_busy": true,
+ "returncode": 0,
+ "finished": "2026-10-30T21:35:50",
+ "seconds": 4526
+}
