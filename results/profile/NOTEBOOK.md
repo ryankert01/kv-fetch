@@ -996,3 +996,7 @@ Posted from results/profile/upstream/vime_issue_draft.md as ryankert01, the Bug 
 headings and its required checklist ticked (CONTRIBUTING read; no watermark mention in vime's docs, scripts or
 code at d7e40fe8, still main; no existing issue for "watermark" or "preemption"). No label (needs triage
 rights). The PR draft now says "Fixes #508"; the PR itself is not opened.
+
+## 2026-10-31 16:49 -- vime#508 edited (user: "this is not a bug", "be concise", no links to our repo)
+Retitled "[Perf] Default --vllm-watermark 0.05 for rollouts (...)", body cut to proposal / why / results / vLLM-only
+repro / PR offer, links to kv-fetch removed. The first version stays in GitHub's edit history.
