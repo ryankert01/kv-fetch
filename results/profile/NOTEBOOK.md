@@ -989,3 +989,10 @@ running requests and KV usage while requests wait, per run.
 
 Possible separate vime bug (not filed): an engine's GPUs are numbered from its first GPU (base + i), so with
 non-consecutive CUDA_VISIBLE_DEVICES ("4,6") a TP2 engine uses GPU 5, outside the visible set.
+
+## 2026-10-31 16:40 -- vime issue posted (user: "Let's post the issue"): vllm-project/vime#508
+
+Posted from results/profile/upstream/vime_issue_draft.md as ryankert01, the Bug Report form's fields as ###
+headings and its required checklist ticked (CONTRIBUTING read; no watermark mention in vime's docs, scripts or
+code at d7e40fe8, still main; no existing issue for "watermark" or "preemption"). No label (needs triage
+rights). The PR draft now says "Fixes #508"; the PR itself is not opened.

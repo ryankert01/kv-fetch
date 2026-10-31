@@ -1,4 +1,4 @@
-<!-- Draft for github.com/vllm-project/vime. Not posted. Blank issues are off, so use the "Bug Report" form: each "##" below is one form field; paste its text into that field. The Logs field is rendered as code: paste its lines without the ``` fences. -->
+<!-- Posted 2026-10-31 as https://github.com/vllm-project/vime/issues/508 (the form fields as ### headings, checklist ticked). Kept as the source text. -->
 
 **Title:** [Bug] Hybrid-model rollouts keep re-preempting requests once the batch outgrows the KV cache; proposal: default `--vllm-watermark 0.05`
 

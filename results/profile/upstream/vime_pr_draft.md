@@ -13,7 +13,7 @@ If you'd rather make 0.05 vime's default, it is one line, `parser.set_defaults(v
 
 ## Why
 
-Fixes #{{ISSUE}}. With vLLM's default watermark of 0, a hybrid model under KV pressure keeps preempting the request it just readmitted. Each readmission recomputes almost the whole sequence, because hybrid state is cached only at block boundaries (528+ tokens).
+Fixes #508. With vLLM's default watermark of 0, a hybrid model under KV pressure keeps preempting the request it just readmitted. Each readmission recomputes almost the whole sequence, because hybrid state is cached only at block boundaries (528+ tokens).
 
 The recipes' batch as shipped (8 prompts x 8 samples) fits in the KV cache, so this changes nothing for it. It is a safe setting for users who scale the batch up, as vime's other recipes do (32-128 prompts per step).
 
