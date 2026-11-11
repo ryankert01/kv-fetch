@@ -1,0 +1,2201 @@
+# Verification of the top ten questions (2026-11-11)
+
+Each question got three independent checks: already answered, premise, feasibility. All ten came back 'weakened': none is fully answered, none has a clean premise. Several 'already answered' searches were cut short when the web-search budget ran out, so 'nothing closer found' is weaker than usual. Papers cited by the checkers were found by subagents and have not been re-read by a second party.
+
+## Q03: parallel vs sequential reasoning under server load (weakened)
+
+### Already answered? partly_answered
+
+Not answered as posed, but two of its parts are already in print and the card understates both. The search was cut short by the shared web-search budget (12 queries ran, 3 did not), so systems-venue programmes for 2026 were not checked directly; treat "nothing closer exists" as likely, not established.
+
+- **The regime change is measured, coarsely.** The latency-aware TTS paper's appendix A.4 has a table (branches x concurrent requests, two models) showing extra branches are free up to about 16 active sequences and cost roughly in proportion from about 64. The card says this is stated "without measuring it"; that is wrong. The paper still does not run a long-chain arm under load, so the flip to sequential is inferred from its token-count result.
+- **First-finisher sampling under load is measured.** SART (first M of N finishers, vLLM, 1 and 4 req/s, R1-Distill-14B and 70B) compares against a single chain and reports that without pruning the extra branches raise queueing until it is no better than self-consistency. DUCHESS runs short-m@k itself under a Poisson arrival sweep and finds lower latency than self-consistency at 1-3 points lower accuracy.
+- **The sequential arm under load exists separately.** LASER shortens a single chain as load rises; it has no parallel arm.
+
+What remains is the head-to-head: long chain versus first-finisher k chains on one loaded engine, in accuracy per GPU-second, over a fine load sweep, with the crossover checked against the engine's throughput-versus-occupancy curve. The "tracks the roofline boundary" outcome is what the latency-aware paper already claims, so that result would confirm a published assertion at higher resolution. The "something else sets it" outcome has partial published support: SART attributes the loss to queueing and KV saturation, and DUCHESS shows short-m@k saves almost no tokens on MATH because branch lengths are similar.
+
+Card corrections: A.4 does contain a measurement; SART does compare against a single chain under load (natural length, not long-budget); arXiv 2511.02309 is now opened and is token-budget only via an API, so it does not bear on load.
+
+**Remaining gap.** No paper found runs a long single chain and a first-finisher k-chain strategy on the same loaded engine and reports accuracy per GPU-second across a load sweep, and none tests whether the crossover coincides with the engine's measured memory-bound to compute-bound occupancy. The direction of the flip is already asserted, with a coarse 3-point latency table, by the latency-aware TTS paper, and first-finisher sampling losing its edge to queueing under load is already reported by SART.
+
+Closest papers:
+- Faster and Better LLMs via Latency-Aware Test-Time Scaling (Findings of EMNLP 2025 (arXiv 2505.19634v4); https://arxiv.org/abs/2505.19634). Answers: Read in full (Limitations and appendix A.4). The card says A.4 states the regime change without measuring it; that is not accurate. A.4 has Table 4: latency for B = 1/4/16/64 branches crossed with 1/4/16 concurrent requests, for s1.1-32B and Llama-3.1-8B, with an accuracy column and the memory-bound cells marked. For s1.1-32B: B=1 is 90.5 / 91.2 / 92.9 s at 1 / 4 / 16 requests; B=4 is 91.3 / 93.1 / 156.8 s; B=16 is 90.5 / 142.7 / 576.8 s; B=64 is 159.8 / 602.8 / 2621.8 s. So branches are free up to about 16 total active sequences and cost roughly in proportion from about 64 on. The paper then asserts that once compute-bound, the token-count ranking applies (where it found sequential needs 9x fewer tokens). Leaves open: No sequential (long-chain) arm is run under load; the flip to sequential is inferred, not measured. No first-finisher (short-m@k) strategy, no GPU-seconds metric, load grid is three points in 4x steps, speculative decoding is on in every row, hardware for the table is not stated, and the crossover is not located against a measured engine throughput curve.
+- Thinking Short and Right Over Thinking Long: Serving LLM Reasoning Efficiently and Accurately (SART) (arXiv 2505.13326, May 2025 (no venue listed on the arXiv page); https://arxiv.org/abs/2505.13326). Answers: Read the evaluation section. This is closer than the card credits. SART is 'sample N branches, stop at the first M finishers' on vLLM under request arrivals of 1 and 4 req/s (R1-Distill-Qwen-14B and Llama-70B, 8 H100, GPQA and GAOKAO), compared with Vanilla N=1, self-consistency and Rebase on latency percentiles and accuracy. Its ablation without pruning is plain first-M-of-N under load: it 'increases the queuing time since more branches are sampled' and 'only achieves similar efficiency as Self-Consistency'. Sensitivity: N=8 has lower inference latency than N=4 but higher end-to-end latency because of queueing; N=4/8 have higher P50/P90 than N=1/2 but lower P97/P99. Leaves open: The single-chain baseline is one natural-length chain, not a long-budget sequential-scaling arm. Only two arrival rates, no sweep to a crossover, latency percentiles rather than accuracy per GPU-second, a PRM picks the final answer, and nothing relates the result to batch occupancy or the memory-bound/compute-bound boundary.
+- Intra-Request Branch Orchestration for Efficient LLM Reasoning (DUCHESS) (arXiv 2509.24957, Sep 2025 (preprint); https://arxiv.org/abs/2509.24957). Answers: Read section 4.2. Runs short-m@k itself (the 'Don't Overthink it' method) under Poisson load in vLLM 0.7.3 on one A100, with 10 branches per request, and sweeps arrival rate up to 2-3.5x the base rate (Table 1, Figure 4). Short-m@k cuts mean latency versus self-consistency (e.g. 15.7 s vs 54.1 s on GSM8K) but loses 1-3 points of accuracy, and saves almost no tokens on MATH (0.2% at 10 branches) because branch lengths are similar. Leaves open: No single-chain or long-chain baseline in the serving experiment, so no parallel-versus-sequential crossover. Loads are low (1-5 requests per minute), no GPU-seconds accounting, no roofline analysis.
+- LASER: Load-Aware Serving with Early-Exit for Reasoning LLMs at the Edge (arXiv 2606.31580, 2026 (preprint); https://arxiv.org/abs/2606.31580). Answers: Abstract and method read. Adjusts the length of a single reasoning chain (exit threshold and hard budget) from the live active-request count in vLLM; reports 17-38% lower latency for about 1% accuracy. Covers the sequential arm as a function of load. A related theory paper, arXiv 2601.10274, optimises thinking-token budgets in an M/G/1 queue. Leaves open: No parallel branches at all, so no comparison between branching and continuing.
+- Adaptive Parallel Monte Carlo Tree Search for Efficient Test-time Compute Scaling (arXiv 2604.00510, Apr 2026 (preprint, ICML template); https://arxiv.org/abs/2604.00510). Answers: Read. Controls the degree of rollout parallelism per search from system state in vLLM and notes that parallelism does not reduce total compute and raises queueing delay when capacity is constrained. Similar load-dependent branching control appears in SpecScale (arXiv 2609.39334, request-rate sweep on Qwen2.5-3B/7B beam search) and Gambit (arXiv 2608.08020, parallel sampling at 256 traces exhausts KV cache and inflates latency about 3x). Leaves open: All three are verifier- or scorer-guided search systems compared with other search methods; none has a single long reasoning chain as a baseline or an accuracy-per-GPU-second comparison.
+- The Sequential Edge: Inverse-Entropy Voting Beats Parallel Self-Consistency at Matched Compute (arXiv 2511.02309, Nov 2025 (preprint); https://arxiv.org/abs/2511.02309). Answers: Opened (the card had it unverified). Sequential refinement versus parallel self-consistency at matched token budgets (3/6/9 chains of 4096 tokens), sequential ahead by 6.6-8.9 points across 2K-16K tokens. Leaves open: All runs go through the OpenRouter API; budgets are tokens only. No latency, no GPU time, no load. It says nothing about the regime question.
+
+Searches run: Coverage is incomplete: the session's shared WebSearch budget ran out after 12 queries, so three planned queries did not run (systems-venue programmes OSDI/NSDI/EuroSys/ASPLOS/ATC/MLSys 2026; 'marginal cost of parallel samples under continuous batching'; 'equal wall-clock sequential vs parallel under concurrent requests'). OpenReview was covered by one web query only, and no venue programme was browsed directly.
+
+Queries that ran (web, extended mode): parallel vs sequential test-time scaling under server load / GPU-seconds / batch occupancy; test-time scaling serving system with concurrent requests and goodput; latency-aware TTS cited-by with compute-bound/memory-bound; load-aware choice between parallel sampling and longer thinking; roofline + test-time scaling + accuracy per GPU-second; reasoning serving under load, best-of-N vs longer budget at equal wall-clock; systems-perspective TTS with request rate; SART follow-ups; load-adaptive reasoning effort by queue length; 'GPU-seconds' cost accounting for batched samples; OpenReview ICLR 2027 phrasing; short-m@k under multi-user load.
+
+Citation lists pulled from the Semantic Scholar citations endpoint (by paper ID) for: 2505.19634 (12 citing), 2505.13326 (6), 2505.17813 (93), 2505.21825 (12), 2511.02309 (13), 2509.24957 (1), 2509.00195 (11); titles screened, likely ones opened. Semantic Scholar counts look low for 2026, so recent citing papers may be missing.
+
+Full text read or keyword-scanned (arXiv HTML): 2505.19634, 2505.13326, 2509.24957, 2604.00510, 2609.39334, 2608.08020, 2606.31580, 2601.10274, 2511.02309, 2511.01866, 2509.00195, 2504.09858, 2505.17813, 2505.21825, 2509.15148, 2504.10449, 2511.09345, 2605.27030, 2601.09093, 2509.09864, 2610.26383, 2609.27166, 2604.17353. Abstract only: 2609.19499.
+
+### Premise: weakened
+
+**Verdict: weakened.** Every quoted sentence and number on the card is in its source, but the contradiction mostly dissolves on reading and the gap is smaller than stated.
+
+- **Quotes:** all four check out; I opened 2511.02309, which the card had as unverified, and the 95.6% (43 of 45 configurations) is there.
+- **Tension:** the papers use "short" and "sequential" for different things (finished early versus truncated; budget forcing versus multi-step refinement). No paper compares first-finisher sampling with one long chain, so "three different rules" overstates it.
+- **Central gap claim is wrong in one respect:** the latency-aware paper's appendix A.4 has a measured table (Table 4), not just a sketch. Latency is flat up to about 16 total concurrent sequences, then roughly proportional to the count.
+- **Closest work is closer than the card says:** SART runs first-finisher sampling against a single chain on vLLM with DeepSeek-R1-Distill-Qwen-14B at 1 and 4 requests per second, and reports that extra branches raise queueing time. ATEST (arXiv 2610.25519, Oct 2026), which the card missed, already reduces sample count as GPU load rises.
+- **Answer is largely predictable:** the crossover is arithmetic on the token-accuracy curve and the step-time-versus-batch curve. On a 48 GB card with a 14B model, my estimate is that KV memory (about ten full-length chains) binds before the compute knee.
+- **What survives:** no paper sweeps load finely on a production engine, reports accuracy per GPU-second, or compares short-m@k with a budget-forced long chain at equal tokens. The last is the only part whose answer I could not predict from the sources.
+
+Nothing was run on GPUs and no project files were modified. Paper texts were downloaded to /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q03dl.
+
+**Is the tension real?** Mostly not a conflict; what remains is a narrower measurement gap than the card states.
+
+**The three "rules" measure different things:**
+- **"Short" means two things.** In Don't Overthink it, a short chain is one that finished early by itself, and the baseline is majority vote over parallel samples. In Let Me Think, a short chain is one cut off at a token cap. "Do not truncate a chain below the length the problem needs" and "among chains that finished, the early finishers are more often right" are compatible, and the first paper says as much (harder questions need more thinking).
+- **No paper pits the first paper's method against one long chain.** Short-m@k is only compared with majority@k.
+- **"Sequential" means three things.** It is budget forcing in items 2 and 3, and multi-step refinement in item 4. Items 2, 3 and 4 agree with each other on tokens: sequential is more token-efficient for reasoning-tuned models.
+- **The latency-aware paper is consistent with all of them.** It adds that step time is flat in batch size at low occupancy.
+
+**The gap is partly filled:**
+- The card says the latency-aware paper names the regime variable but does not measure it. Its Table 4 does measure it, coarsely: latency is flat until branches x requests reaches about 16, then rises roughly in proportion.
+- SART already runs first-finisher sampling against a single chain on vLLM at two arrival rates, and reports that the extra branches raise queueing time.
+
+**What is still unmeasured:** a fine load sweep on a production engine, a GPU-second metric, and the short-m@k versus forced-long-chain comparison under load.
+
+**Obvious answer?** Largely predictable: an expert would say the crossover sits at the knee of the engine's step-time-versus-batch curve.
+
+**Basis:**
+- **Accuracy does not depend on load.** The sampled chains are the same; only the cost per token changes. The card's own design (record chains once, replay under load) reflects this.
+- **The crossover is then arithmetic on two curves.** One is accuracy versus tokens per strategy, which is published. The other is step time versus batch occupancy, which the student already has.
+- **Below the knee,** extra branches cost almost nothing, so parallel wins on time.
+- **Above the knee,** cost is proportional to tokens, so the per-token ranking applies: budget-forced sequential beats majority vote for reasoning-tuned models (9x fewer tokens in the latency-aware paper), and short-m@k beats majority vote in both regimes.
+- **Table 4 of the latency-aware paper already shows this shape.**
+
+**Two corrections an expert would add, both computable in advance:**
+- **KV memory binds first on a 48 GB card.** By my estimate from the Qwen2.5-14B architecture, KV is about 0.19 MB per token, so an 8k-token chain takes about 1.5 GB. The roughly 15 GB of KV the card cites holds on the order of ten full-length chains, so queueing or preemption would set the crossover before the compute knee. I did not measure this.
+- **The stated metric is ill-posed against a fixed background.** With step time affine in batch, the ratio t(N+k)/t(N+1) tends to 1 at both low and high N. The requester's own latency advantage therefore never "reaches zero"; the cost falls on the other requests, so the metric has to be system throughput or an attributed GPU-second share.
+
+**Not predictable from the sources:** the equal-token accuracy of short-m@k against a forced long chain on the same model. That is an accuracy question, not a serving one.
+
+Evidence checks:
+- [confirmed_with_caveat] Within a question, shorter chains are more often correct, and taking the first finishers among k parallel samples beats majority voting while being faster. (https://arxiv.org/abs/2505.17813): The quote is verbatim in the abstract (v2, 3 Feb 2026), and the paper reports short-3@k beating majority@k at every compute budget and running up to 33% faster. Two caveats matter for the card. (1) The comparison is short-m@k against majority@k, both parallel, plus shortest against longest among naturally finished samples; there is no arm with one chain given a longer budget. (2) Time-to-answer is derived from the length of the m-th shortest chain under an assumed free parallel decode, not timed on a server. Section 5.3 already redoes the accounting without parallelism (in thinking tokens) and short-m@k still beats majority. The paper also states that harder questions need longer thinking. No venue is listed on arXiv.
+- [confirmed_with_caveat] The opposite rule: one long chain can beat many short ones, including on AIME with s1-32B. (https://arxiv.org/abs/2505.21825): The quote is verbatim (Section 4, Figure 12), and the arXiv comment says 'Published at NeurIPS 2025'. It is not the opposite of item 1. Here a 'short' chain is one truncated at a token cap (budget forcing, then a forced answer), and the claim is that majority vote over truncated chains cannot replace letting a chain reach the length it needs. Item 1's short chains are ones that finished early on their own. The paper also says quantifying the trade-off on AIME 'is beyond the scope'; the exponential result is for graph connectivity.
+- [confirmed_with_caveat] Sequential is better per token but parallel is better per second, and the authors concede this holds only when the server is not busy. (https://arxiv.org/abs/2505.19634): Both quotes are verbatim (v4): the 9x fewer tokens / 1.6x lower latency sentence in the introduction (s1.1-32B, MATH-500, sequential = budget forcing), and the large-scale-servers sentence in Section 7 Limitations. The caveat is against the card's use of it: appendix A.4 is not only a sketch. Table 4 reports measured latency for B = 1, 4, 16, 64 branches at 1, 4, 16 concurrent requests, with memory-bound cells marked. For s1.1-32B latency stays at about 90-93 s while B x #Req is 16 or less, then grows roughly in proportion (64 total: 143-160 s; 256: 577-603 s; 1024: 2622 s). Llama-3.1-8B shows the same pattern. The measurements were taken with speculative decoding on (draft length 5 and 4), and the appendix text does not name the GPU or use a serving engine with arrivals. Venue (Findings of EMNLP 2025) is not on the arXiv page; I did not confirm it.
+- [confirmed_with_caveat] A later paper reports sequential scaling beating parallel self-consistency at matched compute in most configurations. (https://arxiv.org/abs/2511.02309): I opened the paper; the card had it as unverified. The number is there: 43 of 45 configurations (95.6%), 5 open models, 3 benchmarks. 'Sequential' here means iterative refinement: 6 steps of 4096 tokens, each seeing the earlier attempts, against 6 independent 4096-token chains. It is matched on tokens only, run through the OpenRouter API, with no latency or GPU-time measurement. It is not 'one long chain' in the sense of items 2 and 3.
+- [confirmed_with_caveat] Closest existing answer: SART and the parallel MCTS paper handle branching under load but do not compare against one long chain at equal GPU-seconds (card had this from search summaries only). (https://arxiv.org/abs/2505.13326): SART is closer than the card says. It is built on vLLM with continuous batching, uses DeepSeek-R1-Distill-Qwen-14B (the card's own first-experiment model) and a 70B model, runs at 1 and 4 requests per second, and implements 'sample N, stop at the first M finishers'. It does compare against a single chain ('Vanilla, N=1') on latency percentiles and accuracy. Its ablation reports that redundant sampling with early stopping alone 'increases the queuing time since more branches are sampled' and only matches self-consistency; pruning with a reward model is what brings latency below Vanilla. True parts of the card's claim: no GPU-second metric, no forced-long-chain arm, only two arrival rates, 8x H100. arXiv 2604.00510 (4x H100, MCTS with a reward model, arrival-rate sweep) has no single-chain baseline, as the card says.
+- [confirmed_with_caveat] No paper measures test-time strategy against server load (card's why_unknown). (https://arxiv.org/abs/2610.25519): Not on the card or in the harvest notes: ATEST (arXiv, 18 Oct 2026) measures the cost of a fixed four-sample query rising up to 4.1x as GPU load rises and cuts the sample count as load increases (Phi-3-mini on A100, energy metric). It does not compare against a long chain or locate a knee, so the card's narrow claim survives, but 'sampling count should depend on load' is already published. I read the abstract only.
+
+### Feasibility: yes_scaled_down
+
+Q03 is answerable only in a scaled-down form, and the student's existing measurements already predict part of the answer.
+
+- **Second clause (crossover at the memory-bound to compute-bound boundary):** predicted false on 48 GB cards. In the student's fitted vLLM 0.32 step model for Qwen3-4B, the cost of an extra branch is KV read, about 158 ns per resident context token per step. Branches stop being nearly free at about 7-14 concurrent sequences at 4-8K context, and the KV pool fills at about 35 chains. The FLOP knee, about 137 sequences at zero context, is never reached.
+- **First clause (where parallel stops beating one chain):** partly measured already. The latency-aware paper's Table 4 gives latency at 1, 4 and 16 requests for 1-64 branches, and SART compares branches against a single chain on vLLM at two request rates. The card understates both. Neither reports GPU-seconds, a load sweep, or an engine curve.
+- **Preview from existing chains (30 AIME problems x 8, Qwen3-4B, 16K cap):** parallel sampling's accuracy gain (46% to 63% at k=8) comes entirely from one branch finishing before the cap. On an empty card short-1@8 is predicted 1.36x slower than one chain. With the pool full its cost is 5.6x against 6.5x in tokens. A chain run to 32K costs 2.6x more per token than one at 12K.
+- **What is open:** whether GPU-second rankings under load differ from token rankings once chain lengths differ a lot (16K against 32K caps, dense against hybrid), and whether the crossover load follows the KV-read knee or the pool-full point across 4B, 8B and 14B.
+- **First week:** about 5 GPU-days, using models and data that are public and mostly already on disk, and replay harnesses the student already wrote.
+- **Main risks:** the result reduces to arithmetic on known curves, or accuracy gaps of 1-4 points are not resolvable on about 290 questions.
+- **Not feasible here:** the card's 14B model at 64-128 background sequences, and s1-style extended chains on 32B models.
+
+Web facts were read through an automated page summary; recheck the Table 4 and SART numbers in the PDFs before relying on them.
+
+**Existing data.** The student already holds most of the system side and a small accuracy pilot. All paths are under /home/ryankert_l/kv-fetch/kv-fetch.
+
+1. Fitted step-time model for vLLM 0.32, Qwen3-4B on an RTX 6000 Ada: results/profile/runs/r1_bound_own.json, fitted by scripts/rl/rollout_bound.py. Step = a + b per decoding sequence + c per resident context token, with a = 9.2-10.2 ms, b = 60-83 us, c = 146-162 ns, R2 0.90-0.95. The hybrid Qwen3.5-4B has c = 32-33 ns and b = 172-182 us (results/profile/NOTEBOOK.md, 21:19 entry).
+
+2. Decode step time versus batch and context for Qwen3-4B, Qwen3-8B, Qwen3-1.7B and Qwen3-30B-A3B-FP8: results/profile/findings.json (keys sweeps, decode_points). For Qwen3-4B, three points with the same 131K resident tokens (2K x 64, 8K x 16, 32K x 4) all take 30-32 ms. Step time is therefore set by total resident KV, which is read at the bandwidth bound ("attention 0.99-1.02 of the KV-read bound", NOTEBOOK 00:50). KV pool at 0.85 memory share: 228,752 tokens (4B) and 171,344 tokens (8B).
+
+3. Replay harness: scripts/rl/rollout_trace.py records P prompts x n samples; scripts/rl/rollout_replay.py replays the recorded lengths on an in-process engine with the scheduler instrumented; scripts/profile/thrash_trace.py does closed-loop concurrency; scripts/profile/serve_bench.py drives `vllm serve`. Existing traces are 64 MATH level 3-5 problems x 8 samples for Qwen3-4B and Qwen3.5-4B (results/profile/runs/r1_trace_*/trace_*.json). They hold lengths only, with no text or correctness.
+
+4. Chains with correctness: 240 full-attention chains per set (30 AIME24+25 explore problems x 8) in results/reasoning/e3_shards/full (Qwen3-4B, 16K cap), results/hybrid/h3_shards/qwen3_4b/full (16K cap) and results/hybrid/h3_shards/qwen35_4b/full (32K cap). Each has n_gen, stopped, score and text.
+
+I ran a CPU-only preview on these during this check; it is not in the student's records. Scripts: /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q03_pilot2.py and /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q03_pred.py.
+
+- Accuracy, Qwen3-4B E3 set: single chain 46%, short-1@8 63%, majority@8 63%. Finished chains of one problem disagree on correctness in only 0-3 of 30 problems, and 41% of chains hit the 16K cap. Parallel's whole gain here is "one of k finishes before the cap", not voting.
+- Cost with the fitted model, alone on the card: short-1@8 takes 18% fewer steps but 1.36x the wall-clock and GPU-seconds of one chain (short-1@2: 1.03x).
+- Cost with the pool full: short-1@8 costs 5.6x one chain, against 6.5x in tokens.
+- Cost of length: a chain run to 32K costs 3.4 ms per token against 1.3 ms at 12K, because KV read grows with context.
+- Knee: branches stop being nearly free at about a/(b + c x context), which is 14 sequences at 4K context and 7 at 8K. The FLOP-bound knee would be about 137 sequences at zero context and is outside the pool at reasoning lengths.
+
+5. Serving behaviour under saturation (preemption storms, watermark knob): NOTEBOOK.md 03:38 to 09:24 and the R1 entries.
+
+**First-week experiment.** Day 1, CPU only. Extend the preview above into a prediction table: for each strategy and load, the predicted GPU-seconds per question and time to answer, from the fitted (a, b, c) and the existing 240-chain sets. Write down the predicted crossover before any GPU run.
+
+Days 1-3, record chains. vLLM 0.32, bf16 weights, one 48 GB card per server, gpu_memory_utilization 0.92, max_model_len 34,816.
+- Models: Qwen/Qwen3-4B (8 GB weights, 147 KB of KV per token), Qwen/Qwen3-8B (16.4 GB, 147 KB per token) and Qwen/Qwen3-14B (29.5 GB, 164 KB per token, pool roughly 100K tokens by my arithmetic). All are Apache-2.0 and already in /share2/huggingface/hub.
+- Cross-family check for week 2: deepseek-ai/DeepSeek-R1-Distill-Qwen-14B (MIT, 48 layers, 197 KB per token, about 85K tokens of pool, 30 GB download).
+- Data: AIME 2024 (HuggingFaceH4/aime_2024, 30), AIME 2025 (math-ai/aime25, Apache-2.0, 30), HMMT Feb 2025 (MathArena/hmmt_feb_2025, CC BY-NC-SA, 30, to download) and GPQA-Diamond (Idavidrein/gpqa, gated, CC BY 4.0, local, 198). MATH-500 level 5 is used for lengths only because accuracy is near ceiling.
+- Sampling: 20 chains per question, model-card thinking settings (T 0.6, top-p 0.95, top-k 20), cap 32,768 generated tokens. Keep text, length and finish reason. Run the 14B on AIME + HMMT only.
+- Sequential arm: for each chain, force an answer at budgets 4K, 8K and 16K by re-prefilling the recorded prefix and closing the think block (or with vLLM's thinking_token_budget). "One chain with budget T" then has a real accuracy rather than counting unfinished as wrong.
+
+Days 3-5, engine runs with forced lengths. Extend scripts/rl/rollout_replay.py and scripts/profile/thrash_trace.py to a closed loop.
+- Load: Q questions in flight, Q in {1, 2, 4, 8, 16, 32, 64}. Each question expands into k branches; the losers are aborted when m finish; a new question enters when one completes.
+- Strategies: single@16K, single@32K, short-1@4, short-1@8, short-3@8, majority@4, majority@8.
+- Engine: max_num_seqs 512; watermark 0 and 0.05, because the student's own runs show the default thrashes.
+- Size: 30 questions per run, about 72 runs on the real engine. The fitted simulator fills the rest of the grid.
+
+Numbers measured:
+- GPU-seconds per question = wall time / questions completed on one fully attributed card. This avoids any rule for splitting a shared batch.
+- Time to answer, p50 and p95.
+- Preemptions and recompute tokens.
+- Fitted (a, b, c) per model, and predicted versus measured cost.
+- Accuracy per strategy from the recorded chains, with a paired bootstrap over questions.
+
+Comparison: at each Q, the accuracy versus GPU-seconds frontier. Q* is the load where the best parallel strategy stops dominating the best single-chain budget. Compare Q* on three model sizes with three candidate boundaries: the KV-read knee a/(b + c x context), the pool-full occupancy, and the FLOP knee.
+
+**Result that kills it.** Either of two outcomes.
+
+K1, settled by arithmetic. The three-coefficient step model predicts measured GPU-seconds per question within about 10% for every strategy and load, and the ranking of strategies at equal GPU-seconds equals the ranking at equal tokens at every load, with cost ratios within about 15% of token ratios. The preview already points this way for short-m@k against a single chain at the same cap (5.6x against 6.5x). Then load adds nothing beyond a token count with a known correction, the only boundary is "the KV pool is full", and the answer is the published token-matched results plus curves the student already has. The compute-bound clause of the card is already predicted false on this hardware.
+
+K2, no accuracy signal. With the 32K cap on the 8B and 14B, truncation mostly disappears and the strategies differ by less than the paired confidence interval (about 3 points on roughly 290 questions). In the existing chains voting adds nothing, since finished chains agree within a problem. No crossover can then be located and one chain wins at every load by default.
+
+Prior work narrows the room further. The latency-aware paper's appendix Table 4 already reports latency at 1, 4 and 16 concurrent requests for B = 1 to 64 on two models (for example s1.1-32B at B=16: 90.5 s, 142.7 s, 576.8 s). SART (arXiv 2505.13326) runs on vLLM with R1-Distill-Qwen-14B at 1 and 4 requests per second against a vanilla single chain and self-consistency. The card's statement that nobody measured this under load is too strong. I read both through an automated page summary, so the numbers should be rechecked in the PDFs.
+
+**Result that makes it a paper.** A ranking reversal that both published accountings miss, reproduced on three model sizes and explained by a measured engine curve. Three concrete forms:
+
+1. Cost of length. Under load the per-token cost of a chain grows with its length (predicted 1.3 ms at 12K to 3.4 ms at 32K on Qwen3-4B). If k chains capped at 16K then beat one chain run to 32K at equal GPU-seconds where the long chain wins at equal tokens, token-matched comparisons (arXiv 2511.02309, "Let Me Think") mis-rank strategies on a loaded engine. The effect should shrink about 5x on the hybrid Qwen3.5 (c = 33 ns against 158 ns), giving an architecture-dependent answer.
+
+2. The idle-card premise fails. If short-1@8 is measured slower in wall-clock than one chain on an empty card for small models with long chains (predicted 1.36x on Qwen3-4B), the "parallel branches use idle compute" premise of the latency-aware and shorter-chains papers does not hold there.
+
+3. A predictable crossover. Q* falls where a/(b + c x context) or pool-full predicts on all three models, or measured cost departs from the additive model by more than 25% because branching triggers preemption and recompute. Either gives a regime map (weight-read, KV-read, KV-capacity) that replaces the memory-bound versus compute-bound picture used in the test-time-scaling papers.
+
+The accuracy differences must clear the paired interval on the 288 hard questions for any of these to stand.
+
+**GPU-days.** About 5 GPU-days (range 3-7): 2.3 for recording chains (4B 0.5, 8B 0.85, 14B on AIME + HMMT 0.9), 0.3 for forced-answer budgets, 1.8 for about 72 engine runs, 0.3 for calibrating the step curve on the 8B and 14B. Dropping the 14B brings it to about 3. On 4 cards this is 1.5-2 days of wall-clock. At the time of this check only GPUs 2 and 5 were fully idle.
+
+**Blockers.** 1. The card's experiment does not fit as written. A 14B model in bf16 leaves roughly 100K tokens of KV on a 48 GB card (Qwen3-14B, 164 KB per token) or about 85K (R1-Distill-Qwen-14B, 197 KB per token). That is 3 chains at the 32K cap or 8-10 typical chains, not 64-128 background sequences.
+
+2. The compute-bound regime is unreachable at reasoning lengths on these cards. On Qwen3-4B the FLOP knee is about 137 sequences at zero context, while the pool holds about 35 chains. The card's second clause can only be answered as "no, a different boundary" here, and H100-class behaviour (the papers' hardware) cannot be measured.
+
+3. "One long chain" beyond the model's natural stop needs s1-style budget forcing. s1.1-32B is Apache-2.0 but 131 GB in F32 on the Hub; at FP8 it leaves about 40K tokens of KV on one card. Week one is limited to budget caps and natural stops, so the "Let Me Think" setup is not reproduced. Two cards over PCIe are possible later.
+
+4. No public code was found for arXiv 2505.17813, 2505.19634, 2505.13326 or 2511.02309. short-m@k and majority voting are trivial to rewrite.
+
+5. Statistical power. Published strategy gaps are 1-4 points (the latency-aware Table 4 gives 82.3 / 85.6 / 83.8 / 83.0 for B = 1 / 4 / 16 / 64). AIME + HMMT is 90 questions and GPQA-Diamond 198. MATH-500 is near ceiling.
+
+6. Data conflicts. HMMT Feb 2025 and GPQA-Diamond are the held-out sets in EXPERIMENTS.md for the KV-selector project; using them here spends them. HMMT is non-commercial share-alike. HMMT answers are LaTeX expressions and need an equivalence grader, which the repo lacks; the AIME integer grading exists.
+
+7. Code to write, about 2 days: a closed-loop multi-branch driver with first-m cancellation, and a discrete-event simulator on the step-time fit. vLLM 0.32 already has `n`, abort on client disconnect, `priority` with `--scheduling-policy priority`, `continue_final_message` and `thinking_token_budget`; the last is untested on Qwen3 here. There is no per-request GPU-time attribution in vLLM; the closed-loop design avoids needing it.
+
+8. Shared node: the 4 idle cards assumed in the brief were not all free when I checked.
+
+**Follow-on design space.** If the crossover exists and is predictable from the engine curve: a load-aware controller inside the scheduler that picks k and the thinking budget per question from the current resident KV tokens and the fitted (a, b, c). Supporting pieces would be first-m cancellation and branch priority as scheduler primitives, and pricing or admission by KV-token-seconds instead of tokens. Because c differs 5x between dense and hybrid models and halves with fp8 KV, the best strategy would depend on architecture and KV precision. That gives a dense-versus-hybrid study that reuses the student's Qwen3 / Qwen3.5 pairs.
+
+If tokens turn out to be a sufficient cost proxy and the additive model explains everything: the engine is not the lever. What remains is deciding which chains to stop (Dynasor/Certaindex, SART pruning, LASER's load-aware early exit), which is crowded, or admission tuning under branching, which the student has already found to be an existing knob (watermark, vime#508). A negative result therefore leads back toward directions already dropped.
+
+If a non-roofline factor dominates (preemption and recompute under branching, or length variance): that motivates branch-aware preemption, for example evicting the branch least likely to finish first, and group admission of a question's k branches.
+
+## Q05: which lossy techniques make reasoning models think longer (weakened)
+
+### Already answered? partly_answered
+
+The descriptive half of Q05 is largely answered by 2026 work the card does not cite; the predictive half (one property that forecasts lengthening across families) is not answered by anything I found.
+
+**What is already answered**
+- **Weight quantization lengthens reasoning and can cancel the per-token gain.** arXiv 2606.25519 gives inflation by method, bit width and model size, with one direct end-to-end timing (BF16 285 s vs INT4 292 s). arXiv 2606.00206 (NeurIPS 2026 oral per its listing) gives the mechanism, and 2606.02011 covers the 2-bit case.
+- **Eviction lengthens reasoning.** SkipKV (MLSys 2026), ReCo (2608.04771), Random Attention (2609.03430), BreadthKV (2610.05685) and Hold Onto That Thought all report it, typically +10% to +80% tokens. ReCo measures end-to-end speedups of only 1.09x to 1.63x for cache-only methods as a result.
+- **The "three-sided contradiction" is weaker than the card states.** ThinKV's "eviction does not lengthen" sentence has no eviction length numbers behind it in the text, and it now stands against at least five papers.
+
+**What remains open**
+- No common-axis study across weight quantization, KV quantization and eviction with a matched-noise control.
+- No test of a single divergence measure as a cross-method predictor of length.
+- KV-quantization-only length is reported only as untreated table columns (KVarN, 2606.03458) and ThinKV's unlabelled 5.1x.
+
+**Evidence that already leans against the single-predictor outcome**
+- arXiv 2611.12127 (9 Nov 2026) finds teacher-forced KL ranks recurrent-state heads differently from their closed-loop length effect, and that same-width stochastic rounding removes most of the lengthening (bias, not error magnitude).
+- BreadthKV finds an offline attention-error proxy picks the wrong bit width, and that fewer bits with more tokens kept gives fewer capped runs.
+- EpiKV finds that which tokens are kept, not how many, controls looping.
+
+These are partial (one model lineage, one proxy, eviction only), so they do not settle the question. They do make "method-specific mechanism" the expected answer, which lowers the surprise of that branch.
+
+**Coverage caveat:** the web-search budget ran out after six queries. The rest of the search was citation-graph scans of 17 anchor papers plus reading 13 papers in full; I did not keyword-search OpenReview or the individual conference programmes.
+
+**Remaining gap.** No paper found puts weight quantization, KV quantization and KV eviction on one model/benchmark/axis with a matched random-perturbation control, or tests whether a single offline quantity (e.g. teacher-forced KL to the full-cache run) predicts the length ratio across families. KV-quantization-only length on reasoning models is also still thin and inconsistent (KVarN's tables show a few percent to +35% at about 2 bits; ThinKV claims up to 5.1x with no bit width stated), and no one has reconciled the two.
+
+Closest papers:
+- Quantization Inflates Reasoning: Token Inflation as a Hidden Cost of Low-Bit Reasoning Models (Lian et al.) (arXiv 2606.25519, June 2026 (preprint, no venue on the page); https://arxiv.org/abs/2606.25519). Answers: Weight-quantization arm, including whether the lengthening cancels the per-token saving. Five weight-only PTQ methods (RTN, GPTQ, AWQ, HQQ, ParoQuant) at INT4/INT3 on Qwen3-4B, Phi-4-reasoning-plus and Qwen3-30B-A3B across six reasoning benchmarks. Length inflation by method and bit width: Qwen3-4B INT4 +5% to +12% (RTN +42%), INT3 +24% to +292%; the 30B model is less affected. One direct end-to-end timing (BBH, Qwen3-4B: BF16 285 s vs INT4 292 s despite a 1.2-1.4x kernel speedup) and a serving simulation on vLLM. Leaves open: Weight-only: no KV quantization or eviction. The page read states it does not test KL, perplexity or accuracy drop as predictors of inflation, has no noise control, and does not stratify by difficulty.
+- Quantized Reasoning Models Think They Need to Think Longer, but They Do Not (Lotfi, Kirichenko, Li, Liu) (arXiv 2606.00206, May 2026; listed as a NeurIPS 2026 oral (neurips.cc listing seen in search results, not opened); https://arxiv.org/abs/2606.00206). Answers: Mechanism for the weight-quantization arm. GPTQ/AWQ at 3 and 4 bits plus FlatQuant W4A4KV4 and W8A8KV8 on five models (1.5B to 32B). Spearman -0.73 between accuracy and length across 28 model-quantization pairs. Token-level KL to the full-precision model concentrates on 'wait/but/alternatively' markers, and position-level KL tracks the full-precision model's entropy (rho 0.92). A logit penalty on those markers cuts length 12-23%. Leaves open: KV cache is only quantized jointly with weights and activations; no eviction. KL is used to locate tokens, not as a per-configuration predictor of length; no noise-injection control on the model; no throughput.
+- Fewer Tokens, Smaller Cache: Reward-Coordinated Efficient Reasoning (ReCo; Zhu et al.) (arXiv 2608.04771, August 2026 (preprint, marked work in progress); https://arxiv.org/abs/2608.04771). Answers: Eviction arm with end-to-end time. R-KV at 25% lengthens MATH-500 outputs by +38.8% (R1-Qwen-7B) and +79.0% (R1-Llama-8B); 79.8% of problems get longer; the share stays above 50% across 15-40% compression. Six-benchmark averages for SnapKV, R-KV and RPC are +32% to +59% tokens on three models. Per-problem wall-clock speedup of the cache-only methods is 1.09x to 1.63x, which the paper attributes to inflated generation cancelling the per-token saving. Leaves open: Eviction only, no quantization. The page read reports no mechanism isolated and no divergence measure related to length.
+- SkipKV: Selective Skipping of KV Generation and Storage for Efficient Inference with Large Reasoning Models (Tian et al.) (MLSys 2026 (per the page header); arXiv 2512.07993; https://arxiv.org/abs/2512.07993). Answers: Eviction lengthens reasoning: prior token-level methods 'consistently generate more tokens than FullKV across all models and tasks' (R-KV on R1-Qwen-7B/14B and R1-Llama-8B, MATH-500, AIME-24, GSM8K, LiveCodeBench). Offers a qualitative mechanism (fragmented retained tokens trigger re-derivation and re-checking). Leaves open: No quantization experiments; the mechanism is illustrated with examples, not tested; no predictor.
+- Random Attention: Rethinking KV Cache Eviction for Efficient Reasoning (Wang et al.) (arXiv 2609.03430, September 2026 (preprint); https://arxiv.org/abs/2609.03430). Answers: Appendix E, Table 7: mean generated tokens for full attention vs SnapKV, R-KV, VaSE, TriAttention and a random selector on Qwen3-4B/14B/32B and Phi-4-reasoning at 32K cap. Every evictor lengthens output (+9% to +40%); 'eviction generally lengthens generation relative to full attention, most for the weakest selectors.' Leaves open: Eviction only; the link between selector quality and length is an observation from one table, with no test and no divergence measure.
+- EpiKV: Epiphany-Aware KV Cache Eviction Without the Attention Matrix (Kolawole, Smith) (arXiv 2606.26472, June 2026 (preprint, in review); https://arxiv.org/abs/2606.26472). Answers: For eviction, most accuracy loss is generations that loop to the cap; finished generations are wrong about as often as without eviction (MATH-500, K=1024, two R1 distill models; ThinKV re-run is the exception). Doubling the cap does not recover them. Which tokens are kept matters more than how many: keeping tokens the recent queries attend to lowers cap hits without changing finished-answer errors. Also reports that protecting large-magnitude values (VaSE's explanation) did not change its loops. Leaves open: No quantization experiments, no per-run predictor of looping, no cross-family comparison. This paper overlaps the related card Q07 more than Q05.
+- Spend Bytes on Breadth: Precision-Count Trade-offs for Decode-Time KV Compression in Long Chain-of-Thought Reasoning (BreadthKV; Li) (arXiv 2610.05685, October 2026 (single-author preprint); https://arxiv.org/abs/2610.05685). Answers: The nearest thing to quantization and eviction on one axis for reasoning models. At a fixed byte budget, eviction-only (SnapKV-D) outputs are 1.1-2.0x full-cache length and 74-98% of its wrong answers are capped runs; keeping more tokens at 4 or 2 bits lowers the capped share (Qwen3-8B AIME at 512: 91% eviction-only, 65% 4-bit hybrid, 40% 2-bit hybrid). An offline proxy (single-step attention-output error) picked the wrong bit width, 'the opposite of what happens end to end'. 'Wait' frequency rises under eviction (6.4 vs 3.7 per 1K tokens). Leaves open: No quantization-only length or cap rate (KIVI-4 appears for accuracy only); takes ThinKV's quantization-inflation claim by citation; no KL measure, no matched-noise arm, no serving throughput; single seed for main runs.
+- KVarN: Variance-Normalized KV-Cache Quantization Mitigates Error Accumulation in Reasoning Tasks (arXiv 2606.03458, June 2026 (preprint); https://arxiv.org/abs/2606.03458). Answers: KV-quantization-only lengths on reasoning models, by quantizer, at about 2.3 bits: Qwen3-4B AIME24 full precision 12.5K tokens vs KIVI 12.8K, QuaRot 12.7K, KVQuant 14.8K, Kitty 13.1K; MATH500 3.9K vs KIVI 4.0K, KVQuant 5.0K, PolarQuant 5.3K; Phi-4 HumanEval 3.0K vs KIVI 4.9K with an accuracy drop. So at 2 bits the inflation is mostly a few percent to +35%, depending on quantizer and task, far from ThinKV's 5.1x. Leaves open: Lengths are table columns with no analysis; no cap-hit rates, no eviction arm, no predictor, no end-to-end time.
+- ThinKV: Thought-Adaptive KV Cache Compression for Efficient Reasoning Models (ICLR 2026 (oral per the card; venue page not opened by me); arXiv 2510.01290; https://arxiv.org/abs/2510.01290). Answers: Source of the 'quantization inflates length, eviction does not' claim: KIVI vs R-KV on GPT-OSS-20B LiveCodeBench (Fig. 2) and 'up to 5.1x' on R1-Llama-8B (Fig. 10d). Leaves open: On reading the text: no length numbers for the eviction arm, bit width for the 5.1x not stated, no predictor. Its eviction half is contradicted by at least five later papers (SkipKV, ReCo, Random Attention, BreadthKV, Hold Onto That Thought).
+- Hold Onto That Thought: Assessing KV Cache Compression On Reasoning (arXiv 2512.12008, December 2025 (preprint); https://arxiv.org/abs/2512.12008). Answers: Eviction at budgets 128-512 lengthens traces on three reasoning models but not on Llama-3.1-8B-Instruct; weakest method (KNorm) lengthens most. Per-token tokens/s is below full cache for every method. Leaves open: 2048-token cap, greedy decoding; no quantization; tokens/s is per token and is not combined with length; no correlation computed.
+- Lost in Rounding: bf16 Recurrent State Makes Hybrid Reasoning Models Think Longer (Weng, Chen, Liu) (arXiv 2611.12127, 9 November 2026 (preprint); https://arxiv.org/abs/2611.12127). Answers: A fourth perturbation type (rounding of cached recurrent state) also lengthens reasoning (x1.07 to x1.27 on five of six hybrid models, more cap hits). Two results bear directly on Q05's 'one measurable property' hypothesis: same-width stochastic rounding removes most of the increase ('consistent with the effect being caused by bias rather than error magnitude'), and 'teacher-forced KL ranked head groups differently from their closed-loop effect' (the head octile with 49% of the KL had no detectable length effect). It recommends 'validate state-precision changes with generation, not KL alone.' Leaves open: Recurrent state only, hybrid models only; KL test on one model lineage; no KV cache or weight methods; offers no general predictor.
+- Quantization Hurts Reasoning? An Empirical Study on Quantized Reasoning Models (Liu et al.) (arXiv 2504.04823, 2025 (venue not confirmed); https://arxiv.org/abs/2504.04823). Answers: Lengths match BF16 at W4G128, W8A8KV8 and KV4; longer at W3G128 and W4A4KV4. Already in the card. Leaves open: No eviction, no end-to-end time, mechanism explicitly left to future work.
+
+Searches run: WebSearch (6 queries ran before the session's shared search budget was exhausted; a 7th was refused): KV compression/quantization + reasoning + generation length inflation + end-to-end throughput; the 2606.00206 title; lossy compression + reasoning length + unified predictor/KL; KV eviction + reasoning + generation length + mechanism; benchmark of efficient-inference techniques on reasoning models with total tokens/latency; noise-injection/KL predictor query (refused). Semantic Scholar citation graph ("cited by") pulled and scanned by title for: ThinKV 2510.01290, 2606.00206, Hold Onto That Thought 2512.12008, 2504.04823 (99 citers), MLSys'25 2503.24000, R-KV 2505.24133 (60 citers), SkipKV, 2606.25519, BreadthKV 2610.05685, Random Attention, EpiKV, 2606.02011, VaSE 2606.03928, 2510.10964, 2608.01631, TriAttention 2604.04921, Kitty 2511.18643 (ReCo's list failed on rate limits). arXiv API abstracts read for about 30 candidates from those lists; full HTML read for ThinKV, 2512.12008, 2606.00206, 2606.25519, 2608.04771, 2609.03430, 2606.26472, 2512.07993, 2610.05685, 2611.12127, 2510.10964, 2606.03458, 2610.19605. Not done: keyword searches on OpenReview, Google Scholar, or the individual 2025-2026 conference programmes (OSDI, SOSP, NSDI, EuroSys, ASPLOS, ATC, MLSys, NeurIPS, ICML, ICLR, ACL, EMNLP); coverage of those rests on the citation lists, so a paper that cites none of the anchor papers would have been missed. None of the papers found here except 2510.10964 appears in the harvest notes or the card.
+
+### Premise: weakened
+
+Verdict: weakened. All 15 evidence items were opened at the primary source (six arXiv HTML papers plus the project memory file) and every quoted sentence and number is present. Nothing is fabricated, but several items are over-read and the headline "direct three-sided contradiction" is largely apples-to-oranges.
+
+**Over-readings that matter**
+- **MLSys 2025 Table 4:** the 1.55-1.76x factors are computed on 200 requests pre-selected because compression made them longer. Its Table 5 shows a 0.1 temperature change alone shifts length as much as compression does.
+- **Hold Onto That Thought Table 5:** it reports tokens per second, a per-token rate, so it does not show length cancelling savings. The actual length effect is +2% (H2O) to about +15-20% (KNorm) under a 2048 cap, at 128-512 token budgets, and R-KV is not in the length table.
+- **Lotfi et al. (2606.00206):** not weight-only; it includes FlatQuant W4A4KV4 and W8A8KV8. It already runs the teacher-forced token-level KL analysis the card proposes and says the analysis is not specific to quantization.
+- **ThinKV:** the 5.1x figure is R1-Llama-8B, while the 1.1x throughput claim is GPT-OSS-20B with ThinKV's own sub-4-bit quantizer (TBQ).
+- **R-KV:** it has no data on length under compression, rather than "no change".
+
+**Why the contradiction mostly dissolves**
+- ThinKV's quantization lengthening is KIVI or a 2/4-bit mix; the COLM 2025 study's "no lengthening" is QuaRot KV-only at 4 bits. Both agree aggressive settings lengthen.
+- ThinKV's "eviction does not lengthen" is R-KV at unstated budgets with a 32K cap; the opposing paper uses other methods at micro-budgets with a 2048 cap.
+
+**What remains real**
+- No one has put KV quantization, eviction and a matched-noise control on one axis for a reasoning model with length and end-to-end time measured.
+- ThinKV's pattern (accuracy-neutral lengthening for quantization, accuracy loss without lengthening for eviction) conflicts with the accuracy-length coupling in Lotfi et al. and the quantization study.
+
+**Predictability**
+The dose-response half of the question is predictable from existing results: mild settings do not lengthen, aggressive ones do, in step with accuracy loss. The cross-method single-curve half is not.
+
+**If the student pursues it**
+- The contribution has to be the cross-family test and the end-to-end conversion, positioned as extending Lotfi et al. to KV methods, not as resolving a contradiction.
+- Length measurements need uncensored caps and enough samples to beat sampling noise.
+
+Card file: /home/ryankert_l/kv-fetch/kv-fetch/research_notes/Research question search/questions_ranked.json (id Q05). Nothing was modified, run on GPU, posted or committed; downloaded pages are in the session scratchpad only.
+
+**Is the tension real?** Partly. Every quote is in its source, but the "direct three-sided contradiction" mostly dissolves into different operating points; the gap is real.
+
+**Quantization side (ThinKV vs the COLM 2025 study):** they do not test the same thing.
+- ThinKV's lengthening is for KIVI at unspecified "aggressive" settings (its accuracy table uses KIVI 2-bit) and for its own TBQ, which mixes 2-bit ternary and 4-bit NVFP4 at about 3.5 bits average.
+- The quantization study's "no lengthening" is QuaRot KV-only at 4 bits with asymmetric group-128 quantization.
+- Both papers, plus Lotfi et al., agree that aggressive settings lengthen and mild ones do not. They disagree only on where "aggressive" starts, which is a quantizer and bit-width difference.
+
+**Eviction side (ThinKV vs Hold Onto That Thought):** also different regimes.
+- ThinKV: R-KV on GPT-OSS-20B with a 32K cap and no budgets given.
+- Hold Onto That Thought: KNorm, H2O, SnapKV-D and StreamingLLM at 128-512 token budgets on 7-8B models, greedy, with a 2048 cap close to the uncompressed mean of about 1,700 tokens.
+- Its measured effect is small (+2% for H2O, about +15-20% for KNorm, StreamingLLM shorter), and R-KV is absent from its length table.
+- ThinKV's second statement ("not such drastic inflation") is compatible with this.
+
+**MLSys 2025:** a chat model sampled at T=1.0, where a 0.1 temperature change moves length as much as compression does, and the 1.55-1.76x factors come from a subset selected for being longer.
+
+**What survives as a real conflict:**
+- ThinKV reports a quantizer (TBQ) that keeps accuracy at FullKV level yet is said to inflate length enough to leave 1.1x throughput. The quantization study and Lotfi et al. (rho = -0.73) tie lengthening to accuracy loss. ThinKV's inference crosses two models and gives no length number for the model in the table.
+- ThinKV says R-KV loses accuracy without lengthening as budget shrinks; Hold Onto That Thought and the student's own truncation-at-cap logs say eviction failures show up as longer or non-terminating outputs.
+
+**The gap is as stated:** no source puts KV quantization, eviction and a matched-noise control on one axis for a reasoning model, and none converts per-token savings to end-to-end savings with length measured. Lotfi et al. narrow it: they already have the teacher-forced KL analysis and a mechanism for weight and joint quantization, and they name the extension to other perturbations as an open diagnostic.
+
+**Obvious answer?** Partly predictable; the central "one curve" part is not.
+
+**What an expert would predict with confidence:** lengthening is dose-dependent and appears only where the approximation is strong enough to move accuracy.
+- Mild settings (8-bit or a good 4-bit KV quantizer, eviction at budgets of a thousand tokens or more) leave length essentially unchanged.
+- Aggressive settings (3-bit weights, joint W4A4KV4, 2-bit KV, budgets of a few hundred tokens) lengthen, more on small models and hard problems.
+- Basis: the quantization study (Section 4.1), Lotfi et al. (rho = -0.73 over 28 pairs, plus the mechanism that perturbation at high-entropy positions flips samples to "wait/but/alternatively"), MLSys 2025 Figure 4 (higher compression ratio gives more long responses), and Hold Onto That Thought (low budgets).
+- So "which techniques lengthen, and by enough to cancel the saving" has a predictable headline: only the aggressive regime, where accuracy is already lost. A paper whose result is only this would read as confirmation.
+
+**What is not confidently predictable:** whether one scalar (mean teacher-forced KL) collapses quantization and eviction onto a single curve.
+- Against a clean collapse: quantization is dense noise at every step, while eviction is exact at most steps and fails sparsely.
+- VaSE (arXiv 2606.03928, abstract only read) reports repetitive loops when a few large-magnitude value states are evicted.
+- StreamingLLM shortens outputs in Hold Onto That Thought.
+- ThinKV shows accuracy-neutral lengthening for quantization and accuracy loss without lengthening for R-KV.
+- My lean is that mean KL will predict lengthening within a method family but not across families. That is a guess, not a known result.
+
+Evidence checks:
+- [confirmed_with_caveat] ThinKV: quantization lengthens reasoning outputs, eviction does not (KIVI vs R-KV, GPT-OSS-20B, LiveCodeBench). (https://arxiv.org/abs/2510.01290): Both sentences are in Section 2 of the arXiv HTML (v2, comment field says ICLR 2026 Oral), attached to Figure 2 with KIVI and R-KV on GPT-OSS-20B / LiveCodeBench. The text gives no bit widths, no budgets and no length numbers for that figure. The paper's later wording is softer: eviction approaches 'do not induce such drastic inflation'.
+- [confirmed_with_caveat] Hold Onto That Thought: low eviction budgets produce longer traces, and every compressed setting has lower end-to-end tokens/s than full cache (Table 5). (https://arxiv.org/abs/2512.12008): Abstract sentence and Table 5 numbers are exact (Full 30.71; H2O 23.41-25.81; R-KV 27.72-30.04; all compressed cells below Full). Two caveats. (1) Table 5 is tokens per second, a per-token rate, so it shows kvpress eviction overhead, not a length effect. (2) The length effect is small and censored: budgets 128-512 tokens, greedy decoding, 2048-token cap, 7-8B models. Table 7 (MATH-500, averaged over budgets): full 1616-1729 tokens, H2O 1753-1768 (+2% on the R1 distills), KNorm 1967-2001 (+14-23%), StreamingLLM shorter (1376-1698). R-KV is not in the length table.
+- [confirmed_with_caveat] Quantization study: 4-bit KV quantization does not lengthen reasoning outputs; only more aggressive settings do. (https://arxiv.org/abs/2504.04823): Quote is exact (Section 4.1). The 'aggressive' examples that lengthen are W3G128 (weight-only) and W4A4KV4 (joint weight+activation+KV); the paper names no KV-only setting that lengthens. KV quantizer is QuaRot, asymmetric, group size 128. Venue is COLM 2025 per the arXiv comment field (card says not confirmed).
+- [confirmed_with_caveat] MLSys 2025: on a chat model, both quantization and eviction lengthen outputs enough to cancel throughput gains (>20% of samples at least 1.5x longer). (https://arxiv.org/abs/2503.24000): Quote is exact. Setting: LLaMA-3.1-8B-instruct, ShareGPT, sampling at T=1.0, 1024-token cap. Table 5: 21.3-27.1% of samples at least 50% longer under compression vs 6.8-10.9% shorter. The same table shows that changing temperature to 0.9 or 1.1 alone makes 27.5-31.4% of samples that much longer (and 20.8-21.3% shorter), so the finding is the asymmetry, not an excess over sampling noise. 'Cancel' is the paper's inference from decode speedups rarely exceeding 1.5x.
+- [confirmed] R-KV: headline throughput comes from fitting larger batches, not faster single requests. (https://arxiv.org/abs/2505.24133): Exact sentence in the 'Real-time analysis' paragraph; 6.6x at 10% budget and 16K length confirmed. The throughput table is measured on Llama3-8B at fixed generation lengths.
+- [confirmed_with_caveat] MLSys 2025 (HTML link): KV compression lengthens responses for a sizeable share of chat samples. (https://arxiv.org/html/2503.24000): Duplicate of the item above; same quote, same caveats (T=1.0 sampling, 1024 cap, asymmetry rather than excess over temperature noise).
+- [confirmed_with_caveat] ThinKV: quantization inflates length up to 5.1x, eviction does not; inflation leaves only 1.1x throughput. (https://arxiv.org/html/2510.01290): All three phrases are present. The 5.1x is R1-Llama-8B (Figure 10d). The 1.1x is ThinKV's own quantizer TBQ at 3.5 bits average on GPT-OSS-20B / LiveCodeBench (Table 4), where accuracy equals FullKV (77.8); the paper explains the 1.1x by pointing to the R1-Llama-8B figure and gives no GPT-OSS length number. TBQ mixes 2-bit ternary and 4-bit NVFP4 with group size 16, so it is a sub-4-bit setting.
+- [confirmed] Quantization study: no length increase except at aggressive bit widths. (https://arxiv.org/html/2504.04823): Abstract sentence ('Contrary to expectations, quantized models do not exhibit increased output lengths') and Section 4.1 sentence both present. Contribution list adds 'particularly in smaller models'.
+- [confirmed] R-KV: headline throughput is stated at a fixed sequence length (16K, 9x batch, 6.6x throughput). (https://arxiv.org/html/2505.24133): Exact sentence present; also 13.4x batch and 9.2x throughput at fixed budget 1024.
+- [confirmed] Student's accuracy losses under page selection were mostly runs that hit the output cap. (/home/ryankert_l/.claude/projects/-home-ryankert-l-kv-fetch-kv-fetch/memory/kv-fetch-phase0.md): Line 42: 'Losses are mostly truncation at 16K (not verbatim loops, except SnapKV).' Line 57: 'losses mostly 32K truncation'. This is a memory summary, not the raw logs; I did not re-derive it from results files.
+- [confirmed] Quantization study: abstract says length does not grow while its own text reports longer outputs at aggressive bit widths. (https://arxiv.org/abs/2504.04823): Both sentences present. The paper reconciles them itself: 'Quantized models with minor performance drops do not exhibit longer reasoning steps, but aggressive low-bit quantization can lead to increased output lengths'.
+- [confirmed_with_caveat] Lotfi et al. 2606.00206: large length increase with accuracy drop under weight quantization, rho = -0.73 over 28 pairs; weight quantization only, no throughput. (https://arxiv.org/html/2606.00206): Numbers exact (85.6% to 47.0%, 5.2K to 23.4K tokens, rho = -0.73 between accuracy degradation and length increase over 28 model-quantization pairs). A neurips.cc/virtual/2026/oral/151669 listing came up in search; I did not open it. Not weight-only: it also runs FlatQuant W4A4KV4 and W8A8KV8 (weights, activations and KV cache together); W4A4KV4 gives 66.4% and 8.0K tokens. No KV-only setting, no eviction, no throughput. It already measures token-level KL between compressed and full-precision next-token distributions under identical prefixes, and says the analysis 'is also not specific to quantization' and 'could serve as a general diagnostic'. That is half of the card's proposed measurement, done for weight quantization.
+- [confirmed_with_caveat] ThinKV: 5.1x sentence read; which method and bit width produce it not confirmed. (https://arxiv.org/html/2510.01290): Quote exact. The text partly resolves the open point: Section 6.3 refers to 'the severe generation-length inflation exhibited by TBQ (see Figure 10(d))', so the figure includes TBQ (R4E4T2, about 3.5 bits average). Whether the 5.1x maximum is TBQ or a KIVI baseline is not stated in the text; the figure itself was not readable from HTML text.
+- [confirmed_with_caveat] MLSys 2025 Table 4: quantization and eviction lengthen chat responses by similar factors (1.69x, 1.70x, 1.55x, 1.76x); longer responses can cancel the throughput gain. (https://arxiv.org/html/2503.24000): Numbers, the 1024-token cap (appendix) and the 'outweigh' sentence (introduction) are all present. But Table 4 is computed on 200 ShareGPT requests chosen because compression gave a longer response than FP16 on LLaMA-7B. The factors are conditional on lengthening, not average effects, so 'both lengthen by similar factors' over-reads the table.
+- [confirmed_with_caveat] R-KV reports throughput gains from larger batches but no change in per-response length. (https://arxiv.org/html/2505.24133): Throughput quote exact. R-KV reports no measurement of output length under compression at all (its length figure compares uncompressed models with ground-truth solutions), so the accurate reading is 'no data on length change', not 'no change'.
+
+### Feasibility: yes_scaled_down
+
+Answerable on this node in a week at about 5-6 GPU-days, but not as the card writes it; the phenomenon is already published, and the kill risk is real.
+
+- **What exists:** the student's E3/H3 shards plus the H1 fidelity KL already give a 5-point length-vs-KL curve per model for page selection. Length ratio rises monotonically with KL within each of Qwen3-4B and Qwen3.5-4B (1.03 to 1.16), the two models do not share a curve, and every lengthening arm also lost accuracy. The data is censored by the cap (41-44% of full-attention runs capped).
+- **Engine:** vLLM 0.32.0 as installed has a ladder of KV quantizers by flag (fp8, int8 / int4 per token-head, TurboQuant 8/4/3-bit, nvfp4), so the quantization arms run at engine speed with real end-to-end numbers. Eviction, matched noise and exact KL go through the student's HF engine with small additions.
+- **Models and data:** Qwen3-8B and DeepSeek-R1-Distill-Llama-8B, MATH-500 and AIME 2024/2025 are all local, under Apache-2.0 / MIT, and fit one 48 GB card at bf16.
+- **Novelty state:** lengthening is now reported for weight and activation/KV quantization (2606.00206) and for eviction (Hold Onto That Thought, 2608.04771, which the card misses). What nobody has done is put families on one divergence axis with a matched-noise control and measure the end-to-end effect in a serving engine.
+- **Kill:** no length change at accuracy-neutral settings, or length explained by accuracy loss alone. The student's own selection data leans toward the second.
+- **Paper:** an accuracy-neutral setting whose end-to-end gain is cancelled by length, plus either a single KL curve across families or a 2x family gap at matched KL, on two model families.
+
+Not verified: the low-bit KV dtypes were read from the package, not run; the web search budget ran out before a last novelty sweep.
+
+**Existing data.** The student already holds a pilot of this question for one family (page selection / eviction) on two 4B models, and never analysed it for length.
+
+1. Per-sample logs: 5,520 JSON shards with n_gen, stopped, score and full text, 30 AIME problems x 8 samples per run. /home/ryankert_l/kv-fetch/kv-fetch/results/reasoning/e3_shards/ (Qwen3-4B, 16K cap, 11 runs) and /home/ryankert_l/kv-fetch/kv-fetch/results/hybrid/h3_shards/{qwen35_4b,qwen3_4b}/ (32K / 16K cap).
+2. Teacher-forced next-token KL for the same methods (10 sequences up to 8K tokens): the "fidelity" block of /home/ryankert_l/kv-fetch/kv-fetch/results/h1_explore.json, produced by /home/ryankert_l/kv-fetch/kv-fetch/scripts/h1_screen.py (mode fidelity).
+3. I joined the two (read-only, CPU). Mean length ratio vs full attention rises monotonically with KL inside each model:
+ - Qwen3.5-4B: KL 0.0048 -> 1.03 (ours@1024), 0.0080 -> 1.06 (quest@1024), 0.0112 -> 1.07 (oracle@512), 0.0144 -> 1.09 (ours@512), 0.0249 -> 1.16 (quest@512).
+ - Qwen3-4B: KL 0.0146 -> 1.035, 0.0200 -> 1.05, 0.0352 -> 1.09, 0.0431 -> 1.11, 0.0591 -> 1.14.
+ So one curve holds across three selectors within a model, but the two models do not share a curve in KL (at KL ~0.015: 1.09 vs 1.035). SnapKV (no KL measured) lengthens most: per-problem mean ratio 1.3-1.6.
+ Caveats: 41-44% of full-attention samples already hit the cap, so every ratio is censored downward; every lengthening arm also lost accuracy (oracle@1024 -4 points at 1.04x; quest@512 -26 points at 1.14x); no quantization or noise arm exists.
+4. Noise floor from the same shards: per-problem log length ratio between two halves (4 vs 4 samples) of the full run has SD 0.07 (Qwen3.5-4B) to 0.12-0.15 (Qwen3-4B), also understated by the cap.
+5. Harness: /home/ryankert_l/kv-fetch/kv-fetch/kvfetch/sparse_decode.py (batched HF sparse decoding, Qwen3 and Qwen3.5, checked against HF logits, 164-168 tok/s per card at batch 12 per /home/ryankert_l/kv-fetch/kv-fetch/results/reasoning/e3_logs/), runners /home/ryankert_l/kv-fetch/kv-fetch/scripts/run_e3.py and run_h3.py (claim-based multi-GPU workers, paired bootstrap), configs /home/ryankert_l/kv-fetch/kv-fetch/configs/reasoning.yaml and hybrid.yaml.
+6. vLLM side: fp8 KV already run on Qwen3.5-4B (/home/ryankert_l/kv-fetch/kv-fetch/results/profile/harness/done/abl_kv_fp8_qwen35_4b.json); serving and replay harnesses in /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/ and /home/ryankert_l/kv-fetch/kv-fetch/scripts/rl/ (rollout_trace.py records real lengths per model on MATH-500). Measured Qwen3-8B on vLLM 0.32: 429 tok/s at concurrency 16, 171K-token KV pool (/home/ryankert_l/kv-fetch/kv-fetch/results/profile/NOTEBOOK.md, 13:13 entry).
+7. Local, no download needed: Qwen/Qwen3-8B, Qwen/Qwen3-14B, Qwen/Qwen3-4B, deepseek-ai/DeepSeek-R1-Distill-Llama-8B, Qwen3-32B-AWQ, Qwen3.5-4B AWQ builds; datasets MATH-500, AIME 2024, AIME25, GSM8K, GPQA, LiveCodeBench under /share2/huggingface/.
+
+**First-week experiment.** Redesigned from the card (the card's 14B/20B models in HF Transformers with QuaRot and KIVI-2 do not fit one week).
+
+Day 1, no GPU: finish the join in existing_data item 3 with paired per-problem bootstrap CIs and a censoring-aware statistic (share capped; length among finished).
+
+Arm set A, vLLM 0.32 (flags only, real end-to-end numbers):
+- Models: Qwen/Qwen3-8B (Apache-2.0, thinking mode) and deepseek-ai/DeepSeek-R1-Distill-Llama-8B (MIT; the model behind ThinKV's 5.1x claim and the R-KV, Hold Onto That Thought, 2606.00206 and 2608.04771 numbers). Both local, bf16 weights ~16 GB. KV at bf16: 147 KB/token (Qwen3-8B, 36 layers x 8 KV heads x 128) and 131 KB/token (R1-Llama-8B); the measured pool is ~171K tokens, about 30 concurrent MATH-500 requests or 12-14 AIME requests.
+- Data: MATH-500, all 500 problems x 2 samples; AIME 2024 + 2025, 60 problems x 4 samples. T 0.6, top-p 0.95. Cap 32K new tokens so that few runs are censored (2608.04771 reports a full-cache mean of 4.4K tokens for R1-Llama-8B on MATH-500).
+- Arms via --kv-cache-dtype: bf16 twice with different seeds (noise floor), fp8, int8_per_token_head, int4_per_token_head, turboquant_k8v4, turboquant_4bit_nc, turboquant_k3v4_nc, turboquant_3bit_nc. Plus 4-bit AWQ weights with bf16 KV. Same card type for all arms of a model, fixed concurrency and a second run at each arm's maximum concurrency.
+- Numbers: paired per-problem log length ratio vs bf16 with bootstrap CI; share capped; accuracy and accuracy among finished; wall-clock makespan and correct answers per GPU-hour at equal memory. Comparison: per-token saving (capacity and step time) vs end-to-end saving after length.
+
+Arm set B, the student's HF engine on Qwen/Qwen3-4B (one harness, exact KL):
+- Add to sparse_decode.py: quantize-dequantize of cached K/V at write (int8, int4, 3-bit per token-head), Gaussian noise on cached K/V scaled to match each method's KL, and prompt-protected SnapKV / R-KV-style eviction at budgets 2K and 4K (budgets that do not collapse).
+- Data: 120 MATH-500 problems across levels x 4 samples, 16K cap (shorter outputs than AIME, less censoring), plus the existing AIME runs.
+- KL: teacher-forced on full-cache traces with the existing fidelity path, 20-30 sequences per arm.
+- Comparison: regress log length ratio on log KL with method family (quantization, noise, eviction, selection) as a factor. Test one curve vs family-specific curves at matched KL. Cross-check one quantization setting against vLLM's online length ratio to validate the emulation.
+
+Power: with 500 problems x 2 samples the standard error of the mean log length ratio is about 0.01, so changes of 3% or more are detectable; AIME-60 x 4 detects about 5%.
+
+**Result that kills it.** Either of these, on both 8B models with the 32K cap:
+
+1. No deployable setting (fp8, int8, 4-bit KV, 4-bit weights; accuracy within about 2 points of bf16) changes mean length beyond the bf16-vs-bf16 floor (under ~3%), and only settings that already lose 5 or more points lengthen. Then per-token savings are end-to-end savings at every usable operating point, the papers' disagreement reduces to token caps and operating points (1,024 cap chat in MLSys'25; 2,048 cap greedy in Hold Onto That Thought, where the full-cache mean is already 1.6-1.7K; 32K in ThinKV), and 2504.04823 plus 2606.00206 already say this for quantization.
+
+2. Length ratio is explained by accuracy loss alone across families (the relation 2606.00206 reports for quantization, Spearman -0.73), with KL and method family adding nothing. Then the finding is "report length next to tokens/s", which is bookkeeping, and the card collapses into Q07.
+
+The student's own selection data leans toward outcome 2: every arm that lengthened also lost accuracy.
+
+**Result that makes it a paper.** Both of the following, replicated on the second model family:
+
+1. A setting people would deploy (accuracy within 1-2 points of bf16, for example 4-bit or 3-bit KV in vLLM) lengthens reasoning by 10% or more, so its measured end-to-end gain in vLLM (makespan, correct answers per GPU-hour at equal memory) is cancelled or reversed.
+
+2. One of:
+ a. Length ratio from quantizers, matched Gaussian noise and eviction falls on one curve of teacher-forced KL per model (family term not significant, tight fit). That gives an offline predictor that converts a per-token saving into an end-to-end saving from a few forward passes.
+ b. At matched KL the families differ by 2x or more in length inflation with non-overlapping CIs (for example eviction far above noise and quantization). That names a mechanism and which part of the cache must be protected.
+
+The phenomenon alone is no longer a paper: 2606.00206 (NeurIPS 2026 oral per the search listing), 2608.04771, Hold Onto That Thought and ThinKV all report lengthening for some family.
+
+**GPU-days.** About 5-6 GPU-days (range 5-8), roughly 1.5-2 days of wall clock on 4 cards.
+- Arm set A: ~7.4M generated tokens per arm at the measured ~450-550 tok/s for an 8B dense model, about 3.7 GPU-hours per arm; 10 arms x 2 models is ~74 GPU-hours (~3.1 GPU-days). Low-bit KV arms have a larger pool and may run faster; the TurboQuant Triton backend may run slower.
+- Arm set B: about 5 GPU-hours per arm at 165 tok/s per card; 8 arms is ~40 GPU-hours (~1.8 GPU-days).
+- KL forwards and smoke tests: ~0.3 GPU-day.
+The first day (re-analysis of existing shards) needs no GPU.
+
+**Blockers.** No hard blocker. Things that must be written, substituted or checked:
+
+- Engine support present in vLLM 0.32.0 (read from the installed package, not run by me): KV dtypes fp8 / fp8_e5m2, fp8_per_token_head, int8_per_token_head, int4_per_token_head (Triton backend), turboquant_k8v4 / 4bit_nc / k3v4_nc / 3bit_nc (TurboQuant backend), ultraquant_4bit, nvfp4 (FlashInfer, device families 80/90/120), kv_cache_dtype_skip_layers; AWQ, GPTQ and compressed-tensors weight loaders. Only fp8 has been run by the student, on Qwen3.5-4B. Each low-bit dtype needs a day-1 smoke test on these cards and models.
+- Not in vLLM 0.32: any KV eviction (R-KV's public vLLM port is a patch pinned to v0.25.1; ThinKV has no public code), noise injection, KIVI 2-bit, QuaRot KV4. Eviction throughput in week 1 is therefore modelled, not measured; the card's KIVI-2 and QuaRot arms are replaced by vLLM's per-token-head and rotation-based quantizers.
+- Teacher-forced KL under vLLM's quantized KV needs a forced-decode path (custom logits processor plus top-20 raw logprobs): the TurboQuant backend prefills on uncompressed K/V, so prompt logprobs from one prefill would not see the quantized cache. Week 1 uses HF emulation instead, which must be validated against vLLM.
+- sparse_decode.py supports Qwen3 and Qwen3.5 only; R1-distill (Llama, Qwen2.5) models are untested in it. Quantize-dequantize, matched noise and R-KV-style scoring must be written (small).
+- Length is sensitive to GPU type and batch size (arXiv 2506.09501: up to 9,000 tokens). The node mixes RTX A6000 and RTX 6000 Ada, so each comparison must stay on one card type, with a bf16 repeat as the floor.
+- Token caps censor the effect; a 32K cap costs KV capacity (5 worst-case sequences per card at bf16 on an 8B model).
+- openai/gpt-oss-20b (Apache-2.0, ~14 GB MXFP4, vLLM recipe lists Ampere via Triton attention) is not local, needs the harmony format, and ThinKV's result on it is on LiveCodeBench, which needs a code-execution sandbox. Deferred. DeepSeek-R1-Distill-Qwen-14B is not local (~30 GB); /share2 and /share3 are 98% full (93 and 105 GB free).
+- The vLLM 0.32 venv sits in a session scratchpad under /tmp and may need rebuilding.
+- Not checked (web search budget ran out): whether 3-bit AWQ checkpoints of these models are public (otherwise ~1 GPU-hour to produce), and a final sweep for a late-2026 paper with a cross-family predictor. Two searches plus targeted reads found none.
+
+Corrections to the card found while checking:
+- 2606.00206 is not weight-only: it includes FlatQuant W4A4KV4 and W8A8KV8, computes token-level KL against BF16 (correlated 0.92 with entropy), and suggests divergence as a diagnostic, but does not relate KL to length across settings, has no noise or eviction arm, and reports no throughput.
+- arXiv 2608.04771 (Aug 2026, work-in-progress preprint) is missing from the card: R-KV at 25% lengthens MATH-500 outputs by 38.8% (R1-Qwen-7B) and 79.0% (R1-Llama-8B), longer on 399 of 500 problems; SnapKV and RPC lengthen too; it proposes generation control. With it, ThinKV is the lone source saying eviction does not lengthen, and its sentence is a contrast with 5.1x ("such drastic"), on R1-Llama-8B, with the quantizer and bit width unnamed in the text.
+- Hold Onto That Thought uses greedy decoding with a 2,048-token cap; its MATH-500 length differences are a few percent for H2O and SnapKV-D and 16-23% for KNorm, averaged over budgets.
+
+**Follow-on design space.** If one predictor holds (single KL curve): a length-aware compression controller in vLLM. An offline probe (a few teacher-forced passes per model) predicts length inflation for each KV dtype or budget, and the engine picks the setting that maximises correct answers per GPU-second at the current memory pressure instead of tokens/s. Also a length-corrected reporting standard for KV-compression papers, and a re-scoring of published throughput claims.
+
+If it is method-specific: a protection mechanism for whatever the damage lands on. Candidates: mixed precision by token role or layer (vLLM already has kv_cache_dtype_skip_layers), eviction that never drops the problem statement or verified intermediate results, runtime detection of inflation (the overthinking markers of 2606.00206) that triggers a fallback to full precision, or a refetch of dropped KV from a host tier. The last one reuses the student's tiered-KV work, where dropped pages are recoverable.
+
+If negative (no lengthening at usable operating points): 4-bit and 3-bit KV are free for reasoning models in vLLM, which is a capacity result and a default-setting recommendation, not a research line. The remaining interest moves to Q06/Q07 (what the extra tokens are, and cap accounting), which the same runs answer.
+
+## Q24: keeping earlier turns thinking in agent context (weakened)
+
+### Already answered? partly_answered
+
+Verdict: partly answered, on the border with mostly answered for the accuracy-plus-cost half. The card's claim that no source measures accuracy and compute together is no longer true.
+
+Three recent preprints that the card's search missed cover that half for models not trained to preserve reasoning:
+- **Think or Remember (arXiv 2611.10982, 7 Nov 2026):** live Keep-vs-Drop on five open reasoning models, with success and a cache-aware cost model validated against instrumented vLLM counts. Dropping earlier reasoning costs 1.2-1.9x more on ScienceWorld when the server reuses generated states, with success differences inside the confidence interval for four of five models (gpt-oss-20b gains 19 points from dropping). On HotpotQA dropping is 0.7-0.9x the cost but loses 9-23 points. With no cache reuse the cost ratio flips to 0.34x.
+- **The Hidden Costs of Forgetting (arXiv 2610.35496):** self-hosted DeepSeek-V4-Flash on vLLM, 100 SWE-bench Verified tasks. Deleting all older reasoning leaves the solve rate unchanged but costs 1.22-1.44x under cache-aware token pricing; deleting it immediately roughly doubles run length for one agent.
+- **When Can Agents Forget Their Reasoning? (arXiv 2609.29875):** deleting all thinking raises reward from 62.67 to 71.78 with 63% fewer tokens on one model, which is a pollution-direction result.
+
+So the general finding is already published: the accuracy sign varies by model and task, and stripping is often not cheaper once the prefix cache is counted.
+
+What is still open is the card's distinguishing clause. No one has run a trained-to-preserve open model with the flag on and off against a told-to-strip model, with measured GPU-seconds per solved task. Qwen3.6 appears in Think or Remember only as an architecture reference. The training dependence is asserted in passing (Nemotron-Cascade 2 and the audio paper's train-test-mismatch remark, SWE-AGILE's hypothesis, a figure-only AutoForge ablation, a qualitative MiniMax-M2 claim) but never tested with cost.
+
+If the student pursues this, the contribution has to be reframed around that training-by-policy interaction and real GPU time. A plain Keep-vs-Drop accuracy-and-cost study on Qwen3-class models would now be a replication. The work is moving fast: four relevant preprints appeared between late September and 7 November 2026.
+
+Confidence caveats: the search budget ran out before I could check OpenReview, a possible Qwen3.6 technical report, and the systems-venue programmes. Papers were read through a summarising fetch tool, and figure-only numbers were not readable.
+
+**Remaining gap.** No paper runs a model trained to preserve its reasoning (for example Qwen3.6 with preserve_thinking on and off) against a told-to-strip model in a tool loop, so whether the sign depends on training is untested beyond a train-test-mismatch remark in two NVIDIA appendices and a figure-only AutoForge ablation. No paper reports measured GPU-seconds per solved task on a real engine, or live outcomes for all three policies (all turns, latest user turn, none) on a standard tool-calling or coding benchmark; existing costs are operation counts or price-weighted tokens.
+
+Closest papers:
+- Think or Remember: The Exchange Rate of Agentic Inference (Wisznia et al.) (arXiv preprint 2611.10982, submitted 7 Nov 2026 (no venue listed); https://arxiv.org/abs/2611.10982). Answers: The closest match, and not in the card. Live Keep-vs-Drop of earlier reasoning on open reasoning models (Qwen3-4B, 8B, 30B-A3B, 32B, gpt-oss-20b) in multi-turn agent loops (ScienceWorld, HotpotQA with paragraph-opening actions), reporting success and cost together. Cost is an operation-count model (tokens processed plus token pairs attended) with the cache rule as a parameter; counts matched an instrumented vLLM exactly over 648 requests. Table 1, Drop/Keep cost and solved difference: ScienceWorld Qwen3-8B 1.74x, -3.9 pp (CI spans 0); Qwen3-30B-A3B 1.73x, -0.8 pp; Qwen3-32B 1.94x, 0.0 pp; gpt-oss-20b 1.20x, +19.3 pp; HotpotQA Qwen3-8B 0.81x, -13.3 pp; Qwen3-30B-A3B 0.92x, -22.7 pp. Serving configuration flips the cost sign: 1.74x with generated-state cache reuse versus 0.34x with no reuse. A 'keep latest 1 block' schedule is costed by replay only (about 1.8-1.9x Keep-all with reuse). Leaves open: No model trained to preserve reasoning is run: Qwen3.6-27B appears only as an architecture reference and in a note on provider rules. Cost is operation counts, and the paper says its ratios are 'not measurements of GPU time or money'. No cost per solved task. No latest-user-turn arm with live outcomes. No standard tool-calling or coding benchmark. Models were served at mixed precisions (BF16, GPTQ-Int4, AWQ). It does not relate the sign to training or vendor guidance.
+- The Hidden Costs of Forgetting: A Study of Trajectory Deletion in Software Engineering Agents (Vallecillos-Ruiz, Moonen, Bouzenia, Pradel) (arXiv preprint 2610.35496, 26 Oct 2026 (no venue listed); https://arxiv.org/abs/2610.35496). Answers: Not in the card. Self-hosted DeepSeek-V4-Flash on vLLM (GH200), Trae agent and Mini-SWE-agent, 100 SWE-bench Verified tasks, 9,400 runs. Reasoning-only deletion is one scope, at 25-100%, either delayed (last two turns kept) or immediate. With 100% delayed reasoning deletion, tasks solved are unchanged (74 vs 72.6; 72 vs 74.6), while cost is 0.99x / 0.82x under flat token pricing and 1.44x / 1.22x under caching-aware pricing, because rewriting history re-bills the prefix. Immediate deletion of all reasoning gives +105% / +35% median turns and about 4x / 1.7x cost. Under caching-aware pricing none of the 42 deletion configurations is cheaper than keeping everything. Leaves open: One model, and whether it was trained on its own reasoning is not discussed. Cost is token counts weighted 1 : 0.1 : 5 (new input : cached input : output), not GPU-seconds or wall-clock. Deletion is random, one run per configuration. No trained-versus-untrained contrast.
+- When Can Agents Forget Their Reasoning? ICLR for Long-Horizon Agent Context Compression (Wang et al.) (arXiv preprint 2609.29875, Sep 2026 (no venue; 'ICLR' is the method's acronym); https://arxiv.org/abs/2609.29875). Answers: Not in the card. DeepSeek-V4-Flash on WorkBuddyBench. On the 80-task ablation set, 'Delete All Thinking' scores 71.78 against 62.67 for keeping everything, with 62.9% fewer processed tokens (1.11M vs 3.00M). This is a pollution-direction result on a long-horizon tool agent. A fixed-state analysis finds keep-all equals keep-latest (0.8717) and delete-all is worse (0.6749), and that reasoning is safe to drop once its result has been written to external state. Leaves open: One model, with hosting not stated. Cost is input plus output tokens, with no prefix-cache-aware cost and no GPU time. The paper's own token tables disagree (Pilot40 shows +6.9% tokens for its method). Nothing on training.
+- SWE-AGILE: A Software Agent Framework for Efficiently Managing Dynamic Reasoning Context (Lian et al.) (arXiv preprint 2604.11716, Apr 2026 (no venue listed); https://arxiv.org/abs/2604.11716). Answers: Already in the card. Qwen3-8B on SWE-bench Verified: full reasoning history 12.42% (26.08 average steps), current-step-only thinking 15.83% (15.77 steps), thinking disabled 0.03%. The authors hypothesise the drop is partly due to Qwen3 post-training. Leaves open: One model told to strip. No tokens, cache, latency or GPU time per arm. The training hypothesis is not tested.
+- On Effectiveness and Efficiency of Agentic Tool-calling and RL Training (Liu et al.) (arXiv preprint 2606.00135, 2026 (no venue listed); https://arxiv.org/abs/2606.00135). Answers: Already in the card. Retaining thinking history improves BFCL multi-turn by about 2-5% on Qwen3-8B and Qwen3-4B. Opposite sign to SWE-AGILE on the same model family. Leaves open: Numbers are in a figure only. No cost, token or cache accounting for retain versus strip. No trained-to-preserve model, no long-horizon loop.
+- Nemotron-Cascade 2 (arXiv 2603.19220) and Unified Audio Intelligence Without Regressing on Text Intelligence (arXiv 2607.05196), NVIDIA (arXiv preprints, Mar and Jul 2026 (no venue listed); https://arxiv.org/abs/2603.19220). Answers: The only sources that tie the sign to training. On tau2-Bench with open 30B-A3B models, no carry-over costs 3-5 points against latest-turn retention, attributed to train-test mismatch because the SFT data used latest-turn retention. Full retention gives similar accuracy with 'substantially longer contexts'. Leaves open: An appendix remark with no per-policy numbers, no context lengths and no cost. Models trained under other retention policies are not compared.
+- AutoForge: Automated Environment Synthesis for Agentic Reinforcement Learning (Cai et al., Tongyi Lab) (arXiv preprint 2512.22857, Dec 2025 (no venue listed); https://arxiv.org/abs/2512.22857). Answers: Not in the card. On a Qwen3-Thinking-30B-A3B backbone, it varies interleaved thinking (access to prior-turn thinking) in both training and inference and reports that it 'significantly enhances' agent capability on tau-bench-style domains. This is the nearest thing to a trained-with versus trained-without comparison. Leaves open: Results are in one figure with no numbers in the text. No token, cache or compute cost. No cross between training condition and inference policy is reported in the text.
+- The MiniMax-M2 Series: Mini Activations Unleashing Max Real-World Intelligence (arXiv preprint 2605.26494, 2026 (no venue listed); https://arxiv.org/abs/2605.26494). Answers: Not in the card. A model trained for interleaved thinking; section 7.1 strips prior-turn thinking blocks and reports 'consistent gains across agentic benchmarks' from keeping them, largest on deep search and software engineering. Leaves open: Qualitative only: no benchmarks named, no numbers, no table, no cost for either arm.
+- Agent-Omit: Adaptive Context Omission for Efficient LLM Agents (Ning et al.) (ICML 2026 (per arXiv comment), arXiv 2602.04284; https://arxiv.org/abs/2602.04284). Answers: Listed in the card as unopened; now read. Table 3 has a baseline that prunes historical thought on Qwen3-8B across five agent benchmarks. Tokens fall about 30-37% and accuracy is mixed: WebShop 6.93 to 5.26, DeepSearch 17.75 to 10.25, BabyAI 60.81 to 52.56, TextCraft 55.00 to 57.00, SciWorld 2.47 to 2.75. Leaves open: One model told to strip. Tokens only, with no cache-aware cost or GPU time. The paper's focus is learned omission, not retention policy.
+- Why Pay for Long Reasoning When Rewrite Do Trick? Causal Effects of Reasoning History Compaction on Future Generation and Agent Cost (Hristov) (REALM 2026 workshop, arXiv 2611.03852, Nov 2026; https://arxiv.org/abs/2611.03852). Answers: Not in the card; it covers the card's 'if yes' follow-up (does a compressed form keep the benefit). Compacting earlier reasoning shortens later reasoning in 87.8% of controlled comparisons. On 50 SWE-bench Verified Mini tasks with DeepSeek V4 Flash, MiniMax M3, Nemotron 3 Ultra and Kimi K2.6, spend falls in 6 of 8 configurations and success moves by at most 3 of 50 tasks. Leaves open: The paper states it has no deletion, truncation or latest-only baseline. Mostly hosted APIs priced in dollars and client-observed time. Quality non-inferiority is not established.
+
+Searches run: Read card Q24 (and Q19, Q21) and grepped the harvest notes. Ran 11 web searches before the session's search budget ran out, covering: preserve_thinking ablation; interleaved / preserved thinking / thought retention; keep vs discard reasoning traces with cost; Qwen3.6 preserve_thinking on/off; context pollution with thinking tokens; AutoForge; preserved thinking with prefix cache and GPU cost; thinking-token stripping in serving systems; latest-turn / all / none policy comparisons; trained-with vs without reasoning history. Pulled Semantic Scholar 'cited by' lists for SWE-AGILE, 2606.00135, 2609.29875 and Agent-Omit; these surfaced 2611.10982 and 2611.03852. Opened and read the relevant sections (arXiv HTML, through a summarising fetch tool) of 2611.10982 (both halves), 2610.35496 (twice), 2609.29875, 2604.11716, 2606.00135, 2607.05196, 2603.19220 (appendix), 2512.22857, 2605.26494 (both halves), 2605.29568, 2602.04284, 2611.03852, 2610.12061, 2606.29718, 2608.15127, 2605.26297, and the abstracts of 2610.26632, 2610.07863, 2608.26235, 2608.06370. Not done: three queries were refused when the budget ran out (a Qwen3.6 technical report, OpenReview, community preserve_thinking benchmarks); no venue-programme sweeps for OSDI/SOSP/NSDI/EuroSys/ASPLOS/ATC/MLSys; Semantic Scholar rate-limited the citation lists of 2610.35496, 2611.10982, AutoForge and the NVIDIA papers. Numbers given only in figures (2606.00135, AutoForge, DeepTool) could not be read.
+
+### Premise: weakened
+
+Q24's quotes all check out, but the premise is weakened: every quote and number is in its source, yet the "tension" is partly apples-to-oranges.
+
+- **Two axes conflated.** I read both chat templates. Qwen3 and Qwen3.6 both keep thinking after the last user message by default and strip earlier turns. `preserve_thinking` only affects thinking from earlier user turns, so it does nothing on a single-request agent task.
+- **"Reversal" overstated.** The Qwen3.6 card adds an opt-in with unquantified claims; the default is unchanged from Qwen3.
+- **SWE-AGILE is off-axis.** Its 12.42% vs 15.83% result tests retention across steps within one task, with a 65,536-token cap, a non-native XML scaffold and no significance test. It is the only negative result.
+- **Only one on-axis source.** The Audex paper is the only one that tests latest-turn versus full retention; it reports similar accuracy at longer contexts, without numbers, and attributes the none-versus-keep gap to train-test mismatch.
+- **IISWC inference unsupported.** The 29.0–40.7% figure is a share of output tokens, not context, and the paper shows prefill under 10% of request time.
+- **Missed prior ablations.** MiniMax's M2 post (numeric, vendor-run) and DeepTool (arXiv 2605.29568) both favour keeping thinking.
+- **Agent-Omit** is now opened; ICML 2026 is confirmed in the arXiv comments, and its claim holds only for intermediate turns.
+
+What survives is narrower than the card: nobody has published numbers for `preserve_thinking` on versus off on a model trained for it, and nobody reports accuracy together with GPU cost. An expert would expect no detectable accuracy difference and a mostly mechanical cache effect. The open part is whether retention changes reasoning tokens and step count, and whether long single-request loops degrade.
+
+The first experiment as written needs changing: the agent tasks must have several user turns or the flag is a no-op, and about 50 tasks cannot resolve a 2-5 point effect.
+
+Card file: /home/ryankert_l/kv-fetch/kv-fetch/research_notes/Research question search/questions_ranked.json. Nothing in the repo was modified; downloaded sources are in /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q24.
+
+**Is the tension real?** Partly. The card treats three policies (no thinking / thinking since the last user message / all thinking) as one axis, and the sources split across two different comparisons.
+
+**None versus keep (within a tool loop):**
+- Positive: arXiv 2606.00135 on BFCL (+3-5), the Audex paper (+3-5), and the hermes thread anecdotes.
+- Positive, not on the card: MiniMax's M2 post of 2025-11-03 (https://www.minimax.io/news/why-is-interleaved-thinking-important-for-m2) reports SWE-Bench Verified 69.4 vs 67.2, Tau2 87 vs 64 and BrowseComp 44.0 vs 31.4; DeepTool (arXiv 2605.29568, Section 3.3) reports gains on all seven benchmarks.
+- Negative: only SWE-AGILE, with confounds (65,536-token cap, non-native XML scaffold, weak base model at 12-16% resolve); its authors suspect Qwen3 post-training.
+- The BFCL and SWE-AGILE results on the same Qwen3-8B differ in horizon and context length, so they are not a clean contradiction.
+
+**Latest-turn versus all (what preserve_thinking controls):**
+- The Qwen3.6 card says it helps, with no numbers.
+- The Audex paper says accuracy is similar at longer contexts, with no numbers.
+- Nothing else was found; two searches turned up no on/off measurement for Qwen3.6.
+
+The "vendor reversal" is weaker than stated: the Qwen3 and Qwen3.6 templates have the same default, and Qwen3.6 only adds an opt-in. The gap that does hold is that no source reports numbers for latest-turn versus all, and none reports accuracy together with serving cost.
+
+**Obvious answer?** Partly predictable, with moderate confidence.
+
+- **Accuracy, none versus keep:** stripping all thinking hurts a model trained with interleaved thinking. Basis: the Audex and MiniMax ablations, DeepTool, and both the Audex and SWE-AGILE authors attributing their results to train-test match.
+- **Accuracy, latest-turn versus all:** no difference detectable at this scale. Basis: the Audex result, and BFCL effects of 2-5 points against seed deviation up to 3%. With about 50 tasks the confidence interval is far wider than the expected effect.
+- **Cost:** largely mechanical from the template. The default strips the previous turn's thinking at each new user message, which breaks the prefix from that turn's first assistant message; preserve_thinking=true keeps history append-only. Since prefill is under 10% of request time on vLLM with caching (IISWC paper), extra context is cheap and GPU-seconds per solved task will follow decode tokens and step count.
+
+Not predictable: whether retention cuts re-reasoning tokens or step count enough to matter, and whether a SWE-AGILE-style degradation appears in long single-request loops on a model trained to preserve. No source measures either.
+
+Evidence checks:
+- [confirmed_with_caveat] Qwen3.6-27B card: retention helps agents, reduces tokens and improves cache use, no numbers; default keeps only the latest turn's thinking (evidence items 1 and 6, same source). (https://huggingface.co/Qwen/Qwen3.6-27B): Both quotes are verbatim in the README, section 'Preserve Thinking' (raw README lines 810-839), and no numbers are given. Caveat: 'latest turn' means everything after the last real user message. The chat template condition is `(preserve_thinking is true) or (loop.index0 > ns.last_query_index)`, so thinking inside the current tool loop is always kept. The flag only changes thinking from earlier user turns, and on a single-request agent task (SWE-bench style) it is a no-op.
+- [confirmed_with_caveat] Qwen3-8B card: guidance is to strip reasoning from history. (https://huggingface.co/Qwen/Qwen3-8B): Quote is verbatim (Best Practices item 4). Caveat: the card says this is 'implemented in the provided chat template', and that template uses the same `loop.index0 > ns.last_query_index` rule, so it strips thinking only before the last user query and keeps it inside the current tool loop. Qwen3 and Qwen3.6 therefore have the same default; Qwen3.6 adds an opt-in flag plus training for it. Calling this a 'reversal' overstates it.
+- [confirmed_with_caveat] SWE-AGILE: on Qwen3-8B and SWE-Bench-Verified, retaining full reasoning history lowered the resolve rate (12.42% vs 15.83%). (https://arxiv.org/html/2604.11716): Quote and numbers are verbatim (Table 2 rows 2-3 and the 'Lost-in-the-Middle' paragraph), including the Qwen3 post-training hypothesis. Caveats: (a) it compares retention across steps of one task, which is what the Qwen3 and Qwen3.6 templates keep by default, so it does not test preserve_thinking; (b) evaluation caps context at 65,536 tokens and the interleaved arm runs 26.08 steps vs 15.77, with no report of how many runs hit the cap; (c) base Qwen3-8B on an R2E-Gym scaffold with a non-native XML tool format; (d) the 'Current-Step' arm still keeps a short thought trace per step; (e) 2 runs, no significance test on a 3.4-point gap. arXiv listing shows no venue.
+- [confirmed_with_caveat] Audio paper: on tau2-bench, dropping all thinking cost 3-5 points; full retention matched latest-turn retention at longer contexts. (https://arxiv.org/html/2607.05196): Both sentences are verbatim in the evaluation-details appendix. Model is Audex (Nemotron-Labs-Audex-30B-A3B), text tau2-Bench. Caveats: the authors attribute the 3-5 point gap to train-test mismatch ('our SFT data ... is constructed with the same latest-turn thought retention policy'), and the full-retention result has no numbers. This is the only card source on the exact axis preserve_thinking controls, and it reports no accuracy gain.
+- [confirmed_with_caveat] IISWC paper: thinking is a large share of agent output tokens, so the retention policy changes context growth by a large factor. (https://arxiv.org/html/2605.26297): The quoted sentence is verbatim (Section IV; Gemma 4-31B and Qwen3.6-27B, Claude Code via Harbor, vLLM 0.20.0, TP=2). The 'large factor' inference is not in the paper: the percentages are of output tokens, tool calls are 50.8-63.7% of Qwen Thinking output in four of five workloads, and cached input dominates per-turn token volume. The paper also says thinking is 'retained ... until the current user request is completed', and reports prefill below 10% of request time, so longer context costs little time on a prefix-cached engine. Title is 'Agentic AI Workload Characterization' (the card says 'Characteristics'); IISWC appears only in artifact URLs.
+- [confirmed_with_caveat] arXiv 2606.00135: retaining thinking history improves BFCL multi-turn accuracy on Qwen3, a model whose card says to strip it. (https://arxiv.org/abs/2606.00135): Takeaway 3.3 is verbatim, as is '~3-5% for Qwen3-8B and Qwen3-4B' (Section 3.3, Fig. 3 middle). Caveats: the comparison is all-versus-none (the Fig. 2 'native' template shows a think block from an earlier user turn; the 'without' template has none), so it mixes within-loop and cross-turn retention. The same paper reports seed deviation up to ~3% on BFCL multi-turn; results are 3-seed averages. Qwen3 only, accuracy only.
+- [confirmed_with_caveat] arXiv 2602.24287: in chat, dropping or summarising prior assistant turns often matches full history at about 8x less context; carried-over reasoning is named as a pollution source. (https://arxiv.org/abs/2602.24287): Quote is verbatim (abstract/intro); 'Reasoning Trace Carryover' is one of five pollution categories. Caveats: it manipulates whole assistant responses in WildChat-style chat, judged by an LLM, not think blocks in tool loops; the category is defined as verbose reasoning style repeated in later responses. Qwen3-4B was run with a 1,024-token generation cap. Bears only indirectly on the question.
+- [confirmed_with_caveat] opencode PR #28352: whether reasoning is passed back decides whether the prefix cache hits at all ('WITH reasoning_content -> 97.2% cache hit, WITHOUT -> 0% cache hit'). (https://github.com/anomalyco/opencode/pull/28352): Quote is verbatim in the PR body (checked with gh). Caveats: the PR fixes an empty-string reasoning_content field; the 97.2%/0% line is the author's single direct API test against llama-swap (llama.cpp), not vLLM. The PR was closed unmerged on 2026-10-10 because V1 no longer takes PRs. One commenter reports the same symptom on Qwen3.6-35B-A3B with llama.cpp.
+- [confirmed] hermes-agent issue #56004: the harness silently dropped prior reasoning even when the server was set to preserve it. (https://github.com/NousResearch/hermes-agent/issues/56004): Quote is verbatim in the issue summary (Qwen3.6-35B-A3B-FP8 on vLLM 0.23.1rc1); closed as completed 2026-10-11. Hermes stripped all reasoning on replay, including between tool calls, so this is none-versus-any. Commenters report a 'dramatic difference' after patching, but only anecdotally. The thread also notes vLLM returns the field as `reasoning`, not `reasoning_content`.
+- [confirmed_with_caveat] Agent-Omit (arXiv 2602.04284): selectively omitting thoughts and observations cuts tokens without hurting accuracy (card had not opened it). (https://arxiv.org/abs/2602.04284): Opened now. arXiv comments field says ICML 2026. The paper states 'selectively omitting redundant thought/observation can significantly reduce token cost without sacrificing accuracy' (Qwen3-8B, WebShop; thoughts 45.1% and observations 52.2% of token cost). Caveats: this holds only for intermediate turns; omitting initial or final-turn thoughts hurts. The main result is a trained agent (Agent-Omit-8B) that learns to omit, not a history-retention policy on a stock model.
+
+### Feasibility: yes
+
+Q24 is answerable on the student's hardware in one week, but not with the experiment the card describes, and the "contradiction" on the card is weaker than it reads.
+
+**What I found**
+- **The card mixes two meanings of "turn".** In the Qwen3, Qwen3.5 and Qwen3.6 chat templates (read from the local snapshots), thinking after the last real user message is always kept. `preserve_thinking` only adds thinking from before it. The vendor reversal is therefore only about retention across user turns.
+- **The cited papers measure different things.** SWE-AGILE's ablation is step-level inside one task, on base Qwen3-8B (500 tasks x 2 runs, no CI). The tau2 ablation in arXiv 2607.05196 is user-turn-level. They do not directly contradict each other.
+- **The card is slightly stale.** Qwen3.8-27B (August 2026, Apache-2.0, on disk in BF16) ships with `preserve_thinking` on by default, still with no published ablation.
+- **The gap looks real as of today.** Two extended searches found no on/off ablation of `preserve_thinking`. arXiv 2606.00135 covers Qwen3-8B and Qwen3-4B on BFCL multi-turn only, with no cost numbers.
+- **A cleaner model pair is already on disk.** Qwen3.5-35B-A3B-FP8 (card says strip) and Qwen3.6-35B-A3B-FP8 (trained to preserve) share an architecture and each fit one 48 GB card.
+- **vLLM 0.32 needs no changes.** It passes reasoning back into the template, accepts per-request `chat_template_kwargs`, reports cached tokens, and has the qwen3 reasoning and tool parsers.
+
+**What is missing**
+- An agent harness: BFCL and tau2-bench need installing and their handlers patching, 1-2 days.
+- Containers for SWE-bench-style loops: no Docker daemon access, apptainer only, little disk.
+- Power: the card's "about 50 tasks" cannot resolve 2-5 point effects. BFCL's 800 multi-turn tasks x 3 seeds can resolve about 3 points.
+
+**First week**
+Three client-side retention policies on the matched MoE pair, on BFCL multi-turn and tau2-bench. Log accuracy, reasoning tokens, calls, cached tokens, token ids and GPU-seconds per solved task. About 3-5 GPU-days.
+
+**Open risk**
+The cost side may be boring on these short-context benchmarks. The IISWC'26 paper reports prefill under 10% of request time. The cost question only has teeth in long loops, which week one covers by a trace-only stretch arm at best. If the null or same-in-both-generations outcome appears, the question reduces to a configuration note.
+
+Sources: https://huggingface.co/Qwen/Qwen3.6-27B, https://huggingface.co/Qwen/Qwen3.6-27B-FP8, https://huggingface.co/Qwen/Qwen3.8-27B, https://huggingface.co/Qwen/Qwen3.5-35B-A3B, https://arxiv.org/html/2604.11716, https://arxiv.org/html/2606.00135, https://arxiv.org/html/2607.05196, https://arxiv.org/abs/2602.04284, https://github.com/sierra-research/tau2-bench, https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard
+
+**Existing data.** No agent or tool-loop accuracy data exists in the repo, and there is no agent benchmark runner (no BFCL, tau-bench or SWE-bench code under /home/ryankert_l/kv-fetch/kv-fetch/scripts or configs). What exists shortcuts the cost side and the setup, not the accuracy side.
+
+**Cost-side pieces already measured**
+- /home/ryankert_l/kv-fetch/kv-fetch/scripts/prefix_pilot/agent_loop.py with results/prefix/pilot/agent_ret0.json and agent_dense.json: a synthetic 5-turn loop (random tokens, 2,048-token outputs) on Qwen3.5-4B. Prefill per turn was 316 ms under vLLM's retention-0 default versus 115 ms dense. This is the recompute a hybrid pays when the prefix has no state checkpoint where history diverges, which is what stripping thinking causes.
+- results/prefix/pilot/recompute_probe.json: prefill time versus recomputed tokens after a hit. It prices strip-induced re-prefill offline.
+- scripts/k0_simulate.py and configs/prefix_k0.yaml: a trace-driven simulator of vLLM's hybrid prefix cache. Fed with logged token ids from agent runs, it prices each retention policy without more GPU time.
+- EXPERIMENTS.md line 331 already names this as the one niche K0 did not cover: "long outputs (thinking models in tool loops)".
+
+**Serving harness and throughput**
+- scripts/profile/serve_bench.py starts `vllm serve` and records Prometheus counter deltas (prompt tokens, cached tokens, preemptions). It is reusable for cached-token accounting.
+- results/profile/findings.md lines 244-265 give decode throughput at concurrency 16 / 64: qwen36_35b_a3b_fp8 705-1094 tok/s, qwen35_27b_fp8 306-443, qwen3_8b 429-577. Big hybrids need `--watermark 0.1` under memory pressure.
+- results/profile/harness/done/d2_scan_prefill_qwen36_35b_a3b_fp8.json has prefill time versus length for the MoE hybrid.
+
+**Models on disk in /share2/huggingface/hub**
+- Qwen3.5-35B-A3B-FP8 and Qwen3.6-35B-A3B-FP8, 35 GB each, same architecture. This is a matched pair.
+- Qwen3.5-27B-FP8 (29 GB), Qwen3.8-27B (BF16, 52 GB), Qwen3-8B, Qwen3-30B-A3B, and two gemma-4-31B FP8 builds.
+- Qwen3.6-27B-FP8 is not on disk.
+
+**Engine**
+- vLLM 0.32.0 is installed at /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/venv-vllm32 (a session scratchpad path).
+
+**First-week experiment.** The card's 2x2 needs three corrections before it measures what it claims.
+
+**Corrections to the card's design**
+- **The flag is a no-op inside a tool loop.** I read the local chat templates for Qwen3-8B, Qwen3.5 and Qwen3.6. All three always render thinking for assistant messages after the last real user message. `preserve_thinking` only adds thinking from before that message. In a single-task loop with tool-role observations, flag on and off render the same prompt. Retention must be controlled client-side.
+- **The model pair is confounded.** Qwen3-8B versus Qwen3.6-27B differs in size, architecture and context. Qwen3-8B has max_position_embeddings 40,960, so full retention in long loops can overflow.
+- **50 agent tasks have no power.** The standard error is about 7 points against reported effects of 2-5 points.
+
+**Models (both on disk, one 48 GB card each)**
+- Qwen/Qwen3.5-35B-A3B-FP8: its card says "No Thinking Content in History".
+- Qwen/Qwen3.6-35B-A3B-FP8: "additionally trained to preserve and leverage thinking traces".
+- Both are Apache-2.0 with 262K native context. Weights are 35 GB FP8. KV is 20 KiB per token in bf16 (10 attention layers, 2 KV heads, head_dim 256), about 1.25 GiB per 64K-token session. With roughly 9-10 GiB left at 0.92 memory utilisation, 16 concurrent BFCL or tau2 sessions fit.
+- Optional replication arm: Qwen/Qwen3-8B, bf16, 144 KiB per token, 40K cap, to reproduce arXiv 2606.00135.
+- Optional dense confirmation: Qwen/Qwen3.5-27B-FP8 (on disk) versus Qwen/Qwen3.6-27B-FP8 (about 30 GB download, Apache-2.0). KV is 64 KiB per token, weights 29 GB.
+
+**Engine settings (vLLM 0.32, all present in the installed wheel)**
+- `vllm serve <model> --reasoning-parser qwen3 --enable-auto-tool-choice --tool-call-parser qwen3_coder --enable-prompt-tokens-details --max-model-len 65536 --gpu-memory-utilization 0.92 --watermark 0.1`
+- Prefix caching on, no MTP or speculative decoding (vLLM issue #38182), text-only.
+- Model-card thinking-mode sampling, 3 seeds.
+- Give Qwen3.5 the Qwen3.6 template via `--chat-template` so the only difference is the flag.
+- vLLM 0.32 maps `reasoning_content` to `reasoning` on input and passes both to the template (renderers/chat_utils.py), so no engine change is needed.
+
+**Policies (client-side, about 100 lines in the benchmark's model handler)**
+- P0: no prior thinking (drop `reasoning` from every earlier assistant message).
+- P1: template default (thinking since the last user message only).
+- P2: everything (`chat_template_kwargs={"preserve_thinking": true}`).
+
+**Data**
+- BFCL multi-turn (gorilla repo, Apache-2.0; `bfcl generate --skip-server-setup` against a running server). I recall 4 categories of 200 tasks with Python-simulated backends and no Docker; I did not re-verify the counts today.
+- tau2-bench text (MIT; airline 50, retail 114, telecom 114), 4 trials. The user simulator runs on a fixed local model served separately, or a paid API. This changes absolute scores but not the paired contrast.
+
+**Numbers measured per (model, policy, seed)**
+- Task accuracy, paired by task.
+- Reasoning tokens generated per task and model calls per task.
+- Prompt tokens and cached tokens per request, from `usage.prompt_tokens_details`.
+- Token ids of every request, logged for offline replay through scripts/k0_simulate.py.
+- Peak context tokens per session (KV bytes).
+- Wall GPU-seconds per attempted and per solved task at fixed concurrency 16.
+
+**Comparison**
+- Interaction contrast: [acc(P2) - acc(P1)] on Qwen3.6 minus the same on Qwen3.5, with a paired bootstrap CI.
+- Cost: GPU-seconds per solved task, P2/P1 and P1/P0, per model.
+- Check: does P2 reduce generated reasoning tokens per task (the vendor's "less redundant reasoning" claim)?
+
+**Stretch, days 4-5**
+- 30 SWE-bench Verified instances through mini-swe-agent on apptainer, logging traces only, to see what share of context retained thinking occupies in a long loop. This is not an accuracy claim.
+
+**Result that kills it.** Any of these three outcomes on the matched pair means stop.
+
+- **Null on accuracy and behaviour.** P2 versus P1 and P1 versus P0 are both within about ±1.5 points on BFCL multi-turn (800 tasks x 3 seeds, paired) for both models, tau2 is within noise, and generated reasoning tokens and call counts do not change with policy. The accuracy question then has a null answer and the cost difference is pure token arithmetic computable from any trace. That is a harness-configuration note.
+- **Same effect in both generations.** Qwen3.5 and Qwen3.6 show the same sign and size, about the +2-5 points arXiv 2606.00135 already reports for Qwen3. The training-dependence hypothesis fails and the result is a replication with a cost column.
+- **Cost side too small to matter.** Retained thinking adds under 10% to context, and GPU-seconds per solved task differ by under 5% between policies. This is plausible: the IISWC'26 paper reports decode at 91-98.6% of LLM time and prefill under 10%. Nothing then motivates a serving mechanism.
+
+One caution on reading a kill: BFCL and tau2 contexts are short and dominated by tool schemas, so a small cost effect there does not rule out a larger one in long coding loops. The trace-only stretch arm is what would close that gap.
+
+**Result that makes it a paper.** A significant model-generation by policy interaction, plus a cost result that is not arithmetic.
+
+- **Vendor claim confirmed with a mechanism.** Qwen3.6 gains at least 3 points from P2 over P1 with a CI excluding zero, while Qwen3.5 is flat or negative. Under P2, Qwen3.6 also generates at least 15% fewer reasoning tokens or takes fewer calls per task, so GPU-seconds per solved task fall despite the longer context.
+- **Vendor claim refuted.** The trained-to-preserve model gains nothing from retention while paying a measured KV and capacity cost. Qwen3.8 now ships with `preserve_thinking` on by default, so this would say the default is wrong.
+
+Either result becomes a paper only with three additions beyond week one:
+- A long-horizon benchmark (SWE-bench Verified or Terminal-Bench, containers needed) showing how the cost crossover moves with loop length.
+- A third family as a control. gemma-4-31B FP8 is on disk; Qwen3.8-27B in BF16 needs two cards at tensor-parallel 2.
+- The hybrid-specific cost: under P0 and P1 on vLLM's retention-0 default, each new user turn rewrites history and forces a re-prefill from the last state checkpoint.
+
+Even then this is a measurement paper. Its systems contribution depends on the follow-on mechanism.
+
+**GPU-days.** About 3-5 GPU-days in total, roughly 1.5 wall-days on 3-4 idle cards.
+
+- Core BFCL multi-turn: 2 models x 3 policies x 3 seeds, about 2.4 GPU-hours per run at roughly 700 tok/s, so about 1.8 GPU-days.
+- tau2-bench: 278 tasks x 4 trials x 3 policies x 2 models, plus the user simulator, about 0.9 GPU-days.
+- Optional Qwen3-8B replication: about 0.4 GPU-days.
+- Optional 27B dense confirmation (BFCL, 1 seed): about 1.2 GPU-days.
+
+Per-run times are my estimates from the throughput in results/profile/findings.md and an assumed 6-8K output tokens per task. They are not measured on these benchmarks.
+
+**Blockers.** No hard blocker for the first week. The limits are these.
+
+- **No agent harness in the repo.** BFCL and tau2-bench must be installed and their model handlers patched to implement P0/P1/P2 and log token ids. That is 1-2 days of setup. I did not test tau2-bench against a local endpoint; it goes through LiteLLM, which should accept an OpenAI-compatible base URL.
+- **tau2 needs a user-simulator LLM.** Either a local model on another card (non-standard, so absolute scores are not comparable to published ones) or a paid API key.
+- **Containers for long-horizon benchmarks.** The Docker daemon is not reachable. The user is not in the docker group, and the rootless Docker binaries in /home/ryankert_l/bin are installed but not running. Apptainer 1.4.2 is available. SWE-bench images are several GB each, and disk is tight: /home is 100% full, /share3 has 105 GB free and /share2 has 93 GB.
+- **Statistical power.** BFCL at 800 tasks x 3 seeds resolves about 3 points. tau2 at 4 trials resolves about 4-5 points; the paper that reported 3-5 point effects used avg@8 to avg@16. A 50-task agent subset resolves nothing in this range.
+- **Qwen3.6-27B-FP8 is not on disk.** It is about a 30 GB download. One repo discussion reports gibberish output on vLLM; I did not verify this. The MoE pair avoids the issue for week one.
+- **Qwen3-8B's 40,960-token context.** Full retention in long loops can hit the limit. SWE-AGILE's negative result on that model may be partly this; that is my hypothesis, not something the paper states.
+- **Off-distribution arms.** P0 on Qwen3.6 and P2 on Qwen3.5 are prompts the vendor template never produces by default. The interaction contrast is designed around this, but single-arm numbers need that caveat.
+- **Scoop risk.** The Qwen team could publish the ablation at any time. Two searches today found no on/off ablation of `preserve_thinking`.
+
+**Follow-on design space.** **If retention helps (trained models use old thinking as working memory)**
+- Find which part of the retained thinking carries the gain, and whether a compressed or evicted form keeps it. This could be KV-level eviction of old think spans rather than text stripping, so the prefix stays append-only.
+- Capacity planning for agent serving that counts thinking KV. On hybrids this is cheap per token (20-64 KiB), which may make retention nearly free there and expensive on dense models (144 KiB per token on Qwen3-8B). That would be an architecture-dependent policy.
+- Neighbouring work is training-based: Agent-Omit (ICML 2026) and SWE-AGILE's reasoning digests. A training-free serving-side version is the open slot.
+
+**If retention does not help, or hurts**
+- Stripping is right, and the serving problem is stripping without a full re-prefill. On hybrids that needs a recurrent-state checkpoint at the strip point. This is the dropped D2 mechanism on a workload the Mooncake traces did not cover.
+- The student's K0 result is the warning: an oracle checkpoint policy gained only 2.6-5.5% on Mooncake. Before building anything, replay the logged agent traces through scripts/k0_simulate.py and check whether the ceiling is materially higher here.
+- A cheaper alternative is template- or harness-level: defer stripping to compaction points so the cache breaks once rather than every user turn.
+
+**If the sign depends on training**
+- A per-model retention policy, and a short probe to decide it. This is more an evaluation contribution than a system.
+
+## Q11: schedulers under closed-loop agent sessions (weakened)
+
+### Already answered? partly_answered
+
+Q11 is partly answered: I found no paper that makes the card's central measurement, but the closed-loop side already has scattered results. Coverage was cut short when the web-search budget ran out, so a direct hit cannot be ruled out, especially among the unopened agent-scheduler papers and anything from November 2026.
+
+**What is already covered**
+- **Admission and KV memory dominate under closed-loop agent load.** CONCUR, ThunderAgent (ICML 2026), Basin (arXiv 2611.02543) and 'Bursts That Outlast Themselves' (arXiv 2611.13412) all show this, the last on vLLM with Qwen3-8B. A paper whose main message is 'admission matters for agents' would be late.
+- **Ordering gains under concurrent agent load exist as isolated points, and they conflict.**
+  - Small: SJF gives 4.8-5.2% at 4 parallel sessions (AgentSched); request-level vs call-level FCFS differ by under 8% at fixed concurrency 100 (XPerf); PLAS gives -3.9% mean JCT under Poisson programs (AgentServeSim); Autellix underperforms on SWE-Bench in Continuum.
+  - Not small: trajectory ordering alone gives 1.1-1.26x in closed batch rollout (Heddle); removing Basin's session priority drops goodput to 0.31-0.95 of the full system in a partly-open workload.
+- **The loop-type framing is no longer untouched.** Basin calls its workload partly-open and cites Schroeder; 'Bursts' and the IISWC characterisation state the closed-loop property; XPerf supports both load modes.
+
+**What is not covered**
+None of these papers puts the same standard policies on the same request population under both loop types. The Autellix-line papers that re-run PLAS all keep Poisson or QPS-driven arrivals. CONCUR's 'regardless of scheduling order' is an assertion, not a measurement.
+
+**For the student's decision**
+The conflicting closed-loop numbers mean the outcome is not foregone. The surviving contribution is the controlled cross-loop measurement itself, and the 'if no' branch (admission is first-order) is already crowded.
+
+**Remaining gap.** No paper found runs the same ordering policies (FCFS, SJF by length, MLFQ, Autellix-style program priority) on one engine and one request population under open-loop Poisson, partly-open and fixed-population closed-loop load, and reports how much of the gain survives or the calls-per-session at which it halves. The closed-loop evidence is scattered single points that disagree (about 5% for SJF and under 8% for FCFS variants, against 1.1-1.26x in batch rollout and large losses when Basin's priority is removed), and the claim that ordering is irrelevant once admission is controlled is asserted (CONCUR) but not measured.
+
+Closest papers:
+- When Cache Pressure Becomes a Trap: Metastability in Agent Serving (Basin) (arXiv 2611.02543, preprint, Nov 2026; https://arxiv.org/html/2611.02543). Answers: Closest single paper. Explicitly uses a partly-open agent workload (Poisson session arrivals, each next call issued only after the previous call and tool finish) and cites Schroeder 2006 for it. Its section 7.9 ablation separates ordering from admission on SGLang with Qwen3.6-35B-A3B on H100/H200: removing the session priority while keeping admission drops goodput to 0.81-0.95 with a host cache tier, 0.31-0.34 with GPU-only caching, 0.36 in recovery and 0.55 under sustained overload; removing admission while keeping priority gives 0.62-0.82 under host-tier surges and 1.00-1.03 elsewhere. So in one partly-open agent setting ordering is not second-order. Leaves open: The priority is the paper's own fixed size-aware session priority, not SJF, MLFQ or Autellix PLAS. There is no open-loop Poisson per-call arm and no pure closed (fixed population) arm, so it does not say how much of an open-loop gain survives. Prefill-decode disaggregated SGLang, not a single vLLM engine. Ablation numbers read through a fetch summary, not checked against the tables.
+- CONCUR: High-Throughput Agentic Batch Inference of LLM via Congestion-Based Concurrency Control (arXiv 2601.22705, preprint, Jan 2026; https://arxiv.org/abs/2601.22705). Answers: Supports the 'memory admission sets throughput' arm for batch (closed) agent load: capping the number of active agents by cache signals gives up to 4.09x on Qwen3-32B and 1.9x on DeepSeek-V3 over SGLang on H100s. States that 'excessive concurrency induces thrashing regardless of scheduling order'. Leaves open: The claim about scheduling order is asserted in related work, not measured: no FCFS vs SJF vs program-priority comparison, and no open-loop arm.
+- ThunderAgent: A Fast, Simple, and Program-Aware Agentic Inference System (ICML 2026 (PMLR v306); arXiv 2602.13692; https://arxiv.org/html/2602.13692). Answers: Evaluated at a fixed number of parallel agent programs (e.g. 96), i.e. closed-loop in practice. Gains of 1.5-3.6x in serving and 1.8-3.9x in RL rollout over vLLM and Continuum come from pausing programs before KV thrashing, not from request ordering. Shortest-first is used only as a tiebreak for eviction and restore. Leaves open: Autellix is not evaluated and no ordering policies are compared under the fixed-concurrency load. No open-loop arm, and Schroeder is not cited. 8xH100 with 235B-355B models.
+- Towards Efficient Agents: A Co-Design of Inference Architecture and System (AgentSched) (arXiv 2512.18337, preprint, Dec 2025; https://arxiv.org/html/2512.18337v2). Answers: A direct data point for SJF under concurrent agent sessions: with 4 parallel sessions on a 7B model, 'SJF yields only marginal latency benefits (4.8-5.2% reduction) but degrades cache performance, lowering the hit rate to 58%'. Leaves open: One concurrency level, arrival model not described, no open-loop counterpart on the same requests, Ascend NPU stack, no program-aware policy other than the paper's own.
+- Heddle: A Distributed Orchestration System for Agentic RL Rollout (arXiv 2603.28101, preprint, Mar 2026; https://arxiv.org/html/2603.28101). Answers: Closed batch rollout (fixed batch of 100 trajectories per worker, tool calls between LLM calls). Its scheduling ablation against FCFS and Autellix reports 1.1-1.26x shorter rollout time from trajectory-level ordering alone (Qwen3-14B), by prioritising the long trajectories that set the makespan. Leaves open: Objective is batch makespan, not mean or P99 session completion time. No open-loop arm, no SJF by predicted call length. 64 Hopper-class GPUs.
+- Benchmarking LLM Serving Systems for Agentic AI Workloads with XPerf (arXiv 2608.20370, preprint, 2026; https://arxiv.org/html/2608.20370v1). Answers: The harness supports both Poisson open-loop and fixed-concurrency load. At 100 concurrent requests on mini-SWE-agent traces, 'request-level FCFS performs comparably to or slightly better (<8%) than call-level FCFS', varying across traces. Leaves open: Only two FCFS variants; no SJF, MLFQ or PLAS. The policy comparison is not run under both load modes, and Schroeder is not cited.
+- Autellix: An Efficient Serving Engine for LLM Agents as General Programs (NSDI 2026; arXiv 2502.13965; https://arxiv.org/html/2502.13965). Answers: The open-loop side of the comparison: program-level priority gives up to 8x (ShareGPT, BFCL), 5x (LATS, about 160 calls per program) and 15x (mixed) over vLLM under Poisson program arrivals. It states the feedback effect ('Faster call completions prompt programs to issue subsequent calls more quickly'). Leaves open: No closed-loop or fixed-concurrency experiment and no sensitivity to arrival process or calls per program. Follow-ups that re-run PLAS (Continuum/CacheTTL arXiv 2511.02230: 'underperforms in SWE-Bench'; AgentServeSim arXiv 2606.09613: PLAS -3.9% mean JCT vs FCFS; Astraea arXiv 2512.14142: SJF and LAS at or below FCFS on agent tasks) all keep Poisson or QPS-driven arrivals.
+- Human-less LLM Serving: Quantifying the Human Tax on Throughput (arXiv 2606.20577, preprint, 2026; https://arxiv.org/html/2606.20577v1). Answers: Confirms the card's reading: closed-loop agent benchmark (1000 sessions of 10 rounds, 'every completed request immediately triggers the next', concurrency 16-256) used to measure the throughput cost of chunked prefill and SLO mechanisms. Leaves open: No FCFS/SJF/priority/MLFQ/Autellix comparison; longest-prefix-match ordering is switched on but not isolated. Semantic Scholar lists no citing papers yet.
+- Bursts That Outlast Themselves: Persistent Degradation in Prefix-Cached Agent Serving (arXiv 2611.13412, preprint, Nov 2026; https://arxiv.org/html/2611.13412). Answers: On vLLM with Qwen3-8B and Qwen3-32B, Poisson session arrivals with closed-loop turns: the controlling factor is KV-pool occupancy. Admission-only capping recovered 2 of 8 collapsed runs; suspending sessions against a KV budget recovered 17 of 17. States 'Unlike open-loop chat traffic, the offered load of a session population depends on the server.' Leaves open: Engine scheduler fixed at FCFS with chunked prefill; engine-side ordering options 'were not compared'. No open-loop arm.
+- From Conversational Chats to Agents: Workload-Dependent Bottleneck Shifts in LLM Serving (NeurIPS 2026 Workshop on ML for Systems (poster); https://neurips.cc/virtual/2026/178973). Answers: Abstract only: queue-aware scheduling (QLM) helps p99 scheduling delay on ShareGPT chat (151.2 to 47.4 ms), while on multi-turn agent traces the gain comes from cross-turn KV reuse (Continuum, 162 to 105 minutes); 'scheduling cannot compensate for exhausted GPU capacity'. Leaves open: Different mechanisms on different workloads, so it is not the same policy under two loop types. The abstract does not label the arrival process as open or closed. Full text not read (OpenReview returned a verification page).
+
+Searches run: Coverage is incomplete: the shared web-search budget ran out after about 12 queries, so three planned phrasings did not run and no conference programme (OSDI, SOSP, NSDI, EuroSys, ASPLOS, ATC, MLSys, NeurIPS, ICML, ICLR, ACL, EMNLP) was browsed directly.
+
+Web searches that ran (about 12): closed-loop vs open-loop LLM scheduler evaluation; SJF/FCFS/SRPT/MLFQ/PLAS under agent sessions; 'partly-open' / 'closed queueing' / 'think time' with LLM serving; Schroeder 'Open Versus Closed' with LLM serving; 'cautionary tale' LLM serving evaluation; Autellix Poisson criticism or reproduction; the Mitzenmacher-Shahout survey; the NeurIPS ML-for-Systems poster title; ThunderAgent.
+
+Citation lists (Semantic Scholar API, scanned by title, about a dozen opened):
+- Autellix: 92 citing papers.
+- Continuum: 86 citing papers.
+- Schroeder NSDI 2006: 323 citing papers, 2025-2026 entries scanned.
+- Agentic AI Workload Characteristics: 10 citing papers.
+- Human-less LLM Serving: 0 indexed.
+
+Papers opened and read through fetch summaries (HTML, often truncated at 100k characters): arXiv 2611.13412, 2611.02543, 2607.08565, 2608.20370, 2512.18337, 2512.14142, 2511.02230v4, 2603.28101, 2602.13692, 2604.26963, 2601.22705, 2606.09613, 2606.20577, 2609.34663, 2611.12304, 2608.10402, 2610.03286, 2611.08684, 2606.01839, 2607.05876, 2609.32283, 2610.37230, 2502.13965, 2504.07347, 2608.15127; llm-d-autoscaling issue #1606.
+
+Abstract only: 2605.16637, 2603.02348, the NeurIPS poster.
+
+Not read: the Mitzenmacher-Shahout survey (PDF not extractable). Not opened, titles from the citation lists: Orbit (EuroMLSys 2026), Pythia, FATE, TOPAS, SAGA, HiveMind, UNISON, Cortex, Libra, Prorsa.
+
+### Premise: weakened
+
+Q11's premise is weakened: the quotes check out, but the central tension is partly apples-to-oranges and the main answer is predictable in direction.
+
+**Evidence.** All 12 items were opened. Every quoted sentence and number is present in its source, and none is misquoted. Ten carry caveats; the ones that matter:
+- Autellix and Continuum are partly-open (Poisson program arrivals, closed loop inside each program) and use program-level metrics. They are not per-request open-loop.
+- Schroeder et al. measure per-request response time under request-level policies, so their partly-open result does not contradict Autellix's program-level gains.
+- "Closed-loop" in the IISWC paper means the agent loop, not a fixed-population queueing model, and the paper does not state its scheduling policy.
+- Human-less LLM Serving does change one ordering policy (FCFS to longest-prefix-match), though without ablating it.
+- Learning-to-Rank does not state Poisson arrivals or whether 64 req/s is above capacity.
+- The student's R1 result is a single-turn batch makespan bound, not a latency-under-ordering result.
+- Autellix is in NSDI '26 under the new title "Agentix"; the Copilot dataset is public.
+
+**Gap.** The measurement gap is real. No paper I found compares an ordering policy's gain across open, partly-open and closed load on one request population. The nearest closed-loop agent papers (Human-less, Concur, and 2611.13412 from 10 Nov 2026) test admission or SLO knobs only, and 2611.13412 names scheduling as untested.
+
+**Tension.** The "classic theory versus Autellix" conflict mostly dissolves: Autellix's setup is open at the program level, where theory predicts its gains. Production agent traffic is partly-open; true fixed-population load is the batch and RL-rollout regime, where throughput is the metric.
+
+**Predictability.** Little's law is model-free, so under a fixed population mean latency can move only as much as throughput does. Three data points already suggest that movement is small next to admission effects: the student's 6-7% headroom, Autellix's 10-40% makespan gain in its all-at-once run (against 4-15x under Poisson), and Concur's admission results.
+
+**What stays open.** The size of the throughput-mediated ordering effect near the thrashing cliff, tail latency, and the calls-per-session at which per-call SJF's gain halves. That is a cautionary-tale measurement paper, not a surprising finding, and the card's surprise score of 4 looks too high.
+
+Not checked: the full text of the NeurIPS workshop poster (abstract page only), the last 34K characters of Mitzenmacher and Shahout, and the "Basin" paper cited by 2611.13412, which I could not locate.
+
+**Is the tension real?** Partly. The literature gap is real, but the claimed conflict between classic theory and Autellix mostly dissolves on reading.
+
+**What holds:** I found no LLM-serving paper that reports one ordering policy's gain under open, partly-open and closed load on the same request population. The neighbours I opened all stop short of it:
+- Human-less LLM Serving (2606.20577) varies SLO knobs under closed-loop load, not ordering.
+- Concur (2601.22705) runs a batch of agents and tests admission control only; it asserts without an experiment that "excessive concurrency induces thrashing regardless of scheduling order".
+- "Bursts That Outlast Themselves" (2611.13412, 10 Nov 2026) studies closed-loop agent sessions on vLLM, compares admission and parking controllers only, and says it "did not compare session-aware eviction or scheduling".
+- MARS (2604.26963), ConServe (2606.01839) and the NeurIPS 2026 workshop poster (QLM on ShareGPT, Continuum on agent traces) use rate-driven load and no loop-type comparison.
+- Mitzenmacher and Shahout (2503.07545) assume Poisson arrivals; no closed-system discussion in the first 100K characters.
+
+**What dissolves:**
+1. **The card mixes two arrival models.** Sarathi-Serve, DistServe and Learning-to-Rank use per-request arrivals with single-turn requests. Autellix and Continuum use Poisson arrivals of programs with a closed loop inside each program, which is the partly-open model Schroeder et al. recommend. The "shared untested open-loop assumption" applies to the first group only, and two of those three test no ordering policy.
+2. **Schroeder's partly-open result and Autellix measure different things.** Schroeder's principle (vii) is about per-request response time under request-level policies. Autellix prioritises and measures at program level. With the program as the job and Poisson program arrivals, that is an open system, where classic theory predicts large gains from least-attained-service on heavy-tailed program sizes regardless of calls per program. So "which the classic result would not predict" is apples-to-oranges.
+3. **The production evidence shows partly-open, not closed.** The Copilot study shows a closed loop inside a session, but sessions are user-initiated. Fixed-population load is the batch-eval and RL-rollout regime (the IISWC max-concurrency runs, Human-less, Concur, the student's R1), where the natural metric is throughput or makespan.
+4. **"Closed-loop" in the IISWC paper means the agent's act-observe loop**, not a closed queueing system.
+5. **The why_unknown overstates non-transfer.** The closed-system result rests on Little's law, which holds for any server structure, continuous batching included.
+
+**Obvious answer?** Largely predictable in direction; the magnitudes are not.
+
+- **Closed loop, fixed N, short tool times:** Little's law gives N = X·(E[T]+Z) for any system. Mean per-call and per-session time can change with ordering only as much as throughput X changes. Expect the FCFS/SJF mean ratio to be about 1 plus the throughput effect, and P99 to get worse under SJF or shortest-remaining-program because long sessions starve. If N fits in KV memory there is no queue and ordering is irrelevant.
+- **Throughput effect is small:** the student's R1 found at most 6-7% headroom after the watermark setting, and Autellix's own all-at-once run shows a 10-40% makespan gain against 4-15x under Poisson arrivals. Concur and 2611.13412 both find admission or session caps to be the first-order control in this regime.
+- **Open-loop per call near saturation:** large SJF gains, as published.
+- **Partly-open with a session-level metric:** shortest-remaining-program keeps most of its gain at every k, because the system is open at session level. Per-call SJF loses its gain as k grows, because per-call length says little about remaining session work.
+
+So an expert would answer the card's either/or with confidence: ordering stops mattering for means under fixed-population load and admission sets throughput.
+
+What is not predictable: the size of the throughput-mediated ordering effect near the cache-thrashing cliff, the tail behaviour, and the k at which per-call SJF's gain halves on a memory-gated batching engine.
+
+Evidence checks:
+- [confirmed_with_caveat] Sarathi-Serve evaluates with open-loop Poisson arrivals. (https://arxiv.org/html/2403.02310): The quote "The request arrival times are generated using Poisson distribution." is present. The paper never says "open-loop"; that is an inference from Poisson arrivals at a target QPS. Its baselines are FCFS; it tests no SJF or ordering policy, so it is evidence of the arrival assumption only, not of a scheduler gain that could vanish.
+- [confirmed] DistServe evaluates with open-loop Poisson arrivals. (https://arxiv.org/html/2401.09670): "we generate request arrival times using Poisson distribution with different request rates" is in Section 6.1. Same limitation as Sarathi-Serve: no ordering policy is evaluated, so it supports only the arrival assumption.
+- [confirmed_with_caveat] Autellix lets whole programs arrive by a Poisson process; its programs have many calls each, and a gap to SRPT remains. (https://arxiv.org/html/2502.13965): All quotes and numbers are present (Poisson process for program arrivals; 6.66 / 10.75 / 159.7 calls; "a noticable gap remains between Autellix and SRPT"). Caveat that matters for the card: this is a partly-open design (open at program level, closed within a program), and both the latency metric and the priority are program-level ("total program response time divided by the number of tokens generated"). The SRPT gap comes from a simulation with an oracle. arXiv shows only v1 with no venue; USENIX lists the NSDI '26 paper as "Agentix: An Efficient Serving Engine for LLM Agents as General Programs" (renamed).
+- [confirmed_with_caveat] In classic queueing systems, scheduling helps open systems much more than closed systems, and partly-open systems behave like closed ones when sessions have many requests. (https://www.usenix.org/legacy/event/nsdi06/tech/full_papers/schroeder/schroeder_html/): Principles (iv) and (vii) are quoted correctly; the cutoffs are about 5 and 10 requests per session (crossover 5-20 depending on variability). Caveat: the paper measures per-request response time under request-level policies. It does not report per-session completion time or session-level priority, which is what Autellix and the card's first experiment measure. Its closed-system argument is Little's law (N = X·E[T]): with zero think time all work-conserving policies give the same mean response time.
+- [confirmed_with_caveat] Production coding-agent sessions are tight loops of many LLM calls, each issued after a tool result returns. (https://arxiv.org/html/2608.00101): Both quotes are verbatim and P90 is 100.5 LLM calls per session (Table 4). Caveat: this shows the loop is closed within a session. Sessions themselves are started by users, so the production population is partly-open, not a fixed closed population. The paper only says it plans to release traces, but the dataset now exists in AzurePublicDataset (301K sessions, 9.3M LLM calls, 1-7 June 2026, per-call timestamps, durations, token counts and tool durations), so the first experiment's data source is real.
+- [confirmed_with_caveat] A closed-loop agent workload has been run on an LLM engine, but only chunked-prefill and SLO knobs were varied; no ordering policy was tested. (https://arxiv.org/html/2606.20577v1): Confirmed: "Our primary workload is a closed-loop benchmark derived from MoonCake ToolAgent traces", inter-round gaps removed, concurrency 16 to 256, Qwen-2.5-32B on an 8-GPU H20 node; the knobs swept are chunk size and the per-iteration prefill cap. Caveat: its HlServe system "switches the default scheduling policy from FCFS to longest-prefix-match (LPM)", so one ordering change is bundled in, though not ablated against SJF, MLFQ or program-aware policies. It also compares against a Poisson human-like workload (20.4% vs 1.9% throughput sacrifice), but for SLO knobs, not for ordering.
+- [confirmed] In closed systems, favouring short jobs helps far less than in open systems. (https://www.usenix.org/legacy/events/nsdi06/tech/full_papers/schroeder/schroeder_html/): The URL resolves and both sentences are in the paper (the first in the Introduction; the narrow range is moderate load and high MPL, principle v). This is the same source as the earlier Schroeder item, so it is not independent evidence.
+- [confirmed_with_caveat] A length-ranking scheduler reports large mean-latency gains at a fixed open-loop request rate on chat datasets. (https://arxiv.org/html/2408.15792): The 6.9x sentence is in Section 5.2 (ShareGPT and LMSYS-Chat-1M, Llama-3 8B and 70B). Caveats: the HTML text does not state that arrivals are Poisson, only "increasing arrival rates" plus a separate 2K-request burst test. It does not say whether 64 req/s exceeds capacity; if it does, the 6.9x is a finite-backlog SJF effect. Requests are single-turn chat, not agent sessions.
+- [confirmed_with_caveat] Autellix evaluates with Poisson program arrivals and itself notes the feedback from completion speed to arrival rate. (https://arxiv.org/html/2502.13965): All three quoted fragments are present ("Faster call completions prompt programs to issue subsequent calls more quickly, increasing the arrival rate of LLM calls"; "Autellix achieves up to 8× throughput of vLLM"). Not on the card: Section 6.5.1 runs an offline case, "all programs are submitted at the start", where the gain is "decreasing the average makespan by 10-40%" instead of 4-15x. That is a batch data point already in the paper, and it points toward the "gain shrinks" answer.
+- [confirmed_with_caveat] Continuum also drives its agent evaluation with Poisson program arrivals. (https://arxiv.org/html/2511.02230v2): Confirmed: a job distributor for SWE-Bench with a Poisson arrival pattern of agent programs (0.13 jobs/s in the sensitivity study); baselines include vLLM, Autellix and InferCept; no fixed-concurrency run. The fetch returned the quoted sentence only in part, with the Poisson wording confirmed by a second phrase. As with Autellix, this is a partly-open design (Poisson programs, closed inside each program), not per-request open-loop.
+- [confirmed_with_caveat] Agent serving is described as closed-loop, and under fixed concurrency the first-order failure is a cache-thrashing cliff; only FCFS vLLM was measured. (https://arxiv.org/html/2605.26297): The sentence and the Table II numbers match exactly (98.85 / 16.78 / 19.21% hit rate; 30.08 / 16.96 / 10.30 tok/s per request at max concurrency 15 / 20 / 25). Two caveats. "Closed-loop" here means the agent's act-observe loop ("agents repeatedly interact with the model, external tools, and the environment"), not a queueing closed system; the fixed population comes only from the "Max concurrency" column. The paper does not state the scheduling policy (vLLM v0.20.0 default, FCFS by inference). The venue appears only in an artifact URL.
+- [confirmed_with_caveat] The student's own closed-loop RL rollout runs left little room for a better schedule once one admission knob was set. (/home/ryankert_l/.claude/projects/-home-ryankert-l-kv-fetch-kv-fetch/memory/kv-fetch-phase0.md): The memory file (lines 139-140) and /home/ryankert_l/kv-fetch/kv-fetch/EXPERIMENTS.md (R1 result) give 6.8% and 6.4% from the perfect-packing bound at watermark 0.1. EXPERIMENTS.md gives 24.7% / 29.5% for the default watermark on the hybrid's own trace; the 26-37% figure is the memory file's summary. Caveat: R1 is one batch of 512 single-turn requests submitted at once, with makespan as the metric. It bounds throughput headroom only, and says nothing about mean or P99 session latency under different orderings, or about multi-turn sessions with tool gaps.
+
+### Feasibility: yes_scaled_down
+
+Q11 is answerable on the student's hardware in about a week at reduced scale, but the likely outcome is the less interesting one.
+
+Feasibility:
+- vLLM 0.32.0 (the installed wheel) has `--scheduling-policy priority` and a per-request `priority`, so FCFS, oracle SJF per call and oracle or attained-service program priority need no engine change.
+- Priority there is static and does not preempt running requests except on KV exhaustion; a preemptive MLFQ or Autellix-style policy must be written, and no public Autellix code was found.
+- The Copilot trace named in the card is public (CC-BY, 301K sessions, 9.3M calls) but has token counts only, and its median prompt of 68K tokens exceeds Qwen3-8B's 40,960 window. Prompts must be scaled by about 0.25, or the run moved to Qwen3.5-9B (674K-token pool measured on these cards).
+- The student has the in-process replay harness, scheduler recorder, step-time fit and job queue. Missing are the closed-loop and Poisson drivers, about 1-2 days of work.
+- Cost: 4-6 GPU-days on single 48 GB cards.
+
+What the check turned up against the card:
+- For a fixed session population, Little's law fixes mean session time at N divided by throughput. Ordering can change the closed-loop mean only through throughput, so that arm's headline number is largely known in advance.
+- Autellix's evaluation is open at the program level (Poisson program arrivals, program completion time), so its gains do not conflict with Schroeder et al. as the card states.
+- Two published data points already show small gains under fixed concurrency: XPerf section 5.8 (under 8% between call-level and request-level FCFS at 100 concurrent requests) and arXiv 2512.18337 (SJF 4.8-5.2% with 4 agent sessions). Neither compares loop types.
+- The student's R1 result (6.4-9.1% from perfect packing) points the same way.
+
+What would still be new: no paper found compares the same policies on the same request population across open, closed and partly-open load on an LLM engine, and nobody has tested whether ordering changes closed-loop throughput through KV residency beyond what a tuned session cap achieves. That second test is the one that could make a paper; the first-week design includes it and a day-1 simulator so the predictable part is registered before any GPU time is spent.
+
+Not verified: absence of Autellix code (one search), the Copilot archive size, the Mooncake licence, and per-run times (estimated from notebook throughput).
+
+**Existing data.** What already exists, all under /home/ryankert_l/kv-fetch/kv-fetch:
+
+1. One closed-loop data point (R1). EXPERIMENTS.md "RL rollouts: kill test R1"; results/profile/runs/r1_bound_own.json and r1_bound_cross.json. 512 requests released at once, metric makespan, Qwen3.5-4B and Qwen3-4B. With watermark 0.1 the makespan is 6.4-6.8% from a perfect-packing bound (4.0-9.1% on the like-for-like pair). This is a closed batch with one call per session and no tool time, so it covers the "ordering cannot buy much" side for makespan only. It has no session-latency metric, no multi-turn prefix reuse, and no open-loop arm.
+
+2. Replay harness with forced lengths. scripts/rl/rollout_replay.py runs the engine in-process (VLLM_ENABLE_V1_MULTIPROCESSING=0), submits via eng.add_request with ignore_eos and max_tokens = recorded length, and records per-request finish times. It releases everything at t=0; it has no arrival process and no per-session loop.
+
+3. Scheduler recorder. scripts/profile/thrash_trace.py (Recorder) and thrash_report.py log every step, preemption, readmission, recompute tokens and free blocks. Reusable unchanged for attributing any throughput difference between policies.
+
+4. Step-time model. scripts/rl/rollout_bound.py fits a linear step-time model per run and computes a no-preemption bound. It can calibrate a no-GPU simulator of the three loop types.
+
+5. Serving benchmark wrapper. scripts/profile/serve_bench.py drives `vllm serve` + `vllm bench serve` and saves Prometheus counter deltas (preemptions, cached tokens). Single-turn only.
+
+6. Job queue. scripts/profile/harness.py with configs/harness_plan_*.yaml (GPU pinning, retries, priorities).
+
+7. Measured KV pools on these cards (results/profile/NOTEBOOK.md, 13:13 and 15:33 entries): Qwen3-8B dense 171K tokens at 0.85 of the GPU, bf16 KV; Qwen3.5-9B hybrid 674K tokens; Qwen3-30B-A3B-FP8 139,872 tokens at 0.92. Also Qwen3-8B at c=64 on a 1K-in/8K-out load runs 27-34 of 64 requests and queues the rest (TTFT p50 21 s), so a memory-gated queue is easy to produce.
+
+8. Known engine pathology to control for (NOTEBOOK 05:39 onward, findings.md): at watermark 0 FCFS preemption is LIFO and ping-pongs; watermark 0.1 cuts preemptions 15-27x. Any FCFS baseline here must be run at watermark 0.05-0.1 or the comparison measures that bug.
+
+9. Traces on disk. traces/mooncake/toolagent_trace.jsonl and conversation_trace.jsonl (timestamp, input_length, output_length, hash_ids; no session ids, sessions must be inferred from hash chains as scripts/k0_simulate.py does). ShareGPT and lmsys-chat-1m are in /share2/huggingface/hub. The Copilot trace is not downloaded.
+
+10. Models on disk: Qwen/Qwen3-8B, Qwen/Qwen3-4B, Qwen/Qwen3.5-9B, Qwen/Qwen3.5-4B, Qwen/Qwen3-14B, meta-llama/Llama-3.1-8B-Instruct.
+
+Nothing in the repo runs a priority policy, a multi-turn closed loop with tool delays, or an open-loop arrival process.
+
+**First-week experiment.** Day 1, no GPU: prediction and simulator.
+Write down what theory already fixes. In a closed system with a fixed population N, Little's law gives mean session time = N / session throughput, so ordering can change the mean only by changing throughput (cache hits, recompute, batch occupancy). Build a small discrete-event simulator of a memory-gated batching engine using the step-time fit from scripts/rl/rollout_bound.py and the pools in NOTEBOOK.md. Record predicted FCFS/policy ratios for every cell below before running anything.
+
+Days 1-2: driver (about 200 lines on top of scripts/rl/rollout_replay.py).
+- An event heap of pending arrivals keyed by wall-clock time.
+- When a call finishes, the session's next call is submitted after the trace's tool duration.
+- Prompt of call i = prompt of call i-1 + its output + new random tokens, so vLLM's prefix cache sees the real reuse structure.
+- Each call carries an integer priority through LLMEngine.add_request(priority=...).
+
+Engine: vLLM 0.32.0, Qwen/Qwen3-8B, bf16 weights and bf16 KV, one RTX 6000 Ada (GPUs 4-6, never 0), gpu_memory_utilization 0.85 (171K-token pool), max_model_len 40960, max_num_seqs 256, max_num_batched_tokens 8192, prefix caching on, watermark 0.1 with watermark 0 as a control.
+
+Policies (no engine change needed):
+- FCFS (--scheduling-policy fcfs).
+- Oracle SJF per call: priority = known service of the call (uncached prefill tokens and output tokens weighted by the fitted step costs).
+- Oracle shortest-remaining-program: priority = remaining service of the session.
+- Attained-service program priority, PLAS-like and non-clairvoyant: priority = service the session has received so far.
+- FCFS with a tuned cap on active sessions. This is the admission-only baseline that the "memory admission sets throughput" branch needs.
+
+Request population: 200 sessions sampled from the GitHub Copilot coding-agent trace (Azure/AzurePublicDataset, release tag ghcp-coding-agent-2026, CC-BY). Use its calls per session, prompt / cached / completion token counts and tool durations. Scale prompt lengths by 0.25 and cap at 32K so they fit Qwen3-8B's 40,960 window (the trace's median prompt is 68K tokens). Cap calls per session at 100. As a second population use ShareGPT multi-turn conversations (Autellix's 6.66-call workload, already on disk) to check that an open-loop gain can be reproduced at all.
+
+Loads, all from the same population:
+(a) Open loop per call: Poisson at 70 / 85 / 95% of the measured saturation throughput.
+(b) Closed loop: N = 8 / 16 / 32 / 64 sessions, each finished session replaced by a new one.
+(c) Partly open: Poisson session arrivals at 70 / 90% of session-level capacity, with sessions truncated or concatenated to k = 1, 5, 15, 100 calls.
+
+Numbers measured per cell:
+- Mean and P90 session completion time, and per-call latency, as the ratio FCFS / policy.
+- Token throughput, prefix-cache hit rate, preemptions and recompute tokens (Recorder).
+- The k at which the gain halves.
+- In (b), whether the mean-latency ratio equals the throughput ratio.
+
+Comparisons:
+1. Gain in (a) versus gain in (b) and (c) for the same policy.
+2. Best ordering policy versus FCFS with a tuned session cap in (b).
+3. Measured ratios versus the day-1 predictions.
+
+Repeats: three seeds for the cells that decide the gates. The notebook shows runs with preemptions differ by about 8% between repeats, so differences under 10% are not readable.
+
+Week-2 extension if the result is alive: the same grid on Qwen/Qwen3.5-9B with unscaled 68K-token prompts (674K-token pool, 262K window).
+
+**Result that kills it.** Stop if any of these holds after the first week.
+
+1. Nothing to lose. In arm (a) on vLLM 0.32, oracle SJF and oracle shortest-remaining-program improve mean latency over FCFS (watermark 0.1) by less than about 1.3x at 85-95% load. Then the open-loop gain itself is not reproducible on a current engine with these policies, and the open-versus-closed comparison has no subject. That would be a stale-baseline finding, which is a different card.
+
+2. Textbook result. All three of:
+- In (b) the mean session-time ratio stays within the 10% noise band and equals the throughput ratio, as Little's law predicts.
+- FCFS with a tuned session cap and watermark is within 10% of the best ordering policy on throughput and mean time.
+- In (c) the program-level policy's gain tracks session-level load and does not depend on k, while per-call SJF fades with k as Schroeder et al. predict.
+In that case the day-1 simulator predicted everything, the engine adds nothing specific, and the finding is a paragraph plus a repeat of the R1 result (6.4-9.1% headroom).
+
+Two published data points already lean toward outcome 2:
+- XPerf (arXiv 2608.20370, section 5.8): call-level versus request-level FCFS on mini-SWE-agent at 100 concurrent requests differ by less than 8%.
+- "Towards Efficient Agents" (arXiv 2512.18337): with 4 parallel agent sessions, SJF gives 4.8-5.2% lower latency than FCFS and lowers the KV hit rate from 63% to 58%.
+Neither compares loop types, so they do not settle the question, but they make a small closed-loop gain the expected outcome.
+
+One conceptual point also weakens the card's stated tension. Autellix measures program completion time with Poisson program arrivals. At the program level that is an open system, where classic theory predicts gains from shortest-remaining scheduling regardless of calls per program. Its result therefore does not contradict Schroeder et al.
+
+**Result that makes it a paper.** Either of two outcomes, each needing to hold on both request populations and to exceed the 10% noise band by a wide margin.
+
+1. An engine-specific deviation from the classic prediction. In closed loop (b), ordering changes token throughput by 25% or more through KV residency, and FCFS with a tuned session cap and watermark does not recover it. Concretely: program-priority ordering moves or removes the cache-thrashing cliff that the IISWC 2026 study reports (prefix-cache hit 98.85% at concurrency 15, 16.78% at 20), with the Recorder showing which evictions and recomputes account for the difference. That gives a mechanism paper: where ordering acts as memory admission and where it does not.
+
+2. A clean loop-type curve against published claims. Open-loop gains of 2x or more in (a) fall below 1.2x in (b) and in (c) at k of 15 or more, with a measured k at which the gain halves, reproduced on a second model (Qwen3.5-9B with unscaled contexts). To carry a main-venue paper this also needs a faithful preemptive Autellix-style policy, which must be written, and the demonstration that "throughput at a latency target" is undefined in a closed loop. Without the Autellix reimplementation this is a workshop or methodology paper.
+
+Outcome 2 is the more likely of the two, and it is the less novel one given the theory and the two published data points above.
+
+**GPU-days.** 4-6 GPU-days on single 48 GB cards, about 1.5-2 wall-clock days on three Ada cards. Basis: about 3K calls per run at roughly 1-1.5 calls/s gives 35-50 minutes per run; 5 policies x 14 load cells is 70 runs (about 50 GPU-hours); watermark-0 controls, the ShareGPT population and three seeds on the gate cells add 50-90 GPU-hours. Day 1 (simulator, trace preparation) needs no GPU. The per-run time is an estimate from the notebook's throughput figures, not a measurement.
+
+**Blockers.** No hard blocker. No agent harness, Docker or internet sandbox is needed, because the experiment is trace replay with synthetic tokens. Items that cost time or limit the claim:
+
+1. Context length. The Copilot trace's median prompt is 68K tokens per call. Qwen3-8B has a 40,960-token window and a 171K-token pool on one card (about 2.5 median sessions). Options: scale prompts by 0.25 (changes absolute sizes, keeps ratios), or use Qwen3.5-9B (262K window, 674K-token pool, about 10 sessions resident), which brings the hybrid align-mode preemption behaviour documented in NOTEBOOK.md as a confound.
+
+2. Trace content. The Copilot release has token counts, cached-token counts, timestamps and durations only; no text and no prefix hashes. The prefix structure must be reconstructed from the counts (cached tokens are the only reuse signal). Output lengths come from 37 anonymised production models, not from an 8B model; this is acceptable for forced-length replay. Archive size is not stated on the dataset page (seven daily tarballs, 9.3M calls).
+
+3. vLLM 0.32 priority semantics (checked in the installed wheel, vllm/v1/core/sched/scheduler.py and request_queue.py). Priority is a static integer per request. A higher-priority waiting request does not preempt a running one; preemption happens only when KV allocation fails, and then the lowest-priority running request is evicted and recomputed. There is no KV swap in 0.32 (PRs #32398 and #43839 closed unmerged, per the notebook). Per-call oracle policies work as is. A preemptive MLFQ or Autellix PLAS with mid-call demotion must be written as a scheduler subclass (scheduler_cls exists), about 2-4 days.
+
+4. No public Autellix code was found in one search (not confirmed absent). It was built on vLLM 0.6.1 with custom swap kernels. The learning-to-rank predictor is a fork of an old vLLM. The first week therefore uses oracle policies, which bound those systems but are not those systems.
+
+5. Closed-loop and partly-open drivers do not exist in the repo and must be written (about 1-2 days). XPerf, which does agent trace replay, is announced but has no repository link.
+
+6. Statistical power. 200 sessions give two samples above P99, so report P90 and means; runs that preempt vary by about 8% between repeats.
+
+7. Shared node. Timed runs should stay on the three Ada cards (GPUs 4-6) for comparable timings; GPU 0 is off limits; other users' load adds noise.
+
+8. Scale-down. One 48 GB card with an 8B model against Autellix's A100-80GB runs and the 8x H20 closed-loop study; reviewers may question a single small instance.
+
+Licences: Qwen3-8B and Qwen3.5-9B Apache-2.0 (local copies), Copilot trace CC-BY, Mooncake traces from the public kvcache-ai/Mooncake repository (licence not re-checked today).
+
+**Follow-on design space.** If ordering still matters under closed-loop load (positive):
+The gain would come from ordering acting as memory admission: which sessions keep their KV resident across tool calls. That motivates a session-residency controller in the engine: choose the set of hot sessions from predicted tool-return times and remaining work, pin or evict whole sessions, and admit calls accordingly. This space is partly occupied. Continuum pins KV across tool calls with a TTL, ThunderAgent does program-aware scheduling, and "Towards Efficient Agents" has a cache-aware scheduler worth 9.6-9.8%. A new system would have to beat a tuned session cap plus watermark, which is the comparison the first week already includes. A second direction is KV swap on preemption for 48 GB cards, since vLLM 0.32 only recomputes.
+
+If the gain disappears (negative):
+1. Methodology: a loop-type reporting requirement for scheduler papers, and a replay tool that drives the same request population as open, closed and partly-open load. XPerf covers open and fixed-concurrency replay but is not released.
+2. Metric: closed-loop evaluations should report throughput and tail or fairness, because the mean is fixed by Little's law. A scheduler for batch agent runs (benchmark sweeps, data generation, RL rollouts) would then target tail and starvation, not mean latency.
+3. Admission control becomes the knob. The student's own R1 result (watermark alone within 6.4-9.1% of perfect packing) says little is left to build there for batch rollouts; the open part would be multi-turn sessions with tool waits, where idle KV eviction, not preemption ping-pong, is the loss.
+
+In both branches the system-building room is narrow. The card's own generative score of 3 looks right or slightly high.
+
+## Q12: how much reasoning output length is fixed by the prompt (weakened)
+
+### Already answered? partly_answered
+
+Partly answered: the measurement half of Q12 is more covered than the card states, and the scheduling half is still open.
+
+**What the card missed**
+- **Noise floor for prompt-only prediction (arXiv 2610.40541, 29 Oct 2026).** It runs 300 ShareGPT prompts x 200 decodes on six models, including one R1-distill in thinking mode. It derives an MAE floor from same-prompt variance and finds the best predictor near it (168 vs 129.5 tokens), concluding "system error dominates model error". This is Q12's premise, answered for chat traffic in MAE terms, with no scheduling and no long thinking.
+- **Variance split (TailSieve, arXiv 2608.22788).** Prompt identity explains 64.8% and 77.8% of length variance against 26.1% and 20.3% for sampling, on Qwen3.5-2B/4B. Thinking is disabled and the setting is RL rollouts, not serving.
+- **Hard problems have been sampled repeatedly ("Don't Overthink it", arXiv 2505.17813).** With 20 samples per question on AIME/HMMT at a 32K cap, R1-Distill-Qwen-32B's shortest/longest thinking chain averages 5,791 / 19,233 tokens. The card's "nobody has sampled thinking models repeatedly on hard problems" is wrong; the paper just does not analyse it for serving.
+- **Numerical noise is reported as a mean, not one extreme case (arXiv 2506.09501).** Mean per-example std on AIME'24 is 9,189 tokens for BF16 under greedy decoding.
+
+**Other points that bear on the card**
+- The two papers the card left unchecked (EGTP, arXiv 2602.01237) do not answer it.
+- Published same-prompt spread figures disagree by a wide margin: TIE (ICML 2026) reports average per-prompt CV 1.09 on LMSYS, against about 0.15 in ProD and 2610.40541. That conflict is unexplained in the literature.
+- UniBoost (ICML 2026) already argues the "if_no" position, that prediction is fundamentally limited and perfect-knowledge SRPT can be beaten at P99. Its evidence is 3 prompts per dataset.
+
+**What is left**
+The per-prompt-median SJF ceiling against FCFS and the realized-length oracle has not been computed by anyone. Neither has a between/within split for thinking-mode models on hard problems.
+
+That gap is narrower than the card presents. The authors of 2610.40541 or TIE already hold repeated-sampling data from which the ceiling could be computed, and 2610.40541 is two weeks old. The card's reviewer score of 3 looks about right or slightly generous given that paper.
+
+Search limits: the web-search budget ran out near the end, and conference programmes were covered through searches and cited-by lists, not page by page.
+
+**Remaining gap.** No paper converts same-prompt length noise into a scheduling ceiling: nobody reports the latency of SJF on the per-prompt median (or true per-prompt distribution) against FCFS and the realized-length oracle, for any model. And no paper gives the between-prompt vs within-prompt split for thinking-mode models on hard problems (10K+ thinking tokens) under sampling, or compares sampling noise with numerical noise there; the existing splits and noise floors are for non-thinking or short-output settings.
+
+Closest papers:
+- On the Fundamental Limits of Prefill-Based Decoding Length Prediction (Shi, Yan, Chen, Li) (arXiv preprint, 29 Oct 2026 (no venue listed); not in the card; https://arxiv.org/abs/2610.40541). Answers: The card's central premise for ordinary traffic: is the gap to perfect length prediction predictor error or decoding noise? 300 ShareGPT prompts x 200 decodes each (temperature 0.6), six models including one 'DeepSeek-R1-distilled-thinking'. Models length as Y|x ~ N(mu(x), sigma^2(x)), derives a floor MAE >= sigma*sqrt(2/pi) for any prompt-only predictor, and reports median sigma/mu = 0.145 for Qwen3-32B (no-thinking), floor 129.5 tokens vs best predictor 168.1, and concludes 'system error dominates model error'. R1-distill row: slope 0.116, mean length 676, intercept 147.6. Leaves open: No scheduling experiment at all (no SJF, FCFS or oracle latency). No hard problems: ShareGPT only, the one thinking model averages 676 tokens, not 10K+. No between-prompt vs within-prompt variance split and no ranking ceiling (Spearman/Kendall), which is what SJF depends on. Numerical nondeterminism named as an uncontrolled limitation, not measured.
+- TailSieve: Partial-Rollout-Guided Tail Routing for LLM Rollouts (Xu et al., Alibaba Qwen) (arXiv preprint, Aug 2026 (v3 6 Nov 2026); not in the card; https://arxiv.org/abs/2608.22788). Answers: Gives the between/within variance split the card proposes as its first number, in an RL-rollout setting. Appendix B.2 (64 prompts, 8 samples per prompt and checkpoint): prompt identity 64.8% of length variance vs 26.1% sampling for Qwen3.5-2B; 77.8% vs 20.3% for Qwen3.5-4B. Adjacent-checkpoint AUC of prompt-level tail ranking 0.957-0.985. Its length-aware baselines route on historical per-prompt group-average lengths, i.e. a prompt-level-mean 'oracle'. Leaves open: Thinking mode is listed as disabled (temperature 0.7, 16K cap); models are 2B/4B; prompts are RL training sets (DeepScaleR, KodCode). The objective is synchronous-batch makespan, not serving latency; there is no comparison of prompt-mean scheduling against a realized-length oracle or FCFS.
+- Scheduling LLM Inference with Uncertainty-Aware Output Length Predictions (TIE; Zheng et al.) (ICML 2026 (confirmed on OpenReview and arXiv comment); https://arxiv.org/abs/2604.00499). Answers: Treats length as a per-prompt distribution and schedules on it. 1K LMSYS prompts x 100 generations on Llama-3-8B: average per-prompt CV 1.09, 78.6% of prompts with CV > 1, P90/P50 4.62, P99/P50 10.77. This is a third same-prompt measurement and it conflicts with the roughly 0.15 figures in ProD and 2610.40541. Serving results include DeepSeek-R1-Distill-Qwen-32B (per-token latency FCFS 2.71 vs TIE 1.46 on LMSYS). Leaves open: No oracle of either kind (realized length or true per-prompt distribution), so no ceiling. Same-prompt spread measured only on a non-reasoning 8B model on chat prompts; none measured for the reasoning model. No between/within split.
+- Beyond Prediction: Tail-Aware Scheduling for LLM Inference (UniBoost; Li et al., Cornell/Microsoft) (ICML 2026 (OpenReview lists it as ICML 2026 regular); https://arxiv.org/abs/2606.18431). Answers: States the 'if_no' position: same-prompt variance 'makes predicting model output length fundamentally difficult, even when using the precise same prompt', and prediction-free scheduling beats SRPT with perfect length knowledge on P99 (about 35%). Repeated-sampling data includes a reasoning model on reasoning prompts: DeepSeek-R1-Distill-Llama on S1K, per-prompt CV in [0.00, 0.12]; WildChat [0.22, 0.47]. Leaves open: The same-prompt study is 3 prompts per dataset x 20 runs. Oracle baselines use perfect (realized) length only; no per-prompt-mean scheduler; FCFS not reported numerically. Its own S1K numbers show the lowest spread, which does not support the text's claim for reasoning.
+- Robust Length Prediction: A Perspective from Heavy-Tailed Prompt-Conditioned Distributions (ProD) (arXiv preprint, Apr 2026; https://arxiv.org/abs/2604.07931). Answers: As the card says: 16 samples per prompt at temperature 0.8, Qwen-2.5-7B and Llama-3-8B, median noise ratio 11.5-18.2%, max/median up to 4.03x; uses per-prompt median as the target and a 'noise radius' as an informal floor. Leaves open: No reasoning models, no scheduling experiment (stated as future work), no between/within split. Card's description is accurate.
+- Ranking Before Serving / Prompt-Aware Scheduling (PARS) (arXiv 2510.03243; Semantic Scholar lists ISC High Performance 2025; https://arxiv.org/abs/2510.03243). Answers: Same-prompt spread for Llama 3.1 and 'DeepSeek R1', and scheduling vs Oracle SJF and FCFS including a reasoning model. In the v2 text I read: 30 Alpaca prompts, 10 runs, measure defined as max/min - 1, within 20% for Llama 3.1 and 25% for DeepSeek R1. Leaves open: Easy Alpaca prompts only; oracle uses 'ground-truth response lengths from prior runs'; no attribution of the oracle gap to noise vs predictor. The card says 200 prompts; v2 says 30 (possibly changed in v3).
+- Don't Overthink it. Preferring Shorter Thinking Chains for Improved LLM Reasoning (Hassid et al., Meta FAIR) (arXiv 2505.17813 (v2 Feb 2026), venue not shown; https://arxiv.org/abs/2505.17813). Answers: Contradicts the card's 'nobody has sampled thinking models repeatedly on hard problems'. 20 samples per question at temperature 0.7, 32K cap, on AIME 2024/2025, HMMT and GPQA-Diamond for R1-Distill-Qwen-32B, QwQ-32B, LN-Super-49B, R1-670B. Table 1 thinking tokens (math average), shortest / random / longest of 20: R1-32B 5,791 / 11,218 / 19,233; QwQ-32B 10,109 / 14,685 / 21,867. Across questions, harder ones use 'up to a factor of 2.9' more tokens. Leaves open: Not a serving paper: no variance split, no per-prompt CV, no scheduling. Capped generations excluded. But the within-question max/min (about 2-3x) is comparable to the across-question factor on these hard sets, which is the raw fact Q12 wants.
+- Understanding and Mitigating Numerical Sources of Nondeterminism in LLM Inference (arXiv 2506.09501 (v2 Oct 2025), venue not shown; https://arxiv.org/abs/2506.09501). Answers: The numerical-noise arm, and more fully than the card says. It reports the dataset mean of per-example length std across 12 runtime configurations under greedy decoding: DeepSeek-R1-Distill-Qwen-7B AIME'24 9,189 (BF16) / 5,990 (FP16) / 0 (FP32) tokens; MATH500 2,774 / 2,090 / 139; LiveCodeBench-Easy 5,508 / 4,283 / 263. Leaves open: No length variance under sampling (temperature > 0), so numerical and sampling noise are never compared; no link to scheduling or prediction.
+- On Reasoning Strength Planning in Large Reasoning Models (Sheng et al.) (NeurIPS 2025; https://arxiv.org/abs/2506.08390). Answers: Prompt-predictability of reasoning length directly: a linear probe on question activations before any thinking predicts the reasoning-token count with correlation about 0.84 (above 0.8 across R1-Distill-Qwen 1.5B-32B and QwQ-32B) on MATH. Leaves open: No repeated-sampling variance, no statement of how the target length was sampled, no serving use. Correlation 0.84 implies roughly 70% of variance, in line with TailSieve, but that inference is mine.
+- Checked and not relevant to the gap: EGTP/PLP (ICLR 2026, arXiv 2602.11812); Predictive Scheduling for Inference-Time Reasoning (arXiv 2602.01237); SageSched (arXiv 2603.07917); LEAP (arXiv 2610.41359); Geometry-Aware Scheduling (arXiv 2606.22327); Jumping the Line (arXiv 2610.03430); ThoughtTerminator (arXiv 2504.13367); Token Budget Saturation (arXiv 2607.21433) (2025-2026, mixed; https://arxiv.org/abs/2602.11812). Answers: The two items the card left unchecked do not answer it. EGTP: 'Reasoning' subset is IFEval, RL subset has K=4 samples but no variance statistic; SJF experiment has no oracle or FCFS. 2602.01237: predicts early-stopping correctness on GSM8K for token-budget allocation; no latency scheduling. SageSched shows 10 ShareGPT prompts x 100 runs and uses Gittins on predicted distributions, no true-distribution oracle. ThoughtTerminator reports mean per-question max-min spend (QwQ-32B 13,662 tokens). 2607.21433 uses one greedy sample per problem and leaves 'decoding artifact vs intrinsic' to future work. Leaves open: None computes a prompt-level scheduling ceiling or a variance split on long-thinking outputs.
+
+Searches run: WebSearch (about 14 queries, extended and standard) on: reasoning/thinking length variability under repeated sampling, aleatoric/irreducible length uncertainty and SJF, oracle definitions (realized vs expected length), reasoning-length prediction before generation, per-question thinking-token variance, reasoning-serving workload characterization, plus direct lookups of EGTP and arXiv 2602.01237. arXiv API: 20 abstract/full-text queries (output length + prediction/serving/stochastic/uncertainty, decoding length, thinking length, reasoning length, reasoning tokens, shortest job first) sorted by date through Nov 2026. Semantic Scholar cited-by lists read for LTR 2408.15792 (139), TIE 2604.00499 (15), EGTP 2602.11812 (14), ProD 2604.07931 (6), PARS 2510.03243 (1), numerical nondeterminism 2506.09501 (99), UniBoost and 2610.40541 (0 each). OpenReview API search (one query; confirmed TIE and UniBoost as ICML 2026). Opened and read the relevant sections (arXiv HTML) of 2610.40541, 2608.22788, 2604.00499, 2606.18431, 2604.07931, 2510.03243v2, 2602.11812, 2602.01237, 2603.07917, 2610.41359, 2606.22327, 2610.03430, 2608.15592, 2506.09501, 2505.17813, 2504.13367, 2506.08390, 2607.21433. Limits: the session web-search budget ran out before the last query (Mitzenmacher and Shahout's open-problems paper, arXiv 2503.07545, not opened); Semantic Scholar rate-limited the cited-by list for 2505.17813; conference programmes (OSDI, SOSP, NSDI, EuroSys, ASPLOS, ATC, MLSys, ACL, EMNLP) were covered only through these searches and citation lists, not page by page; Google Scholar not used.
+
+### Premise: weakened
+
+All five quoted items exist in their sources, but two are read in a way the sources do not support, and the card misses four 2026 papers that occupy most of its framing. The premise is weakened, not dead.
+
+Main problems:
+- **The oracle is misdescribed.** Learning-to-Rank's "Oracle" (the 0.46 s/token the card quotes) uses one seed's lengths to schedule another seed's run, explicitly because of sampling noise. It is already an attainable prompt-level bound, and its cross-seed tau (0.74 ShareGPT, 0.84 LMSYS) is already a measurement of what the prompt fixes. PARS's oracle also uses lengths "from prior runs". The card's "oracle baselines overstate what any predictor can reach" does not apply to its own two anchor papers.
+- **The large-noise source is not an extreme case.** The 9,000-token figure is the dataset-mean per-prompt std in Table 4 of arXiv 2506.09501 (9,190 tokens on AIME'24, 2,774 on MATH500, 5,508 on LiveCodeBench-Easy for R1-Distill-Qwen-7B, 32K cap, greedy decoding). That already covers three of the four prompt sets in the proposed first experiment.
+- **The "shared assumption" is no longer shared.** TIE (arXiv 2604.00499, ICML 2026; 1K prompts x 100 samples, within-prompt CV 1.09), SageSched (arXiv 2603.07917), EGTP (arXiv 2602.11812, ICLR 2026) and the tail-aware scheduler (arXiv 2606.18431; 20 samples per prompt on R1-distill over a reasoning set, 3 prompts per cell) all treat length as a distribution and already schedule on distributions or in-generation signals. None is on the card. EGTP was readable on arXiv.
+- **The "20% versus 9,000 tokens" conflict is apples to oranges** (range ratio, MAD/median, CV and absolute std, on different prompt regimes).
+
+What survives:
+- No paper found reports a between-prompt versus within-prompt variance split, or per-prompt-median SJF against both FCFS and a realized-length oracle, for thinking models at scale.
+- There is an unreconciled disagreement on plain chat models: ProD's 15-18% noise ratio versus TIE's CV of 1.09, both Llama-3-8B on LMSYS.
+
+The direction of the answer is fairly predictable (high prompt share on a mixed pool, low on a hard-only pool), so the result risks reading as "it depends on the workload mix". The DeepServe quote, which the card left unverified, is confirmed in Sec. 5.3.3.
+
+Nothing was run on GPUs, posted or modified; paper text was downloaded only to the session scratchpad.
+
+**Is the tension real?** Partly, and not in the form the card states.
+
+What dissolves on reading:
+- The "small noise versus large noise" numbers use four different metrics: PARS is (max/min - 1) over 10 runs; ProD is mean absolute deviation over median; the nondeterminism paper is absolute per-example std in tokens across hardware configs under greedy decoding; TIE is CV and P90/P50. They also differ in regime (Alpaca and GSM8K outputs of a few hundred tokens versus AIME with a 32K cap). None of these can be set against each other directly.
+- The "shared assumption that the gap to the oracle is predictor error" is not shared any more. Learning-to-Rank already defines its oracle as one seed predicting another because of sampling noise, so the oracle the card quotes (0.46 s/token) is an attainable prompt-level bound, not a realized-length one. PARS's oracle uses lengths "from prior runs". DeepServe blames temperature and top-p. TIE (ICML 2026), SageSched, EGTP (ICLR 2026) and the tail-aware paper all start from "length is a distribution" and have already moved to distributional or in-generation scheduling, which is the card's "if_no" branch.
+- The claim that the large-noise source gives only an extreme case is wrong: its Table 4 gives a dataset-mean per-prompt std (about 9.2K tokens on AIME'24, 2.8K on MATH500 for R1-Distill-Qwen-7B).
+
+What remains real:
+- The published same-prompt spreads do disagree, even on the same model and dataset: ProD reports a 15-18% median noise ratio for Llama-3-8B on LMSYS chat, TIE reports a mean CV of 1.09 and P90/P50 of 4.62 for Llama-3-8B on LMSYS. Nobody has reconciled these. This conflict is on ordinary chat models, not specific to reasoning.
+- No paper found reports the share of length variance that is between prompts, or the latency of a per-prompt-median SJF against both FCFS and a realized-length oracle, for thinking models at scale. Learning-to-Rank comes closest (cross-seed oracle with tau 0.74-0.84) but only for a non-reasoning model on chat data and without a realized-length comparison.
+
+So the open piece is a measurement gap (a variance decomposition and one extra baseline), not a conflict between papers about reasoning models.
+
+**Obvious answer?** Direction is largely predictable; the magnitude is not.
+
+Prediction an expert would make: the answer is set by how heterogeneous the prompt pool is. On the card's mixed pool (LMSYS chat plus MATH-500, AIME and LiveCodeBench), lengths differ by two to three orders of magnitude between prompt sources, so most log-length variance is between prompts, the intraclass correlation is high, and per-prompt-median SJF recovers most of the oracle's gain over FCFS. Within a hard-only pool (AIME alone), within-prompt noise dominates and prompt-level SJF recovers much less.
+
+Basis: (1) Learning-to-Rank's cross-seed oracle already reaches tau 0.74-0.84 at temperature 1.0 and large latency gains on chat data (Alpaca, Llama-8B: FCFS 1.36, cross-seed oracle 0.24 s/token), so one prior sample of the same prompt is a strong scheduler input; (2) the nondeterminism paper's Table 4 shows a mean per-prompt std of about 9K tokens on AIME'24 under a 32K cap for R1-distill models, i.e. spread comparable to the mean on hard prompts; (3) TIE's 1K x 100 study shows within-prompt CV near 1 even on chat; (4) SJF degrades gracefully with noisy size estimates.
+
+What is not predictable: the actual fraction of oracle gain captured for well-behaved thinking models (Qwen3-8B, Qwen3.5-9B) on a hard-only pool, and whether the cap-hitting loops of small distilled R1 models are what drive the large spread. A reviewer could also say the headline number is chosen by the experimenter through the workload mix.
+
+Evidence checks:
+- [confirmed_with_caveat] Learning-to-Rank (NeurIPS 2024) treats exact length as unpredictable and compares against a realized-length oracle; Table 3 Llama-3-70B ShareGPT: Oracle 0.46 s/token vs ranking 0.78 (tau 0.54). (https://arxiv.org/html/2408.15792): Quote and numbers are present (abstract: "although predicting the exact generation length of each request is infeasible"; Table 3: Optimal Prediction tau 0.74 / 0.46 s/tok, Ranking tau 0.54 / 0.78 s/tok, 2k-request burst). But the oracle is NOT a realized-length oracle. Table 3 caption: "Optimal Prediction is using the generation length of one random seed to predict the length of another seed." Appendix E: "Due to noise and randomness in the sampling process, we define the Oracle as utilizing sampling results from one seed to guide the scheduling of another sampling, which represents the best performance achievable given one sampling result." So this paper's oracle is already a noise-limited, attainable prompt-level bound, and its cross-seed tau (0.74 ShareGPT, 0.84 LMSYS, temperature 1.0) is already a measurement of how much rank order the prompt fixes. The 0.46-vs-0.78 gap the card cites is therefore predictor error by construction, which is the opposite of what the card uses it for.
+- [confirmed_with_caveat] PARS: same-prompt length spread is about 20% on short instruction prompts, including for DeepSeek-R1; burst latency PARS vs Oracle SJF on LMSYS 206.88 vs 153.24 ms/token. (https://arxiv.org/html/2510.03243): Quote present in Sec. III-B (200 Alpaca prompts, 10 runs, temperature 0.7, top-p 0.9, "around 20% for both models"). Numbers 206.88 / 153.24 are the (LMSYS-Chat-1M, DeepSeek-R1) row of the burst table; FCFS is 520.99. Caveats: (1) the metric is not a variance, it is (max_length / min_length - 1) x 100% over the 10 runs, stated in prose with "typically" and no table or figure; (2) "DeepSeek-R1" is the distilled 7B Qwen variant; (3) the Oracle SJF uses "ground-truth response lengths from prior runs", so it is also not clearly a realized-length oracle; (4) a 20% max/min range is far below what other papers report for the same kind of model and prompt (see the TIE and tail-aware items below), so this number is an outlier, not a settled 'small noise' result.
+- [confirmed_with_caveat] ProD: fixed-prompt length is a distribution; median noise ratio 11.5% (Qwen/Math) to 18.2% (Llama/LongSequence); max-to-median up to 4.03x; non-reasoning 7-8B models; no scheduling experiment; serving integration is future work. (https://arxiv.org/html/2604.07931): All quotes and numbers present. Models are Qwen-2.5-7B-Instruct and Llama-3-8B, 16 samples per prompt at temperature 0.8, on GSM8K, MBPP, LongBench and LMSYS; no thinking models; no SJF or latency experiment; conclusion says they will "integrate the resulting predictions into serving scenarios". Caveats: the noise ratio is mean absolute deviation from the per-prompt median divided by the median, a robust metric that hides tails; the 4.03x max/median is from a handful of hand-picked 'representative' prompts under 100 repeats, not an aggregate; absolute noise radii are only 16-43 tokens, i.e. outputs are short.
+- [confirmed_with_caveat] Nondeterminism paper: for a reasoning model, response length changes by thousands of tokens under greedy decoding from hardware and batch size alone ("up to 9% variation in accuracy and 9,000 tokens difference in response length", DeepSeek-R1-Distill-Qwen-7B, bfloat16). (https://arxiv.org/html/2506.09501): Abstract sentence is verbatim. But the card's why_unknown says this paper "reports only an extreme case, not a distribution", and that is wrong. The 9,000 figure comes from Table 4, Avg_Std@Output_Length: the per-example standard deviation of output length across 12 runtime configurations, averaged over the whole dataset. Values at BF16: DeepSeek-R1-Distill-Qwen-7B 9189.53 (AIME'24), 2774.28 (MATH500), 5507.52 (LiveCodeBench-Easy); DeepSeek-R1-Distill-Llama-8B 9348.59 / 4015.00 / 4732.85; non-reasoning Qwen2.5-7B 211 / 53 / 8. Cap is 32,768 tokens for reasoning models. So the paper already gives a dataset-level same-prompt spread for two reasoning models on AIME, MATH500 and LiveCodeBench (three of the four prompt sets in the card's first experiment), and it is very large: a mean per-prompt std of about 9K tokens against a 32K cap. Limits: greedy decoding with numerical perturbation, not temperature sampling; small distilled R1 models that loop to the cap; no between-prompt share reported.
+- [confirmed_with_caveat] DeepServe (USENIX ATC 2025): "Accurately predicting decode lengths with minimal overhead remains a challenging research problem." (card marks this unverified) (https://arxiv.org/html/2501.14417): Sentence is verbatim, first line of Sec. 5.3.3 'Discussion of the Predict Model'. Not in the abstract. Context: they bucket lengths with a classifier of 84.9% accuracy and add that "inference parameters such as temperature and top-p introduce substantial variability in outputs, making accurate prediction difficult". So this source already attributes part of the difficulty to sampling noise, which cuts against the card's 'shared assumption' that the gap is seen as pure predictor error. The arXiv page does not state the venue; I did not check the ATC listing.
+- [not_found_in_source] Card's gap statement: nobody has sampled thinking models repeatedly on hard problems; closest work is ProD and PARS only; EGTP and arXiv 2602.01237 unchecked. (https://arxiv.org/html/2606.18431): The gap statement is partly contradicted by work the card does not cite. (a) 'Beyond Prediction: Tail-Aware Scheduling for LLM Inference' (arXiv 2606.18431) ran each prompt 20 times at temperature 0.6 on Qwen 7B and DeepSeek-R1-Distill-Llama over WildChat, BigCodeBench and the S1K reasoning set: CV 0.10-0.35 / 0.22-0.47 on chat, up to 0.46 on code, and 0.00-0.19 / 0.00-0.12 on S1K because many runs loop to the limit or refuse. Only 3 prompts per cell, but it is exactly 'thinking model, hard prompts, repeated sampling', it cites the nondeterminism paper, and it concludes length prediction is "fundamentally difficult" and builds a prediction-free scheduler. (b) 'Scheduling LLM Inference with Uncertainty-Aware Output Length Predictions' (TIE, arXiv 2604.00499, listed at ICML 2026) sampled 1K LMSYS prompts x 100 generations on Llama-3-8B: mean within-prompt CV 1.09, mean P90/P50 4.62, P99/P50 10.77; it schedules on a fitted per-prompt distribution and evaluates DeepSeek-R1-Distill-Qwen-32B, with no oracle baseline. (c) SageSched (arXiv 2603.07917, listed at NeurIPS 2026) predicts a length distribution and schedules by Gittins index. (d) EGTP (arXiv 2602.11812, ICLR 2026; readable on arXiv, no need for OpenReview) states prompt-only predictors are unreliable under one-to-many sampling and adds progressive in-generation prediction, with a reasoning split on DeepSeek-R1-Distill. (e) arXiv 2602.01237 is about token-budget allocation on GSM8K for accuracy, not serving scheduling; it does not cover the question. What I did not find in any of these: a between-prompt versus within-prompt variance split, or a per-prompt-median SJF ceiling compared with a realized-length oracle. That narrow piece still looks open.
+
+### Feasibility: yes
+
+Q12 is answerable on this node in about 4 GPU-days, but the student's own traces already suggest the unsurprising answer for dense models, so it may well die in week one.
+
+- **What the existing data say.** A CPU-only pilot on six 8-sample sets (4B models, math prompts) puts 84-91% of log-length variance between prompts for Qwen3-4B. Leave-one-out per-prompt-median SJF captures 82-95% of the realized-oracle gain. That agrees with ProD and PARS.
+- **What stays open.** Qwen3.5-4B is unresolved: 44-53% of its samples hit the cap, and the uncapped (selection-biased) subset gives ICC 0.33-0.52 with 54-66% captured. Chat prompts are also open, because ProD reports about 18% spread and TIE an average CV of 1.09 on LMSYS chat with Llama-3-8B.
+- **Prior art.** The card's two unchecked papers (EGTP, arXiv 2602.01237) do not answer the question. Two it missed are closer: TIE (arXiv 2604.00499) and UniBoost (arXiv 2606.18431, ICML 2026). Both measure same-prompt variability and already argue past point prediction. Neither decomposes variance, computes an attainable ceiling, or samples long-thinking models at scale.
+- **Feasibility.** Models and datasets are public and mostly cached (Apache-2.0 / MIT; LMSYS is gated with no redistribution). vLLM 0.32 has n-sampling, the priority policy and the reasoning parsers. The student's rollout_trace.py and rollout_replay.py cover most of the harness; a small replay simulator and a Gittins index need writing.
+- **Changes to the card's plan.** Use R1-Distill-Qwen-7B instead of the 14B in week one. Add a greedy cross-GPU arm, since sampling at T 0.6 cannot isolate numerical noise. Add SEPT and Gittins baselines, since median SJF is not the theoretical attainable optimum. Re-run Qwen3.5-9B at a 64K cap to lift the censoring.
+- **Main risks.** Censoring at the cap; ICC depending on the prompt mix (a chat-plus-olympiad mix is trivially predictable, and AIME alone has only a 12% oracle gain to capture); and a thin contribution if the answer is "mostly prompt-fixed".
+
+**Existing data.** The student already holds six same-prompt multi-sample length sets (8 samples per prompt, 4B models only), enough for a CPU-only pilot. I ran that pilot read-only; the script is in the scratchpad, not the repo: /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q12_pilot2.py. The numbers are mine and unreviewed.
+
+**Pilot results** (ICC = share of log-length variance between prompts; "captured" = share of the realized-length oracle's SJF gain over FCFS that leave-one-out per-prompt-median SJF gets, burst with 8 slots; Poisson at 0.7 and 0.9 utilisation gives similar shares):
+
+| Set | Source | Prompts | Capped | ICC (95% CI) | Captured | Max/median (median; worst) |
+|---|---|---|---|---|---|---|
+| A: Qwen3-4B, MATH L3-5, T=1.0, 16K cap | r1_trace_qwen3_4b | 64 | 5% | 0.90 (0.86-0.93) | 95% | 1.28; 2.37 |
+| B: Qwen3.5-4B, same prompts | r1_trace_qwen35_4b | 64 | 46% | 0.79 | 93% | 1.12; 6.75 |
+| C: Qwen3-4B, AIME, T=0.6, 16K cap | e3_shards/full | 30 | 41% | 0.86 | 82% | 1.15; 1.55 |
+| D: Qwen3.5-4B, AIME, T=1.0, 32K cap | h3_shards/qwen35_4b/full | 30 | 44% | 0.89 | 96% | 1.07; 1.83 |
+| E: Qwen3-4B, MATH L1-5, 8K cap | r2b_rollouts_qwen3_4b | 128 | 17% | 0.91 | 95% | 1.23; 2.54 |
+| F: Qwen3.5-4B, MATH L1-5, 8K cap | r2_rollouts_qwen35_4b | 128 | 53% | 0.67 | 84% | 1.01; 5.22 |
+
+- **Dense Qwen3-4B:** length looks mostly fixed by the prompt. Within-prompt sd of log length is about 0.2 and median per-prompt CV 0.11-0.18, in line with ProD's 11-18%.
+- **Hybrid Qwen3.5-4B:** not settled. On prompts where no sample hit the cap, ICC falls to 0.33 (B, 24 prompts) and 0.52 (F, 26 prompts), with 54% and 66% captured. That subset is selection-biased, so the true value is unknown.
+- **Stakes in a homogeneous hard set are small:** on AIME alone the realized oracle beats FCFS by only 12% in the burst simulation (9-17% under Poisson load).
+- **Wrong answers run long:** mean length for wrong vs correct is 14.5K vs 10.1K (C) and 30.3K vs 20.0K (D).
+- **Same nominal seeds do not reproduce lengths:** Qwen3-4B full attention on AIME was run twice with the same seeds, on an A6000 (E3) and a 6000 Ada (results/hybrid/h3_shards/qwen3_4b/full). Lengths are identical in only 27% of 240 pairs (I did not check whether those are all cap-cap pairs), with a median |log ratio| of 0.19 where at least one is uncapped. The code commit also differs, so this is not a clean numerical-noise measurement.
+
+**Files** (all under /home/ryankert_l/kv-fetch/kv-fetch/):
+- results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json and r1_trace_qwen35_4b/trace_qwen35_4b.json
+- results/reasoning/e3_shards/full/
+- results/hybrid/h3_shards/qwen35_4b/full/ and qwen3_4b/full/
+- results/profile/runs/r2b_rollouts_qwen3_4b/rollouts_qwen3_4b.json and r2_rollouts_qwen35_4b/rollouts_qwen35_4b.json
+
+**Harness that carries over:**
+- scripts/rl/rollout_trace.py already samples n per prompt with vLLM offline and records lengths (config configs/rl_rollout.yaml).
+- scripts/rl/rollout_replay.py replays forced lengths in a real engine with the scheduler recorder.
+- scripts/rl/rollout_bound.py has the step-time fit.
+- scripts/e3_repetition.py is a loop detector for capped outputs.
+- results/profile/NOTEBOOK.md (13:13 entry) has measured throughput: Qwen3-8B 544 tok/s and Qwen3.5-9B 1,262 tok/s at concurrency 64 on one card, with KV pools of 171K and 674K tokens.
+
+**Already cached in /share2/huggingface/hub:** Qwen3-8B, Qwen3-14B, Qwen3.5-9B, DeepSeek-R1-Distill-Llama-8B, Llama-3.1-8B-Instruct, MATH-500, AIME 2024/2025, livecodebench code_generation_lite, lmsys-chat-1m.
+
+**First-week experiment.** **Day 0 (CPU, done in pilot form):** the variance decomposition and replay on the existing 4B traces, as above.
+
+**Models** (bf16, one 48 GB card each, vLLM 0.32 offline, `SamplingParams(n=16)`, model-card sampling):
+- Qwen/Qwen3-8B, thinking on, T 0.6 / top-p 0.95 / top-k 20, 32K output cap. Its position limit is 40,960, so the cap cannot go higher.
+- Qwen/Qwen3.5-9B, thinking on by default, T 1.0 / top-p 0.95 / top-k 20 / presence penalty 1.5, 32K cap. Re-run every prompt that had a capped sample at 64K (262K native context); this is the only model where censoring can be lifted.
+- deepseek-ai/DeepSeek-R1-Distill-Qwen-7B (MIT, T 0.6, 32K cap) in place of the card's 14B. The 7B is the model the conflicting evidence (arXiv 2506.09501, PARS) is about. The 14B in bf16 leaves about 13 GB of KV on one card (my estimate: roughly 66K tokens, 2 requests at the cap), so it is several times slower; move it to week 2 or run it at TP=2.
+- Control: meta-llama/Llama-3.1-8B-Instruct on the LMSYS prompts only, 32 samples, T 0.8, to see which published number reproduces: ProD's 18% or TIE's average CV of 1.09, both on LMSYS chat with Llama-3-8B.
+
+**Prompts** (about 660):
+- MATH-500, 200 stratified by level.
+- AIME 2024 + 2025, all 60.
+- LiveCodeBench code_generation_lite, 100, prompts only (no execution needed for lengths).
+- LMSYS-Chat-1M, 300 first-turn English prompts.
+
+**Record per sample:** thinking tokens, answer tokens, finish reason, and a loop flag from e3_repetition.py.
+
+**Numerical-noise arm** (the card's design cannot separate this): greedy decoding on the same prompts with one model, on A6000 vs 6000 Ada and at concurrency 4 vs 64. Also seeded sampling with the same seed under different co-batched load.
+
+**Numbers measured:**
+1. ICC of log length with bootstrap CI, per stratum and pooled, plus a censored (Tobit) estimate; per-prompt CV, max/median, P90/P50, and probability of hitting the cap.
+2. Offline replay with the measured batch-dependent step time, under burst and Poisson load at 0.7 and 0.9 utilisation, reporting mean latency, per-token latency and P99, for:
+   - FCFS;
+   - SJF on the realized length (the literature's oracle);
+   - SJF on the true per-prompt median and on the mean (SEPT), both leave-one-out;
+   - a preemptive Gittins-style index from the true per-prompt distribution;
+   - SRPT on realized length.
+3. Validation of two operating points in real vLLM with `--scheduling-policy priority` and forced lengths (rollout_replay.py).
+
+**Comparison:** the share of the realized-oracle gain over FCFS that the true-median and SEPT policies capture, per model and stratum, and how much the Gittins index adds.
+
+**Engine check:** vLLM 0.32.0 has the priority policy (vllm/v1/core/sched/request_queue.py) and the qwen3 and deepseek_r1 reasoning parsers. To write: a multi-dataset loader for rollout_trace.py, a discrete-event replay simulator of about 200 lines, and the Gittins index from empirical samples.
+
+**Result that kills it.** Stop if both hold on Qwen3-8B, Qwen3.5-9B and R1-Distill-7B with under 10% of samples capped (or after the Tobit correction):
+- within-stratum ICC is at least about 0.85, and
+- true-median SJF captures at least 90% of the realized-oracle gain in every stratum, pooled mix included.
+
+That would confirm ProD and PARS for reasoning models: the gap to the oracle is predictor error, as the field already assumes, and the result is a paragraph. The Qwen3-4B pilot already sits here (ICC 0.84-0.91, 82-95% captured), so this is the likelier outcome for dense models.
+
+Also stop if the only strata with low ICC are homogeneous hard sets where the realized oracle itself beats FCFS by under about 15% (AIME alone: 12% in the pilot), while any realistic mix has ICC above 0.9 because chat and olympiad prompts separate trivially. Then no regime exists where the answer changes a scheduler.
+
+A third stop: if the within-prompt tail turns out to be only cap-hitting loops (finish vs runaway), the topic collapses into loop detection, which is a different and smaller question.
+
+**Result that makes it a paper.** All of the following together:
+- **A noisy regime that replicates.** On at least two model families, with long thinking and under 10% capped, true-median/SEPT scheduling captures no more than about 60% of the realized-oracle gain (ICC about 0.5 or less within reasoning traffic). The Qwen3.5-4B hint (ICC 0.33-0.52 on uncapped prompts, max/median up to 6.75) would have to survive on the 9B at a 64K cap.
+- **Predictors already at the ceiling.** A simple trained prompt-level ranker (LTR-style) on the same data lands near the true-median ceiling, so the remaining gap is not predictor error.
+- **Something recovers the gap.** A policy using the per-prompt distribution or in-generation information (Gittins-style index, loop flag, remaining-length update) recovers a large part of it in real vLLM with preemption cost included.
+- **The published numbers are reconciled.** The same harness explains why the literature's same-prompt spread figures disagree by an order of magnitude: PARS's max/min − 1 of about 20%, ProD's 11.5-18.2%, UniBoost's CV of 0.00-0.47 on 3 prompts per dataset, and TIE's average CV of 1.09. The candidate causes are the statistic, the cap, the temperature and the prompt set.
+
+The contribution would then be a corrected, attainable upper bound for length-aware scheduling papers plus a variance decomposition for reasoning traffic. Even so, it is a measurement paper in a crowded area: TIE (arXiv 2604.00499, code public) and UniBoost (arXiv 2606.18431, ICML 2026) already argue that point prediction is fragile. Workshop or short-paper level unless the mechanism part lands.
+
+**GPU-days.** About 4 GPU-days (range 3.5-6), which is 1.5-2 days of wall time on 3-4 cards.
+
+- Qwen3-8B: about 47M output tokens at about 540 tok/s, roughly 1.0 GPU-day.
+- Qwen3.5-9B: about 2x the tokens at about 1,260 tok/s, roughly 0.9, plus 0.3 for the 64K re-runs.
+- R1-Distill-7B: roughly 0.8.
+- Llama-3.1-8B control: under 0.1.
+- Greedy numerical arm: roughly 0.5.
+- Real-engine validation replays: roughly 0.3.
+
+Token volumes are my estimates from the 4B traces; throughputs are the student's measured figures. The card's "a GPU-day each for about 1,200 prompts" is optimistic by about 2x for the 8-9B models (nearer 2 GPU-days per model for the full set) and by more for the 14B.
+
+**Blockers.** No hard blockers. Models and data are public and mostly cached; no Docker, sandbox or agent harness is needed; the engine features exist. The real threats are these:
+
+- **Censoring.** In the existing 4B data, 36-53% of samples on hard sets hit the cap, and capped samples are exactly the tail in question. Qwen3-8B cannot exceed 40,960 positions, so only Qwen3.5-9B can run uncensored. This needs a Tobit-style estimate and reporting on the capped workload as served.
+- **The headline number depends on the prompt mix.** ICC is a property of the prompt population as much as of the model: adding chat prompts to AIME pushes it toward 1. Results must be reported per stratum, and reviewers will ask which mix is realistic. No public trace gives the reasoning-traffic mix.
+- **Prior art is closer than the card says.** The card's two unchecked items do not cover the question:
+  - EGTP/ForeLen (arXiv 2602.11812, ICLR 2026) asserts that static predictors fail under RL sampling but gives no variance numbers and no oracle comparison.
+  - arXiv 2602.01237 is token-budget allocation on GSM8K (workshop).
+  
+  Two papers the card missed are closer. Neither decomposes variance, computes an attainable ceiling, or samples long-thinking models at scale:
+  - TIE (arXiv 2604.00499): 1K LMSYS prompts x 100 samples on Llama-3-8B, average CV 1.09, with a distribution-aware scheduler.
+  - UniBoost (arXiv 2606.18431, ICML 2026): 20 runs at T 0.6 on Qwen and R1-Distill, with a prediction-free scheduler.
+- **The ceiling is close to a function of ICC.** Scheduling theory already says the attainable non-preemptive optimum is SEPT and the preemptive one is the Gittins index, so the scheduling half of the result is thin without the mechanism part.
+- **LMSYS-Chat-1M licence.** It is gated and bars redistribution; release prompt IDs and lengths only, and the student needs their own acceptance. The cached copy is in a shared cache.
+- **DeepSeek-R1-Distill-Qwen-14B** is not cached (about 30 GB download) and is KV-starved in bf16 on one card.
+- **Hardware noise is limited to two GPU types** (A6000 and 6000 Ada), a narrower spread than arXiv 2506.09501 used.
+
+**Follow-on design space.** **If length is mostly fixed by the prompt (ICC high):**
+- Prompt-level predictors and rankers for reasoning traffic are worth building, and the per-prompt-median/SEPT oracle becomes the baseline to report.
+- The systems angle that fits this student is length-aware memory planning in vLLM: KV reservation and admission by predicted length to avoid the preemption thrash they already characterised (watermark work, vime#508).
+- In RL rollouts, the first finished siblings of a GRPO group predict the rest.
+- Caveat from the student's own R1 result: with known lengths, a tuned watermark was already within 6-7% of perfect packing, so the memory-planning headroom may be small.
+
+**If noise dominates:**
+- In-generation signals and preemption. Much of this is occupied: TRAIL (ICLR 2025) and EGTP's PLP refine remaining length during decoding, TIE schedules on the per-prompt distribution, and UniBoost is prediction-free.
+- The open parts that fit this student:
+  - Preemption-cost-aware scheduling in vLLM for long reasoning: recompute after preemption, and the expensive per-request state of hybrids, both of which they have measured.
+  - Loop- or runaway-aware scheduling: wrong and looping samples are the long tail in their data, and scripts/e3_repetition.py already detects loops. The scheduler would demote or cap requests whose thinking has started to repeat.
+  - Reporting the per-prompt probability of runaway rather than a length.
+
+**Either way:** the hybrid-vs-dense difference in the pilot is a thread specific to this student's models. Qwen3.5 thinks about twice as long and shows more within-prompt spread.
+
+## Q22: SpecReason under concurrent load on shared cards (weakened)
+
+### Already answered? partly_answered
+
+Not answered for SpecReason itself, but the card understates how much neighbouring evidence exists, and that evidence already points at the likely outcome.
+
+What the card had right: SpecReason's paper has no load evaluation, and the step-level follow-ups that I read (SpecGuard, Arbitrage, HeteroReason, Scaling Up Speeding Up) all measure at batch size 1, some saying so explicitly as a limitation.
+
+What the card missed, three papers:
+- R-Stitch, Appendix A.8: a small/large switching method that removes large-model compute, swept over batch size in vLLM. Its speedup over LLM-only goes from 2.31x at batch 1 to about parity at batch 8 and below 1x from batch 16 (ratios are my arithmetic from their Table 7). The authors say this behaviour is shared with speculative decoding because alternating model calls create synchronization points. That is one arm of Q22 (does removing base compute make it behave differently from token-level speculative decoding under batch) answered in the negative for the token-level sibling.
+- TokenRouter (preprint, Oct 2026): under request concurrency 4, the official implementations of R2R, CITER and Co-LLM are all slower than LLM-only; it names step desynchronization and batch admission delay as causes and builds a runtime that recovers a gain for some methods. It also shares GPUs between the two models via CUDA MPS. This means the card's follow-on direction (a two-model scheduler) is already taken for token-level routing.
+- ATTS (ICLR 2026): runs SpecReason itself with many samples in flight on SGLang and reports latency rising with sample count and diminishing throughput, but gives no ratio against base-only.
+
+What is still unmeasured: the step-level case specifically. SpecReason switches models once per reasoning step rather than per token, so it has far fewer synchronization points than R-Stitch or R2R, but it adds a verification prefill per step and rework on rejection, which the token-level methods do not have. Which effect dominates under load is not shown anywhere I found, nor is the 48 GB shared-card KV-split condition or vLLM 0.32.
+
+Limits of this check: keyword search stopped after 3 queries when the shared search budget ran out, so the search relied on citation lists of SpecReason and 11 neighbouring papers; a 2026 paper that cites none of them would have been missed. The SpecReason OpenReview rebuttal and one AAAI 2026 step-routing paper could not be opened. R-Stitch's batched numbers sit beside a limitations statement that its implementation supports only batch size 1, and TokenRouter is an unreviewed preprint.
+
+**Remaining gap.** No paper found measures a step-level draft-then-judge method (SpecReason or a successor) against base-only serving across independent request concurrency, with both models sharing 48 GB cards in current vLLM, and none attributes the outcome to KV split, verification prefill interference and rejected-step rework. The existing evidence is for token-level small/large routing on A100s (R-Stitch, TokenRouter) and for SpecReason under parallel samples on SGLang without a base-only ratio (ATTS).
+
+Closest papers:
+- R-Stitch: Dynamic Trajectory Stitching for Efficient Reasoning (arXiv preprint 2507.17307, v6 dated 8 Feb 2026 (venue not confirmed); https://arxiv.org/abs/2507.17307). Answers: Appendix A.8 'Batch Size Analysis' sweeps batch size 1 to 128 in vLLM on MATH (DeepSeek-R1-Distill-Qwen-7B with a 1.5B small model, one A100) for a small/large switching method that, like SpecReason, removes large-model compute instead of adding verification. Table 7 latency in seconds at batch 1/2/4/8/16/32/64/128: LLM-only 38.34/31.58/22.07/16.11/11.08/8.42/6.52/5.97; token-level speculative decoding 36.86/31.61/24.29/22.04/19.20/17.88/15.32/14.01; R-Stitch 16.61/20.48/17.98/14.98/12.02/10.61/7.43/6.55. From those numbers (my arithmetic) R-Stitch's speedup over LLM-only is 2.31x, 1.54x, 1.23x, 1.08x, 0.92x, 0.79x, 0.88x, 0.91x: it shrinks to parity by batch 8 and is a loss from batch 16. The authors attribute it to 'alternating model invocations introduce synchronization points and reduce GPU utilization'. This is direct evidence against the card's hypothesis that removing base-model compute protects the gain under batch, for the token-level sibling. Leaves open: Token-level switching, not step-level draft-then-judge. Offline batch, not request concurrency. A 7B/1.5B pair on one A100, not a 30B-class base sharing 48 GB cards. No attribution to KV split, verification prefill or rework. The paper's limitations section also says its implementation supports only batch size 1, which is inconsistent with the appendix, so how the batched numbers were produced is unclear.
+- TokenRouter (serving system for token-level LLM routing) (arXiv preprint 2610.12242, v1 dated 8 Oct 2026 (Tsinghua/CMU); https://arxiv.org/abs/2610.12242). Answers: Measures small/large token-routing methods under request concurrency (closed-loop workers, concurrency 1 to 16) against LLM-only and names the serving-level failure mechanisms: 'current systems suffer from severe step desynchronization and frequent batch admission delays under token-level routing'. Table 2 at concurrency 4, each method's original model pair (throughput tok/s, end-to-end latency s): R2R LLM-only 145.30/411.98, official code 89.62/751.15, TokenRouter 244.56/270.19; CITER LLM-only 123.72/2.68, official 17.16/7.64, TokenRouter 149.31/0.48; Co-LLM LLM-only 134.79/13.39, official 3.46/247.61, TokenRouter 76.02/11.46; R-Stitch LLM-only 150.41/360.76, official not released, TokenRouter 140.58/151.30. So every official implementation with a number is slower than LLM-only at concurrency 4 on both metrics, and a purpose-built runtime (asynchronous execution, handoff-and-resume, delayed batching, extended CUDA graphs) recovers the gain for some methods; on throughput it stays below LLM-only for Co-LLM and R-Stitch while latency is lower for all four. Both models share two GPUs through CUDA MPS, so it is also a shared-card setup. It also occupies the card's follow-on build direction (two-model scheduling) for the token-level case. Leaves open: No step-level method: 'SpecReason' and 'step-level' do not appear in the text. 8x A100-80G, Qwen3-0.6B with Qwen3-32B, own runtime and SGLang baseline, not vLLM 0.32 on 48 GB cards. Concurrency only up to 16, and the LLM-only comparison is tabulated only at concurrency 4. Token-level routing has no verification prefill or rejected-step rework, so those two cost terms from the card are not measured. Preprint, not peer reviewed.
+- ATTS: Asynchronous Test-Time Scaling via Conformal Prediction (ICLR 2026 (arXiv 2509.15148); https://arxiv.org/abs/2509.15148). Answers: The only paper found that runs SpecReason itself (and Speculative Thinking) with many generations in flight at once: both are baselines under parallel test-time scaling on SGLang 0.4.3. Section 4.4 reports 'the latency of SpecReason and SpecThink consistently increases with the number of samples' and that their throughput shows 'diminishing returns as the token budget becomes large'. It notes both 'focus on acceleration under serial scaling' and that high-concurrency validation of long chains causes memory peaks. Leaves open: The concurrency is samples per problem, not independent requests at saturating load. No SpecReason-versus-base-only ratio per concurrency level, so it does not say whether the gain holds, reaches parity or turns into a loss. SGLang, not vLLM; GPU model not stated in the text I read; no component breakdown.
+- SpecReason: Fast and Accurate Inference-Time Compute via Speculative Reasoning (NeurIPS 2025 (arXiv 2504.07891); https://arxiv.org/abs/2504.07891). Answers: Source of the 1.4-3.0x claim, on 2x A6000 48 GB with vLLM 0.8.2 and a static KV split, one request at a time. Leaves open: The latest arXiv HTML has zero occurrences of 'batch', 'concurren' or 'throughput'; no load evaluation at all. I could not open the OpenReview reviews and rebuttal (browser challenge), so a concurrency experiment added in rebuttal cannot be ruled out.
+- Speculative Decoding: Performance or Illusion? (MLSys 2026 (arXiv 2601.11580); https://arxiv.org/abs/2601.11580). Answers: Token-level speculative decoding in vLLM loses its speedup as batch size grows, with verification cost dominating. This is the result the card contrasts against. Leaves open: Token-level only; no step-level or small/large routing method. None of its Semantic Scholar citers extends the measurement to SpecReason.
+- SPEX (speculative execution for Tree-of-Thought search) (OSDI 2026 (arXiv 2605.10195); https://arxiv.org/abs/2605.10195). Answers: Shows speculation gains shrinking with batch size for tree-search reasoning in a serving engine. Leaves open: Different mechanism (speculating search branches of one model, not small-model drafting of reasoning steps). SpecReason is cited only in related work and is not measured.
+- PARSE (arXiv preprint 2605.04263 (2026); https://arxiv.org/abs/2605.04263). Answers: Compares against SpecReason on throughput (tok/s) on 4x H200 with SGLang: 'accuracy on par with SpecReason on every benchmark, and at substantially higher throughput'. Leaves open: No request-rate or concurrency conditions, no base-only ratio under load, H200 not 48 GB cards.
+- Step-level follow-ups that state they did not test batching: From Tokens to Steps / SpecGuard; Arbitrage; HeteroReason; Scaling Up, Speeding Up (ACL 2026 (arXiv 2604.15244); arXiv 2512.05033; arXiv 2609.28717; ICLR 2026 (arXiv 2509.04474); https://arxiv.org/abs/2604.15244). Answers: Nothing on load; they confirm the gap is acknowledged by the step-level line itself. SpecGuard: 'Our analysis focuses on single-instance inference and does not explicitly address deployment aspects such as large-scale batching'. Arbitrage (A6000, SGLang): 'For speedup measurements, we fix the batch size to 1.' HeteroReason: 'all experiments are conducted using a batch size of 1'. Leaves open: The whole question. Also checked with no load evaluation: Lookahead Reasoning (NeurIPS 2025; its 'concurrency constraints' section is about the speculation budget inside one request), TRIM (ICLR 2026, 2x H100, per-query latency only), SSR, ConfSpec, GlimpRouter, R2R, RelayGen, RelayLLM, SPECS, FoReaL, Speculative Thinking, SparseSpec, FastTTS, PyroDash.
+
+Searches run: Card and harvest notes read first (questions_ranked.json Q22 and the three harvest_*.md files). Web keyword search: only 3 queries completed (SpecReason concurrent load / batch throughput / step-level speculative reasoning serving) before the session-wide search budget ran out; 3 further queries were refused and I did not work around the limit, so there was no keyword search of arXiv, Google Scholar, OpenReview or venue programmes after that. Citation graphs instead: all citers of SpecReason from OpenAlex (54) and Semantic Scholar (72), plus Semantic Scholar citers of Lookahead Reasoning, Liu et al. (MLSys 2026), ATTS, SparseSpec, Reward-Guided Speculative Decoding, Speculative Thinking, R-Stitch, SSR, Arbitrage, GlimpRouter and TRIM; the R2R citer lookup failed (rate limit) and PARSE and SPEX returned no citers. About 34 papers opened as arXiv HTML and read or text-searched for batch, concurrency, throughput, request-rate and SpecReason sections (list in closest_papers plus the 'also checked' names). Not readable: SpecReason OpenReview reviews and rebuttal (browser challenge), Confidence-Guided Stepwise Model Routing (AAAI 2026, arXiv 2511.06190, HTML 404), CriticRouter (CIKM 2026, no arXiv ID found). Coverage is therefore strong for papers that cite SpecReason or its close neighbours and weak for a 2026 paper that cites none of them.
+
+### Premise: weakened
+
+Premise weakened: every quote on the Q22 card checks out against its primary source, and the gap (nobody has measured SpecReason under concurrent load) looks real, but the card's reason for thinking the answer is open is partly wrong.
+
+- **Evidence:** all 11 items are confirmed, with four caveats.
+  - The SPEX catalogue quote is a paraphrase and its URL points at the wrong paper; the right one is arXiv 2605.10195.
+  - "Reasoning benchmarks up to batch 16" is not in the text of Liu et al., which says only "medium batch sizes".
+  - The 1.5x-versus-1.9x narrowing on A100s has a second cause the card omits: a stricter acceptance threshold (23.2% of steps offloaded versus 40.8%).
+  - Venues other than SPEX's OSDI 2026 were not rechecked.
+- **Central mechanism claim:** the card says step-level speculation "removes base-model compute instead of adding verification compute". The paper and the public code (`spec_reason.py`) show otherwise. The base model prefills every drafted step plus a judge prompt, about 70 new tokens per verification, and regenerates rejected steps. The paper says this is cheap because short prefills are memory-bound, which is the same assumption that fails for token-level speculation under batch. The only real compute removal is 1.2-2.0x fewer thinking tokens.
+- **Supporting items that measure something else:** SPEX is same-model branch speculation with no small drafter, and R-KV is KV compression. Neither bears on small-model substitution.
+- **Predictability:** the direction (gain shrinks with concurrency) is predictable from known results. The sign and the crossover point on 48 GB cards are not.
+- **Setup constraint:** by my estimate, QwQ-32B in bf16 on two A6000s leaves about 50K tokens of KV, so the card's concurrency 16 and 64 points would be KV-capacity-bound for the baseline as well. The experiment would measure queueing and prefix-cache eviction unless the model is quantized or spread over more cards.
+- **Not done:** an independent novelty search. The session's web search budget was exhausted, so prior-work coverage rests on the card's neighbours plus four related papers I opened by arXiv ID (Lookahead Reasoning, SSR, SparseSpec, the test-time-scaling SD benchmark); none measures this.
+
+What survives is a narrower question: where the crossover falls on 48 GB cards and which component causes it, not whether step-level speculation behaves differently in kind from token-level.
+
+Downloaded sources are in /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q22 (the SpecReason repo files are in its `gh` subfolder).
+
+**Is the tension real?** Partly. The gap is real: no source I opened measures SpecReason-style speculation (small model drafts steps, base model scores them) under concurrent load. SpecReason's page has no batch, concurrency or throughput content, PARSE reports per-request tokens per second only, and the neighbours I checked by arXiv ID (Lookahead Reasoning 2506.19830, SSR 2505.15340, SparseSpec 2512.01278, the test-time-scaling SD benchmark 2509.04474, which states batch size 1) do not cover it. I could not run an independent novelty search because the session's web search budget was exhausted, so "nobody has done it" rests on the card's own neighbours plus those four.
+
+The tension the card builds on top of the gap mostly dissolves. The card's contrast is that token-level speculation adds base-model compute while step-level speculation removes it. Reading the paper and the public code, SpecReason does not remove base-model compute per step: the base model prefills each drafted step plus a judge prompt (about 70 new tokens by the paper's count) and regenerates rejected steps. The paper says verification is cheap because "short-prefill forward passes are memory-bound", which is exactly the assumption the token-level papers show failing under batch. Structurally SpecReason is draft-model speculative decoding with a step-long draft and semantic acceptance, so the token-level evidence predicts its behaviour instead of standing in tension with it. The one genuine compute removal is that the small model is less verbose: the paper reports 1.2-2.0x fewer thinking tokens.
+
+Two supporting items measure different things. SPEX speculates Tree-of-Thought branches with the same model to fill idle batch capacity (no small drafter), so its shrinkage with batch is the add-compute mechanism again. R-KV is KV compression and only shows that batch size matters.
+
+One setup issue affects what "saturating load" would measure. By my arithmetic (not from any source), QwQ-32B in bf16 is about 61 GiB of weights; at the README's 0.8 memory fraction on two 48 GB cards that leaves roughly 12-15 GiB of KV, about 50K tokens at 256 KiB per token. With an 8,192-token budget that is on the order of 6-15 concurrent sequences. The card's concurrency 16 and 64 points would therefore be KV-capacity-bound for the base-only baseline too, and for SpecReason the base model's prefix cache for in-flight problems would be evicted, turning a 70-token verification into a multi-thousand-token re-prefill.
+
+**Obvious answer?** Direction: yes, an expert would predict it. The relative gain shrinks as concurrency rises, for the same reason as token-level speculative decoding. Basis: (1) per step the base model still processes the drafted step plus a ~50-60-token judge prompt as prefill, plus full regeneration on rejection, so in the compute-bound limit base-model work per step is at or above the baseline's; (2) the paper states that verification is cheap only because short prefills are memory-bound; (3) Liu et al. (vLLM, H100) and EAGLE-3 Table 5 show that this idle-compute assumption fails as batch grows; (4) on 2x A6000 with QwQ-32B in bf16, the KV pool is small enough that prefix-cache eviction between steps is likely at concurrency well below 64.
+
+Sign at the reachable operating point: not confidently predictable. Two effects push the other way: the 1.2-2.0x reduction in thinking tokens persists under load, and a prefill token is still cheaper than a decode token at moderate batch. So whether it ends above, at, or below 1.0x at the concurrency these cards can hold, and which component (judge-prompt prefill, rejection rework, prefix-cache eviction) dominates, needs measurement. My lean is parity to loss once the base model is compute-bound or KV-bound, but that is a derivation from the code, not a measured result.
+
+Evidence checks:
+- [confirmed] SpecReason was evaluated one request at a time with the two models taking turns and a static KV split; no load analysis (card items 1 and 5). (https://arxiv.org/html/2504.07891): All three quotes are verbatim in v2 (the only arXiv version; v3 does not exist). Text search of the full page for batch / concurren / throughput / request rate returns zero hits. Extra detail the card omits: both models are colocated on the same two cards, each served with tensor parallelism 2. NeurIPS 2025 venue is not stated on the arXiv page and was not rechecked.
+- [confirmed] SpecReason headline 1.4-3.0x is a sequential single-request latency result on two A6000 with vLLM 0.8.2 (card item 9). (https://arxiv.org/html/2504.07891v2): Abstract and Sec. 5 quotes verbatim; 'We use vLLM 0.8.2 as the underlying inference engine and enable prefix caching.' Public repo README launches with VLLM_USE_V1=0 (the V0 engine, removed in current vLLM); the SpecReason script itself is a client-side loop over two OpenAI-compatible servers, one process per problem.
+- [confirmed_with_caveat] The gain already narrowed on stronger hardware within the paper: 1.5x instead of 1.9x for R1-70B on 4x A100 (card item 10). (https://arxiv.org/html/2504.07891v2): Quote is verbatim (Appendix A.1). The paper gives two causes, and the card quotes only the first. The second is a stricter acceptance threshold for R1-70B, which cut the offloaded share of steps to 23.2% from 40.8%. So the narrowing is not purely a hardware effect.
+- [confirmed_with_caveat] Token-level speculative decoding loses relative speedup as batch grows in vLLM; EAGLE on GSM8K Llama3.1-8B 1.73x at batch 1 to 1.21x at batch 128; step-level not evaluated; reasoning benchmarks up to batch 16 (card items 2 and 11). (https://arxiv.org/html/2601.11580): Both quotes verbatim; vLLM v0.10.1.1 and H100 80 GB confirmed; 'SpecReason' appears nowhere in the paper. The 'up to batch 16' figure is not in the text: the paper says only 'we restrict our evaluation to medium batch sizes' to avoid KV preemption (the number would be on the Fig. 3 axis, which I could not read). MLSys 2026 venue not rechecked. The paper's stated mechanism: SD 'trades additional computation' and loses when 'the system becomes increasingly compute-bound'.
+- [confirmed_with_caveat] R-KV shows the opposite batch dependence: almost no gain at batch 1, gain from larger batches (card item 3). (https://arxiv.org/html/2505.24133): Both quotes verbatim. But R-KV is KV compression: its gain comes from fitting more sequences in memory. It shows that batch size matters for a reasoning-efficiency method, not that a speculation method can gain with batch. It is context, not evidence for either side of this question.
+- [confirmed_with_caveat] SPEX catalogue quote: 'at larger batch sizes the system is compute-bound, reducing SPEX's relative benefits' (card item 4, marked unverified, URL pointing at SpecReason). (https://arxiv.org/html/2605.10195): The card's URL is wrong (acknowledged on the card); the right source is arXiv 2605.10195. The quote is a paraphrase. Actual text: 'As the batch size increases, the system transitions from being memory-bound to compute-bound, reducing SPEX's relative benefits.' Meaning is preserved.
+- [confirmed_with_caveat] SPEX (OSDI 2026), a different step-level speculation system, has its largest gain at small batch, and its gain combined with token-level speculation is below the product (about 2.0x and 3.1x alone at batch 1, 4.1x combined) (card item 6). (https://arxiv.org/html/2605.10195): Quotes and numbers verbatim (RSTAR-10 at BS=1: ~2.0x MTP only, ~3.1x SPEX only, ~4.1x both); arXiv comments field says 'OSDI 2026'. Caveat on meaning: SPEX uses no small drafter. It speculatively expands Tree-of-Thought branches with the same model to fill idle batch capacity, on SGLang. That is the add-compute kind of speculation, so its shrinkage with batch says little about small-model substitution. The same passage also says 'SPEX maintains robust acceleration even when token-level speculation saturates', which the card does not quote.
+- [confirmed] EAGLE-3 vLLM table: 1.75x at batch 2 to 1.01x at batch 56 (card item 7). (https://arxiv.org/html/2503.01840): Table 5 row for EAGLE-3: 1.75, 1.68, 1.58, 1.49, 1.42, 1.36, 1.21, 1.01 at batch 2 to 56. The paper's hardware inconsistency (RTX 3090 in text, A100 in caption) is real. NeurIPS 2025 venue not rechecked.
+- [confirmed] PARSE, which parallelises SpecReason-style verification, reports higher throughput but no concurrency, batch or request-rate conditions (card item 8). (https://arxiv.org/html/2605.04263): Quote verbatim (Sec. on Fig. 5). 'Throughput' there is tokens per second for a request (TPS); the page has no batch, concurrency or request-rate conditions. Setup is Qwen3-235B target with an 8B draft on 4 H200 with SGLang, far from the student's hardware.
+- [misquoted] Card's why_unknown: verification is a prefill of about 70 tokens per step, and step-level speculation 'removes base-model compute instead of adding verification compute'. (https://github.com/ruipeterpan/specreason): The 70-token figure is in the paper: 'each verification requires prefilling only ~70 new tokens. Since short-prefill forward passes are memory-bound, the overhead is comparable to decoding just 1-2 tokens'. But the 'removes base-model compute' reading does not hold. In spec_reason.py, get_score sends the base model all steps including the new drafted step plus a judge prompt of roughly 50-60 tokens, then reads one score token. So the base model still processes every accepted token (as prefill) plus the judge prompt, and regenerates rejected steps. Base-model token passes per step are at least the baseline's; what changes is sequential decode becoming one parallel prefill. The paper itself rests the cheapness of verification on short prefills being memory-bound, the same idle-compute assumption as token-level speculative decoding.
+
+### Feasibility: yes_scaled_down
+
+Q22 is answerable on this node within a week, but not in the form the card states. Feasible, scaled down.
+
+What checks out: models and data are public and usable (Qwen/QwQ-32B and QwQ-32B-AWQ Apache-2.0, not gated; DeepSeek-R1-Distill-Qwen-1.5B MIT; AIME, MATH-500, GPQA already cached). vLLM 0.32 has every engine feature the method uses (chat continue_final_message, logprobs, prefix caching, --kv-cache-memory-bytes, draft_model speculation, AWQ loading); checked in the installed package. The student's serving harness, counter deltas, timeline and preemption tracer cover most of the measurement; a current same-tokenizer pair (Qwen3-32B-AWQ + Qwen3-1.7B) is already on disk. Cost is about 4-6 GPU-days.
+
+What does not check out:
+- The released code is a 250-line single-request script for vLLM 0.8.2's removed V0 engine, with no licence file, no grader and unanswered reproduction issues. An async closed-loop driver must be written (small).
+- "Concurrency 1 to 64 on two A6000s" is not reachable: in the paper's bf16 TP=2 setting SpecReason has KV for about 6 full 8K chains, and with 4-bit AWQ on one card about 9 (roughly 20 at mean context). Saturation is KV-bound at C of 8-20. The student's own 27B run (about 25 of 64 requests running, 1006 preemptions at default watermark) shows the same regime.
+- The card's premise that step-level speculation "removes base-model compute" is wrong in FLOPs: each accepted token still goes through the base model once in the scoring prefill, plus ~70 template tokens per step. It removes sequential decode steps, which pays only while the base model is weight-read-bound. In a compute-bound engine the loss is arithmetic. What is actually open is narrower: whether a 32B on 48 GB leaves the weight-read-bound regime before KV caps it, and whether, at the cap, a chain's idle base-model blocks get evicted between calls so that a 70-token scoring pass becomes a multi-thousand-token re-prefill.
+- Snapshot at check time: only two cards (one A6000, one Ada) were empty; /home is full and the HF cache disk has 93 GB free.
+
+First week: reproduce at c=1 on one card (QwQ-32B-AWQ + R1-1.5B), record the token accounting, write down a predicted curve, then run closed-loop C = 1..32 for base-only, SpecReason, small-only (and token-level SD on the Qwen3 pair), measuring problems per hour, base prefix-cache hit rate on scoring calls and the GPU-time split; then attribution reruns and the second pair.
+
+Stop if the ratio is flat and predicted by the accounting, if an existing flag (watermark, KV split, cap) removes any loss, or if the c=1 gain does not reproduce on vLLM 0.32. It is a paper if the gain collapses or grows by a large margin on two pairs with one measured cause that existing knobs do not remove; even then a reviewer will call it one technique unless it is generalised to dependent-call chains (agent loops) or a second step-level method.
+
+Not verified by me: whether someone has since published this measurement (web-search budget ran out after one search), and QwQ-32B-AWQ throughput on an A6000 (GPU-day estimate is extrapolated from the student's 27B-FP8 runs).
+
+**Existing data.** Nothing in the student's records measures SpecReason or any two-model step-level loop; no QwQ-32B or R1-1.5B run exists. What does exist and shortcuts part of the work:
+
+1. Serving harness: /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/serve_bench.py (starts `vllm serve`, per-run deltas of Prometheus counters incl. preemptions and prompt/cached tokens, per-GPU port allocation), serve_timeline.py (Running/Waiting/KV usage/prefix-hit rate every 10 s), thrash_trace.py + thrash_report.py (instrumented scheduler: trigger of each preemption, recomputed tokens, prefix-cache savings on readmission), harness.py + configs/harness.yaml (job queue, GPU policy never-GPU-0). These give the base engine's prefix-cache hit rate and recompute tokens for verification calls without new code.
+2. Token-level SD baseline harness and one result: scripts/profile/spec_profile.py; NOTEBOOK.md "08:48 -- speculative decoding" (Qwen3-4B EAGLE3 k=3: 1.85/1.28/0.69x at b=1/16/64; Qwen3.5-4B MTP k=3: 2.31/1.86/1.18x). This is the comparison curve the card invokes, on this node and vLLM 0.32, but only at 4B.
+3. Base-only saturation reference for a ~30B model on one 48 GB card: NOTEBOOK.md "16:41 -- 27B serving (d2_serve_27b)" and results/profile/findings.md lines 244-255: Qwen3.5-27B-FP8 gives 306 out tok/s at c=16 (TPOT 43 ms) and at c=64 only ~25 of 64 run, KV 87-94%, 1006 preemptions (46 with --watermark 0.1). This already says the saturating regime for a ~30B model on one 48 GB card is KV-bound at roughly 20-25 in flight, not the compute-bound regime where token-level SD dies. Also the decode/prefill sweeps (results/profile/harness/done/d2_base_*.json) give per-step costs to build the prediction.
+4. Multi-call cache-reuse client to copy from: scripts/prefix_pilot/agent_loop.py (turn-by-turn prompts with cached-token accounting).
+5. Benchmarks and grader: AIME24/25 and MATH-500 are cached (/share2/huggingface/hub/datasets--HuggingFaceH4--aime_2024, --MATH-500, datasets--math-ai--aime25, datasets--Idavidrein--gpqa); boxed-answer scorer in kvfetch/tasks/sweep.py score(); MATH-500 L3-5 prompt set in configs/rl_rollout.yaml.
+6. Models cached under /share2/huggingface/hub: Qwen/Qwen3-32B-AWQ (19 GB), Qwen/Qwen3-14B, Qwen/Qwen3-1.7B, Qwen/Qwen3-0.6B, Qwen3-4B/8B with EAGLE3 heads. QwQ-32B, QwQ-32B-AWQ and DeepSeek-R1-Distill-Qwen-1.5B are NOT cached.
+7. Literature notes: /home/ryankert_l/kv-fetch/kv-fetch/reports/Reproducible LLM systems paper setups.md (SpecReason is first on the shortlist) and research_notes/Reproducible LLM systems paper setups/model_level_efficiency.md entry D5.
+
+**First-week experiment.** Day 1-2 (reproduce at concurrency 1, and get the token accounting).
+Pair A (paper's): Qwen/QwQ-32B-AWQ (Apache-2.0, 19.3 GB, 4-bit AWQ) as base + deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B (MIT, bf16, 3.6 GB), both on ONE 48 GB card, vLLM 0.32, prefix caching on, max_model_len 10240, thinking budget 8192, T 0.6 / top-p 0.95, score threshold 7 greedy, as in the released script. Memory: KV per token for QwQ-32B is 0.25 MiB (64 layers x 8 KV heads x 128 x 2 x bf16), so on one card SpecReason gets about 18 GiB KV = ~73K tokens (9 full-8K chains, ~20 at mean context) and base-only at 0.9 gets ~23 GiB = ~94K tokens. Use --kv-cache-memory-bytes (exists in 0.32) to set the split exactly. The paper's own setting (bf16, 65.5 GB, TP=2 over two A6000s) leaves only ~12 GiB KV (about 6 full chains) for SpecReason versus ~22 GiB for base-only, needs two idle same-type cards, and is kept to one confirmation run.
+Pair B (current, already cached, same tokenizer so token-level SD is also possible): Qwen/Qwen3-32B-AWQ + Qwen/Qwen3-1.7B (0.156 MiB KV per token, ~118K tokens on one card).
+Write an asyncio closed-loop driver (about 200 lines; the released spec_reason.py is a synchronous one-problem-per-process OpenAI-client loop with no licence file, so re-implement, do not copy): draft step on small server (stop at "\n\n", max 512), 1-token scoring call on base server (continue_final_message + logprobs, both in 0.32), fallback step on base server if score < 7. Log per call: prompt tokens, cached tokens, output tokens, latency.
+Data: AIME 2024 (30 problems) x 4 samples and MATH-500 first 100 problems x 2 samples; the same problem/sample list for every cell.
+Check at c=1: speedup and accuracy versus the paper's range (1.4-3.0x). Record: tokens per step, share of steps accepted, base tokens decoded, base tokens prefilled for scoring (step + ~70 template tokens), wasted small-model tokens.
+
+Day 3-5 (the measurement). Closed-loop client concurrency C in {1, 2, 4, 8, 16, 32} for four systems at equal total GPU memory on the same card(s): (i) base-only, (ii) SpecReason with static split, (iii) small-model-only (upper bound on speed, lower on accuracy), (iv) base + token-level SD (draft_model or EAGLE3 where a head exists; pair B) if time allows. For base-only use watermark 0 and 0.1 (the student's known saturation confound).
+Numbers measured per cell: solved problems per hour and total output tok/s (headline), mean and p95 per-problem latency, accuracy (control), base-engine prefix-cache hit rate on scoring and fallback calls (cached/prompt tokens from the API usage and /metrics), recomputed prompt tokens, preemptions, KV usage, and GPU-time split between small decode, base decode, scoring prefill and re-prefill after eviction.
+The comparison: ratio SpecReason / base-only in problems per hour as a function of C, against (a) its own c=1 latency ratio and (b) a prediction made BEFORE the run from the c=1 token accounting plus the per-token step costs of the existing decode/prefill sweeps. Write the prediction down first. Note for the prediction: SpecReason does not remove base-model FLOPs; every accepted token still passes once through the base model in the scoring prefill, plus ~70 template tokens per step, so the base model processes at least as many tokens as in base-only serving. Its gain at c=1 is that prefill is parallel while decode is sequential (weight-read-bound regime). The open part is (1) whether a 32B on a 48 GB card ever leaves that regime before KV caps concurrency at ~10-20 chains, and (2) what happens at the cap: between calls a chain's base-model blocks are unreferenced prefix-cache blocks that vLLM may evict, so a 70-token scoring prefill can become a re-prefill of several thousand tokens.
+
+Day 6-7 (attribution). At the C where the ratio changes most: rerun with the small model on a second card (removes memory split and SM contention), with base KV raised/lowered via --kv-cache-memory-bytes, and with --watermark 0.1; repeat the key cells on pair B.
+
+**Result that kills it.** Any one of these means stop.
+(1) No effect and predictable: the SpecReason/base-only ratio in problems per hour stays within about +/-10-15% of the c=1 latency ratio over the whole reachable range (C up to the KV cap), base prefix-cache hit on scoring calls stays above ~95%, and the pre-registered accounting predicts every cell within ~15%. Then the answer is "it holds on 48 GB cards because a 32B model there is KV-capped before it is compute-bound", derivable from numbers the student already has; one paragraph, not a paper.
+(2) A shrink that an existing knob removes: the loss disappears with --watermark 0.1, a different --kv-cache-memory-bytes split, a lower --max-num-seqs/client cap, or moving the 1.5B model to another card. By the student's own rule (c) from the profiling phase that is a configuration note.
+(3) The c=1 reproduction fails on vLLM 0.32 at equal accuracy (speedup below ~1.2x on both pairs, or accuracy drops by more than the paper's margin): there is then no gain to follow under load. The repo has open, unanswered issues asking for reproduction guidance (#12), the latency computation (#8) and why base AIME accuracy is under 30% (#11), so this is a live risk. A failed reproduction of one method is not the paper the student wants.
+(4) The effect exists only at 4-bit AWQ on one card and vanishes in the paper's bf16 TP=2 setting (or the reverse), with no mechanism common to both.
+
+**Result that makes it a paper.** Either sign, if it is large, attributable and not removable by a flag:
+(a) Sign flip or collapse: e.g. 1.5-2x at c=1 falling to <=1.0x problems per hour at saturation on both pairs, with more than half of the lost GPU time attributed to one measured component (re-prefill of evicted chains on the base engine, scoring prefill inflating base steps, rejection rework, or the static KV split), surviving watermark / split / cap tuning. That gives a measured crossover plus a design target: an engine that knows a chain is alive between calls (pinned or reserved KV for speculation chains, chain-level admission, batched scoring passes, load-adaptive speculation threshold).
+(b) Gain grows: SpecReason delivers clearly more problems per hour than base-only at the same memory (say >=1.3x and above its c=1 ratio) because chains finish sooner and hold base KV for less time, i.e. step-level speculation is a capacity technique where token-level SD (the student's own 0.69x at b=64) is not. The follow-up is a two-model memory partition and scheduler.
+In both cases it needs: the accounting model that predicts the curve, a second model pair (Qwen3-32B-AWQ + Qwen3-1.7B is cached), the paper's bf16 TP=2 setting as a confirmation, and the token-level SD curve on the same pair as contrast. A reviewer will still say "one technique" (the card's own reviewer score is 3), so a second step-level method or a generalisation to "multi-call chains that rely on unprotected prefix cache" (agent loops; the student has scripts/prefix_pilot/agent_loop.py) would be needed for a top venue.
+
+**GPU-days.** About 4-6 GPU-days. Basis: a base-only cell at saturation is ~0.7M output tokens at 200-300 tok/s (about 1 h); c=1 and c=2 cells are the expensive ones (roughly 20-30 tok/s, 2-5 h each, so trim them to 30 AIME x 1 sample plus 50 MATH problems). Roughly 4 systems x 6 concurrency levels x 1 card for pair A = ~2 GPU-days, attribution reruns and pair B = ~2 GPU-days, one bf16 TP=2 confirmation on two cards = ~1 GPU-day. Fits on two cards in a week; throughput figures are extrapolated from the student's 27B-FP8 runs on the Ada card, not measured for QwQ-32B-AWQ on an A6000 (AWQ path may be slower).
+
+**Blockers.** No hard blocker; several things that change the design.
+1. Concurrency 64 from the card is not reachable in memory. QwQ-32B KV is 0.25 MiB/token; in the paper's setting (bf16, TP=2, two A6000s, 0.8 util) SpecReason has ~12 GiB KV = about 6 full 8K chains, and base-only at 0.9 has about 1.8x that. With 4-bit AWQ on one card about 9 full chains (~20 at mean context). "Saturation" therefore arrives at C of roughly 8-20 and is KV-bound; the compute-bound regime that kills token-level SD may never be reached with a 32B on 48 GB. To go further needs bf16 TP=4 on all four cards (~88 GiB KV) over PCIe, or a smaller base (Qwen3-14B bf16, cached).
+2. Precision: QwQ-32B bf16 (65.5 GB) does not fit one card; no official FP8 build, and FP8 on these cards (Ampere A6000 / Ada via Marlin weight-only) would leave under 8 GiB KV. So single-card runs are AWQ 4-bit, which differs from the paper's bf16 and may change the acceptance rate and accuracy.
+3. Code: github.com/ruipeterpan/specreason is a 250-line single-request script pinned to vLLM 0.8.2 with VLLM_USE_V1=0 (the V0 engine no longer exists), no LICENSE file (GitHub API: license null), no grader, no concurrency driver, last push 2025-10-02, open unanswered reproduction issues. The method must be re-implemented as an async client (small job). The API fields it uses (continue_final_message, add_generation_prompt, logprobs/top_logprobs) and the draft_model speculative method exist in the installed vLLM 0.32 (checked in the venv). The token-level SD combination in the paper needed a vocab-size patch (QwQ 152064 vs R1-1.5B 151936); avoid by using the Qwen3 pair for that baseline.
+4. Hardware availability: at the time of this check only GPU 2 (A6000) and GPU 5 (6000 Ada) were empty; GPUs 1, 3, 4, 6 had other users' jobs (12-29 GB, 20-87% util). A TP=2 run needs two idle cards of the same type; mixed A6000 + Ada pairs are paced by the slower card and are not comparable with the paper.
+5. Disk: /home is 100% full (30 GB free); the HF cache disk /share2 has 93 GB free. QwQ-32B bf16 (65.5 GB) would take most of it; AWQ (19.3 GB) and R1-1.5B (3.6 GB) are fine; /share1 has 401 GB.
+6. Statistical power: throughput and latency are well powered (hundreds of chains). Accuracy on 30 AIME problems has ~2-3 points standard error at 4-16 samples, so accuracy can only serve as a "did not change" control, and the paper's +0.4 to +9.0% accuracy gains cannot be confirmed in week 1. Sampling at T 0.6 makes chain lengths vary across concurrency levels (batched sampling is not seed-stable), so compare tokens/s and problems/hour over the same problem list, not paired latencies.
+7. Stale pair: QwQ-32B (March 2025) + R1-1.5B is a 2025 pairing; a 2027 reviewer will ask for a current base. Pair B covers part of this.
+8. Novelty was not re-checked here: the session's web-search budget ran out after one search (which found no load study of SpecReason). PARSE (arXiv 2605.04263) was opened: SGLang, 4x H200, tok/s with no batch or concurrency conditions, no code link. Whether a later paper measured step-level speculation under load is unverified by me.
+9. The card's premise needs correcting before the student commits: SpecReason does not remove base-model compute in FLOPs; every accepted token is still run through the base model in the scoring prefill, plus ~70 template tokens per step. It removes sequential base decode steps. So in a truly compute-bound engine a loss is predictable by arithmetic; the non-obvious part is confined to the weight-read-bound and KV-bound regimes.
+
+**Follow-on design space.** If the gain collapses at the KV cap (negative for SpecReason): the mechanism to build is engine support for multi-call speculation chains. Options: KV reservation or pinning for a live chain between its calls (today its blocks are unreferenced prefix-cache blocks that admission ignores and LRU reuses), chain-level admission and preemption instead of per-call, batching the 1-token scoring passes of many chains into one step, a load-adaptive acceptance threshold or "speculate only when the base engine is idle" policy, and choosing which chains to speculate on by remaining KV. This connects directly to the student's preemption/watermark findings and to agent-loop prefix-cache thrash, so the system could be stated more generally as "serving chains of dependent calls on a KV-bound engine", with SpecReason and agent loops as two workloads.
+If the loss is from scoring prefill making base steps longer (compute interference): a scheduler that separates or rate-limits scoring prefills, or verification on a cheaper path (logprob-based confidence the paper names as future work, verifying several steps per pass as PARSE does).
+If the gain holds or grows (positive): step-level speculation becomes a capacity technique, and the design space is the two-model memory partition (dynamic KV split between small and base model as load changes, where --kv-cache-memory-bytes is static today), co-location versus separate cards, the pipelining the authors left as future work (small model drafts the next step while the base scores the current one), and stacking with token-level SD at low load only. A positive result also motivates checking other step-level methods (SPEX-style search, PARSE) under the same protocol to see whether "removes sequential base decode" is the property that survives load.
+If it is flat and predictable: nothing to build; fold the accounting model into Q01 (token-level SD versus batch) as one more row.
+
+## Q23: attention diffuseness in GDN hybrid models (weakened)
+
+### Already answered? partly_answered
+
+Verdict: partly answered, on a limited search (keyword search budget ran out after 2 queries; the rest is citation-graph lookups and direct reading of about 35 arXiv papers). No paper answers the compound question, but each of its three parts now has close work, most of it from September to November 2026, and two of the card's premises are out of date.
+
+Part (a), are hybrid attention layers more diffuse than dense ones: nobody has published the comparison. The nearest are ValueDiff (same Qwen3-4B / Qwen3.5-4B pair, but it reports sink mass and ranking overlap, not coverage), the Preferred Networks paper (oracle coverage inside Qwen3.5-4B, 90-94% at L/16 on retrieval, with no dense comparator), and Samba (entropy per layer against Mistral, but Mamba with sliding-window attention at 1.7B).
+
+Part (b), did recurrent layers take over the sharp lookups: the published mechanism work mostly says the opposite for retrieval. Four papers on Qwen3.5-class models find attention does the exact lookup and the linear layers build the query or control response mode (2609.04434, 2611.01909, 2609.15545, 2606.15378). What is supported is that output depends on attention less for ordinary language modelling than for retrieval (2610.06750, 2603.22473), and that recurrent layers can pre-empt retrieval during training in small from-scratch models (2610.26830). None of these looks at reasoning traces or links the finding to attention diffuseness.
+
+Part (c), does the eviction premise fail for hybrids: mixed. ValueDiff shows attention-score eviction (TOVA, SnapKV) is unreliable on Qwen3.5, but also on dense Qwen3-4B, and blames sink suppression. Against a blanket failure, 2611.06133, 2611.04313, SpotAttention, GateSight and DeltaS all get query-aware selection or eviction to work on hybrids for long-prompt short-output tasks at budgets of roughly 6% and up, with losses concentrated on multi-key retrieval. The card's statements that eviction and selection papers used dense models, and that only one paper evicts KV on a Qwen3.5 hybrid, no longer hold.
+
+One confound the student should check before building on the anomaly (this is my inference from two published numbers, not a published result). Qwen3.5 uses gated attention, which removes the BOS sink: ValueDiff reports 0.408 BOS mass on Qwen3-4B against 0.034 on Qwen3.5-4B. The student's shared set pins the sink page (EXPERIMENTS.md line 31), so the dense model gets a large share of its attention covered for free. Renormalising the H1 miss rates over non-sink mass gives roughly 11.6/(1-0.408) = 19.6% for Qwen3-4B against 22.7/(1-0.034) = 23.5% for Qwen3.5-4B, so most of the 2x gap could be sink arithmetic. The caveat is that ValueDiff's sink numbers come from 2048-token calibration prompts averaged over all layers and heads, while H1 is 12K-token reasoning traces on 8 layers; the existing H1 data can settle it by recomputing misses over non-sink mass. This would not explain the selector ranking flip or the lookahead cost, which 2611.01909 (linear layers build the query) may.
+
+Scoop risk is high: at least six preprints on sparse attention or eviction in Qwen3.5-class hybrids and five on their division of labour appeared in the last three months, and a hybrid-versus-dense coverage table is a small step from what 2611.04313 and ValueDiff already measured. Unread items that could change the verdict: the body of Jet-QSparse (2611.01022, claims no loss on math tasks at a 128-block budget on four hybrids), UniPrefill, and 2609.33093.
+
+**Remaining gap.** No paper found measures token-level attention concentration (oracle top-k coverage or entropy, per layer, plus cross-layer predictability) in GDN-hybrid attention layers against a matched dense model with attention sinks controlled for, and none tests selection or eviction on long reasoning traces at a ~4% budget for hybrid versus dense. The two candidate causes, gated attention removing the sink versus GDN layers changing what attention is used for, have not been separated by anyone.
+
+Closest papers:
+- ValueDiff: Value-Geometric KV Cache Eviction for Sink-Suppressed LLMs (arXiv preprint 2609.23314v2 (Qualcomm AI Research), Oct 2026; https://arxiv.org/abs/2609.23314). Answers: Closest single paper, on the student's exact model pair. Reports mean BOS attention mass of 0.408 for Qwen3-4B against 0.034 for Qwen3.5-4B and 0.031 for Qwen3.5-9B (Table 5), and sink rate 0.548 against 0.015 (Table 4, 20 calibration prompts at context 2048). Reports the lowest top-256 attention-ranking overlap for Qwen3.5-4B (Jaccard 0.319, Qwen3-4B 0.347) and attributes it to near-zero sinks giving no stable high-mass anchor. Shows attention-score eviction is unreliable on Qwen3.5: RULER 8K at 2K budget TOVA 42.0 / SnapKV 62.6 / ValueDiff 97.6 on Qwen3.5-4B; MATH-500 at 25% budget TOVA 39.3 / SnapKV 24.7 / ValueDiff 84.3 (n=100, no thinking). So arm (c) is partly covered, with a competing explanation (gated attention removes the sink) for arm (a). Leaves open: Labels Qwen3.5 only as 'gated attn' and never ties anything to the GDN layers. No oracle top-k coverage or entropy, no per-layer breakdown, no cross-layer predictability, no long thinking traces. SnapKV is also weak on dense Qwen3-4B (52.8), so it does not show a hybrid-specific failure. Does not say where the former sink mass goes.
+- Coarse Semantic Blocks for Efficient Training-Free Sparse Attention (arXiv preprint 2611.04313v1 (Preferred Networks), Nov 2026; https://arxiv.org/abs/2611.04313). Answers: Measures oracle attention coverage in the 8 full-attention layers of Qwen3.5-4B: dense-ranked tokens retain 90.4% of prompt attention at L/16 and 94.3% at L/8 on MK-2, 91.9/95.1 on MK-3, 94.2/96.6 on MRCR-8 (Appendix G.1, 512K prompts, 10 prompts per task), with a per-layer figure. So the oracle top 6% of tokens still misses 6-10% on retrieval tasks. Training-free selection at L/16 costs little on Qwen3.5-4B and 35B-A3B (LongBench-v2 54.5 vs 55.7 and 63.3 vs 64.7) but loses on multi-key retrieval at 1M (55.2 vs 63.2); Nemotron 3.5 Lightning needs L/8. Leaves open: No dense-model coverage comparison (it states that all-attention results do not show how much sparsity hybrids tolerate, but does not measure the difference). Long prompts with short outputs, not long reasoning traces; budget is a fraction of a very long prompt, not 512 tokens of a 12K trace. No mechanism claim about GDN layers.
+- Accelerating Long-Context Decoding in Large-Scale Hybrid LLMs Without Retraining (arXiv preprint 2611.06133v1 (RIKEN), 4 Nov 2026; https://arxiv.org/abs/2611.06133). Answers: Applies Quest page selection plus a recent window and a 256-token pinned prefix in the full-attention layers of Qwen3.5-4B/27B/122B-A10B and other hybrids, as a vLLM plugin. Qwen3.5-4B 21-dataset average 48.8 baseline vs 48.4 uniform (W=256, Q=1024); Qwen3.5-27B 53.8 vs 53.8. Per-layer search keeps one layer (L19) at full attention and gives layers very different budgets. Evidence that the selection premise does hold for hybrids on long-context short-output tasks, which bears against a blanket version of arm (c). Leaves open: No attention-concentration measurement, no dense comparator, no cross-layer analysis; the sparsity premise is stated as a hypothesis. BABILong 64K and LongBench subsets with thinking disabled and short outputs only.
+- SpotAttention: Plug-In Block-Sparse Routing for Pretrained Long-Context Transformers (arXiv preprint 2606.22874v1 (KAIST), Jun 2026; https://arxiv.org/abs/2606.22874). Answers: Trained block selector evaluated on dense Qwen3-4B/8B/32B and hybrid Qwen3.5-4B/9B. All five land within one standard error of dense at K=0.5L, 0.75L and top-p=0.9 (Qwen3.5-4B 0.561 dense vs 0.569/0.557/0.572). States the per-layer budget asymmetry is 'structural to the backbone' and that hybrids 'still span a U-shape'. Leaves open: Budgets are 50-75% of context, far from the 4% regime. No teacher attention-mass recall or oracle top-k; no statement that hybrid layers are more or less concentrated than dense; hybrid and dense are not length-matched (128K vs 32K); Quest not run on Qwen3.5.
+- GateSight: Recurrent Memory Anticipates Attention Memory for Query-Agnostic KV Eviction in Hybrid LLMs (arXiv preprint 2610.14754v1 (SJTU), Oct 2026; https://arxiv.org/abs/2610.14754). Answers: KV eviction on Qwen3.8-27B (48 GDN + 16 attention layers) with SnapKV, KeyDiff, KVzip baselines on SCBench up to 262K and RULER at kept fractions 0.9-0.1. Appendix D: removing the three shallowest full-attention layers leaves RULER-8K at 96.2, removing a fourth collapses it to 39.1, i.e. output dependence on attention is very uneven across layers. Leaves open: No concentration measurement, no dense model, no reasoning traces. With DeltaS (2609.27470, Qwen3.5-9B streaming video) it makes the card's 'one paper evicts KV on a Qwen3.5 hybrid' out of date.
+- What Attention Recalls and Recurrence Controls in Hybrid Language Models (arXiv 2609.04434v1; Semantic Scholar lists EMNLP 2026; https://arxiv.org/abs/2609.04434). Answers: Arm (b), and against the card's hypothesis for retrieval: on Qwen3.5-4B/9B/27B and other hybrids, 'Exact retrieval survives only through attention (64-98% of full accuracy)', recurrence-only retrieval is 0.00, and the recurrent state 'does not function as an addressable memory for retrieval at inference'; recurrence controls language and persona. Leaves open: Short synthetic tasks; no reasoning traces; no attention distributions; no dense baseline. Says nothing about how concentrated the attention is.
+- Who Asks, Who Answers: Linear Attention Builds the Query in Hybrid Language Models (arXiv preprint 2611.01909v1, Nov 2026; https://arxiv.org/abs/2611.01909). Answers: Arm (b): in Qwen3.5-0.8B to 35B-A3B the linear-attention layers construct the query that softmax attention uses; removing one linear block drops reader attention on the queried entry from 0.83 to 0.06. Consistent with the student's finding that one GDN layer of query lookahead is costly, and it shows attention on retrieval is sharp, not diffuse. Leaves open: Short synthetic key-value retrieval only; no entropy or top-k over long contexts; no dense baseline; no reasoning.
+- Balancing Memory Pathways (Qwen3.5-4B and Nemotron-H-4B pathway ablations) (arXiv preprint 2610.06750v1, Oct 2026; https://arxiv.org/abs/2610.06750). Answers: Arm (b), dependence of output on attention is task-dependent: restricting attention drops QA accuracy 30.2% to 5.1% vs 20.2% for restricting recurrence; on retrieval QA ablating attention raises NLL 5.3 vs 1.5; on PG19 language modelling the order reverses (1.3 vs 3.7). Component Ablation (2603.22473) finds the same direction on perplexity for Qwen3.5-0.8B. This is the nearest published support for the student's 'KL per missing attention is lower' observation. Leaves open: No attention distributions, no dense comparison of sensitivity per unit of dropped attention, no reasoning traces.
+- Competing Learning in Hybrid Architectures (arXiv preprint 2610.26830v1 (Tsinghua), Oct 2026; https://arxiv.org/abs/2610.26830). Answers: Arm (b), the only paper found that supports a takeover story: in from-scratch KDA/GDN/GLA hybrids up to 1B, 'Without intervention, KDA layers become dominant in terms of retrieval ability', i.e. recurrent layers can pre-empt attention's retrieval learning during training. Related: Rethinking the Role of Efficient Attention in Hybrid Architectures (2606.15378, EMNLP 2026 per Semantic Scholar) finds the opposite end state at 0.66B scale: long-range retrieval is carried by full attention. Leaves open: Training dynamics in small models; no attention-distribution measurement; no released Qwen3.5 checkpoints; no dense experiments.
+- Samba: Simple Hybrid State Space Models for Efficient Unlimited Context Language Modeling (arXiv 2406.07522 (ICLR 2025 by my recollection, not checked on the page); https://arxiv.org/abs/2406.07522). Answers: The only hybrid-vs-dense attention entropy comparison found: Fig. 5a, Samba 1.7B vs Mistral 1.6B on 100 GSM8K samples, 'the Samba model has a larger variance of the attention entropy distributed over the layer indices' (middle layers low entropy, upper and lower higher). Hymba (2411.13676) similarly reports a 'more balanced' attention distribution than Llama3.2-3B, where over 50% of attention sits on BOS. Leaves open: Mamba with 2048-token sliding-window attention, not GDN with global attention; small models; short inputs; nothing on top-k coverage, cross-layer predictability or eviction.
+- Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free (arXiv 2505.06708 (NeurIPS 2025 by my recollection, not checked on the page); https://arxiv.org/abs/2505.06708). Answers: Supplies the confound: the gate Qwen3.5 uses cuts first-token attention from 46.7% to 4.8% averaged over layers (83% to 4% at layer 21). The dense comparator Qwen3-4B has no gate. Leaves open: Dense models only; says nothing about how the freed mass is distributed over content tokens or about hybrids.
+- On the Design of Qwen3.8-Next Architecture (arXiv preprint 2608.30320 (Qwen team), 2026; https://arxiv.org/abs/2608.30320). Answers: Arm (c) from the model builder: replacing full attention in the GDN hybrid with a K=2048 sparse attention plus indexer 'leads to a clear performance drop' when applied directly after dense initialisation, and is recovered by brief joint training. Jet-QSparse (2611.01022, abstract only readable) claims training-free 128-block sparse attention on four hybrids with no detected loss on math, coding and agentic tasks. Leaves open: No concentration statistics, no dense comparison of the size of the drop. Jet-QSparse body text could not be fetched, so its budget sweep on reasoning tasks is unread.
+
+Searches run: Search was limited. The shared WebSearch budget ran out after 2 keyword queries, so keyword search of arXiv, Google Scholar, OpenReview and the 2025-2026 conference programmes (OSDI, SOSP, NSDI, EuroSys, ASPLOS, ATC, MLSys, NeurIPS, ICML, ICLR, ACL, EMNLP) was NOT done; venue coverage is only through Semantic Scholar venue tags. What was done instead: (1) read card Q23, Q32, Q33 in /home/ryankert_l/kv-fetch/kv-fetch/research_notes/Research question search/questions_ranked.json, the harvest_*.md notes, and the H1 section of /home/ryankert_l/kv-fetch/kv-fetch/EXPERIMENTS.md; (2) Semantic Scholar cited-by lists for Samba 2406.07522 (214), 2507.06457 (43), HALO 2601.22156 (21), Gated DeltaNet 2412.06464 (691), Kimi Linear 2510.26692 (237), 2606.15378 (6), Sparse Frontier 2504.17768 (42), scanned by title; lists for Jet-Nemotron 2508.15884 and 2611.06133 failed; GateSight, DeltaS, 2610.06750, 2611.01909, 2610.26830 have no citations yet; (3) opened and read the relevant sections of about 35 arXiv papers found that way or named on the card, including every one in closest_papers plus 2609.15545, 2606.15378, 2603.22473, 2606.11052 (probably the card's unopened EMNLP Findings paper; it is about CoT fine-tuning shortening attention distance, not concentration), 2608.12149, 2609.02986, 2609.08574, 2609.27470, HySparse, laLTE, HyLRA, FlashMorph, GLIDE, 2610.09051, 2608.21541, 2610.36950, 2611.10634. Not opened: UniPrefill, 2609.33093 'How Linear Attention Remembers', 2610.04424, 2610.37432, HARD-KV 2606.28831, 2609.35378, 2510.04800; Jet-QSparse 2611.01022 body text did not load (abstract only); aclanthology.org refused connections.
+
+### Premise: weakened
+
+Verdict: weakened. Every quote on the card is in its source, and the core local number reproduces from the result file, but the tension is partly apples-to-oranges and the likely answer is predictable in direction.
+
+- **Evidence:** all 18 items verified against the paper HTML, abstract page or local files; 11 carry caveats. The notable ones: the memory file's '7.5-9.6x' KL figure is '7.4-7.5x, confounded: 8 perturbed layers vs 36' in EXPERIMENTS.md; laLTE's ICLR 2026 venue is unconfirmed; the 72 released checkpoints from arXiv 2507.06457 have a 2,048-token context and cannot test the 8K-32K regime.
+- **Core measurement:** oracle@512 misses 22.7% on Qwen3.5-4B vs 11.6% on Qwen3-4B, with the hybrid higher in all 8 layer pairs (18.0-33.8% vs 5.0-20.1%). The per-head oracle shows the same gap.
+- **'Less consequential' is not supported:** the offline KL advantage is about the size the 8-vs-36 layer count alone would produce, and the online ratio is 1.03 from runs near the floor.
+- **The proposed mechanism is doubtful:** the hybrid puts 35% of attention mass on the sink page plus recent window against 52% for dense; outside those, top-512 coverage is similar (about 65% vs 71%). The gap is mostly missing sink and local mass, which Priming's layer-selection rationale and Hymba's Fig. 7 would lead an expert to expect.
+- **Unlisted confounds:** per-model sampling settings (presence penalty 1.5 on the hybrid only), own traces, 8 of 36 dense layers, head dimension 256 vs 128.
+- **Still open:** no opened paper reports top-k attention coverage for GDN-hybrid attention layers against a dense model across tasks. Priming's Qwen3-derived GDN hybrids (release stated in the paper, not opened) would give a cleaner same-source pair than Qwen3.5 vs Qwen3.
+- **Sub-question 3** (does eviction fail on hybrids) is already mostly answered for reasoning by the student's H3: it fails about equally on both models.
+
+Not done: web search was unavailable (session budget exhausted), so I ran no independent novelty search and checked only papers I could fetch by known URL. The EMNLP Findings 2026 paper the searcher could not open is still unreachable. No GPU jobs were run and no files in the repo were modified; downloaded pages are in /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/dl.
+
+**Is the tension real?** Partly. The measured gap is real and reproducible from the result file, but the conflict the card builds around it is weaker than stated, for four reasons.
+
+1. The 'retrieval predicts concentrated attention' side is the card's inference. Mamba-2 offers one untested sentence about a 350M model, and no cited paper claims the kept attention layers are sparse on reasoning traces. The measurement is on AIME thinking traces, not retrieval inputs, so the two sides are about different regimes. The card's own if_yes branch concedes this.
+
+2. The 'less consequential' half is not established. The offline KL advantage (4.4-5.2x per unit of missing attention, 7.4-9.6x at matched missing attention) is about what perturbing 8 layers instead of 36 would give by itself, and the log flags that confound. Online the loss ratio is 1.03, from runs near the floor. So there is no evidence that the hybrid's output depends on its attention less.
+
+3. The student's own numbers point away from the proposed mechanism ('recurrent layers took over the sharp lookups'). In the fidelity runs, the pinned sink page plus the recent window holds 51.5% of attention mass on Qwen3-4B but 35.3% on Qwen3.5-4B. Of the mass outside those pins, oracle@512 captures about 71% on dense and 65% on the hybrid (my arithmetic on results/h1_explore.json; 10 sequences up to 8K tokens, dense over all 36 layers). Most of the 'twice as diffuse' gap is therefore less sink and local mass in the hybrid, not flatter long-range attention.
+
+4. Confounds beyond those the card names: different sampling settings per model (presence penalty 1.5 and T 1.0 on the hybrid only), each model on its own text, 8 of 36 dense layers sampled, head dimension 256 vs 128.
+
+What remains a real gap: no paper I could open reports top-k attention coverage for the attention layers of a GDN hybrid against a dense model across tasks. The third sub-question (does the eviction premise fail for hybrids) is already largely answered for reasoning by the student's H3: it fails about equally on both models, by non-termination.
+
+**Obvious answer?** An expert would predict the direction with fair confidence, though not the magnitude: the kept attention layers of a hybrid cover less mass with a fixed top-k than dense layers on long generation, because the mass that makes dense attention look sparse (attention-sink no-op heads and local or recent-token heads) is the part recurrent layers absorb. On needle-style retrieval the same layers would be sharp, so the expected overall answer is 'task-dependent', which is the card's less interesting branch.
+
+Basis:
+- Priming states that conversion replaces layers doing 'predominantly local mixing' and keeps the high-Hankel-rank, long-range ones.
+- Hymba (arXiv 2411.13676, section 2.4 and Fig. 7) already reports that a hybrid's attention heads put less mass on BOS and self and more on other tokens than Llama-3.2-3B. It is a parallel hybrid with meta tokens, on one text, so it is adjacent, not the same measurement. The card's 'none found' missed it.
+- HALO notes attention entropy rising with context length in its hybrid.
+- The student's own split (35% vs 52% of mass on sink plus recent window) fits this account.
+
+Not predictable from known results: whether the effect holds in same-source pairs (Priming's Qwen3-derived GDN hybrids), and whether it changes the online cost of eviction. The only online data so far says it does not.
+
+Evidence checks:
+- [confirmed] KV eviction rests on attention mass being concentrated on few tokens (H2O). (https://arxiv.org/abs/2306.14048): The quoted sentence is in the abstract.
+- [confirmed] Query-aware selection keeps the same sparsity premise (Quest, arXiv). (https://arxiv.org/abs/2406.10774): Both quoted sentences are in the abstract.
+- [confirmed_with_caveat] The hybrid literature hypothesizes that the attention layers serve as retrieval (Mamba-2). (https://arxiv.org/html/2405.21060): The sentence is verbatim in the hybrid-models section. It is a single untested hypothesis attached to a perplexity ablation on a 350M model. The paper measures no attention patterns and does not say attention is concentrated; 'retrieval predicts concentrated attention' is the card's inference, and it would apply to retrieval inputs, not to 12K-token reasoning traces.
+- [confirmed] Only a few attention layers matter, their role is task-dependent, and placement is called unclear (Jet-Nemotron v3). (https://arxiv.org/html/2508.15884v3): Key Finding 1 and 'the optimal placement of these layers remains unclear' are both verbatim. The arXiv comments field says NeurIPS 2025.
+- [confirmed_with_caveat] SSM hybrids beat sliding-window hybrids with larger caches (Priming). (https://arxiv.org/html/2605.08301): The quote is verbatim. The same paper cuts against the card's surprise: it keeps as attention the layers with high Hankel rank ('complex, long-range, input-dependent retrieval') and replaces layers that 'perform predominantly local mixing'. It also says it releases GDN hybrids primed from Qwen3-8B and 32B with a vLLM plugin, which would be a same-source controlled pair the card does not use (Hugging Face collection not opened).
+- [confirmed_with_caveat] Student's measurement: hybrid attention is more diffuse, yet missing attention costs less offline and about the same online (memory file). (/home/ryankert_l/.claude/projects/-home-ryankert-l-kv-fetch-kv-fetch/memory/kv-fetch-phase0.md): The quote matches line 53-54 of the memory file. EXPERIMENTS.md gives the KL figure as '7.4-7.5x ... (confounded: 8 perturbed layers vs 36)', not 7.5-9.6x; the card drops that confound. From results/h1_explore.json, plain KL per unit of missing attention is 4.4-5.2x lower on the hybrid in all six configurations, close to the 36/8 = 4.5 ratio of perturbed layers. The online ratio of 1.03 is from runs near the floor (9.6% and 14.2% accuracy) with different caps and sampling, which the log itself calls approximate.
+- [confirmed_with_caveat] On one model pair the hybrid's attention layers are less concentrated layer by layer, and the selector ranking flips (EXPERIMENTS.md H1). (/home/ryankert_l/kv-fetch/kv-fetch/EXPERIMENTS.md): Verbatim at lines 204-206; the result file agrees (0.2268 vs 0.1158; per layer 18.0-33.8% vs 5.0-20.1%, hybrid higher in all 8 pairs). Caveats from the config: the dense side is 8 of 36 layers at matched relative depth; each model replays its own traces, sampled differently (Qwen3.5 at T 1.0 with presence penalty 1.5, Qwen3-4B at T 0.6 with none); head dimension is 256 vs 128. The mid-depth gap is small (18-20% vs 12-17%); the large gaps are the last two layers (24-25% vs 5-8%).
+- [confirmed] Jet-Nemotron selects kept layers by task accuracy, reports they differ by task, and does not report what they attend to. (https://arxiv.org/html/2508.15884): Both quotes are verbatim (Key Findings 1 and 2). A text search of the paper finds no attention maps, entropy or sparsity statistics.
+- [confirmed] For dense models it is already reported that attention is less sparse than top-k methods assume (MagicPIG). (https://arxiv.org/abs/2410.16179): Both phrases are in the abstract. This means the dense-side sparsity premise is itself contested, which narrows the contrast the card draws.
+- [confirmed_with_caveat] Student's H1: hybrid about twice as diffuse, selector ranking flips, one layer of lookahead costs +3.4 vs +0.2. (/home/ryankert_l/kv-fetch/kv-fetch/EXPERIMENTS.md): The numbers match the log and result file (mean-key 25.5% vs Quest 31.8% on the hybrid; 19.5% vs 14.3% on dense). The +3.4 is the student's selector on the hybrid and the +0.2 is Quest on dense; like for like it is +3.4 vs +0.3, or +4.5 vs +0.2 for Quest. The lookahead number is about predicting the query from an earlier residual, not about salient tokens carrying across attention layers.
+- [confirmed_with_caveat] The controlled hybrid study finds recall comes from full-attention layers, measures no attention patterns, stops at 2,048 tokens, and released its checkpoints. (https://arxiv.org/html/2507.06457v1): Both quotes are verbatim; the limitations say 'models up to 1.3B parameters, a 2,048-token context window'; no attention-pattern analysis is in the text. The card's reviewer score says these checkpoints 'can remove the one-model-pair confound', but at 2,048 tokens a top-512 budget is a quarter of the context, so they cannot test the 8K-32K regime of the anomaly.
+- [confirmed_with_caveat] HySparse builds on the premise that salient tokens carry over from a full-attention layer to following layers. (https://arxiv.org/html/2602.03560v1): Both quotes are verbatim. HySparse mixes full and sparse attention layers with no recurrent layers, and takes the stability observation from dense-model literature, so it says nothing about GDN hybrids.
+- [confirmed] Quest's premise that a small query-dependent set of tokens carries the attention (PMLR page). (https://proceedings.mlr.press/v235/tang24l.html): The sentence is in the abstract; venue is ICML 2024, PMLR 235. Duplicate of the arXiv item.
+- [confirmed_with_caveat] Measured anomaly: oracle shared set of 512 misses about twice the attention mass on the hybrid, in every layer. (/home/ryankert_l/kv-fetch/kv-fetch/EXPERIMENTS.md): Duplicate of the H1 item; same numbers and same caveats. The per-head oracle shows the same gap (21.1% vs 10.3%), so sharing a set across heads is not the cause.
+- [confirmed_with_caveat] Hybrid conversion keeps the attention layers whose removal hurts recall most (HALO). (https://arxiv.org/abs/2601.22156): The sentence is verbatim in section 4.3. 'A mechanism for concentrating retrieval load into the remaining layers' is the card's inference, not HALO's. HALO also states 'As the context length increases, the entropy of attention scores increases' and adds logit scaling for it, so diffuse attention at length in hybrid attention layers is already acknowledged there. HALO distils from Qwen3, another possible same-source pair (release not checked).
+- [confirmed] The Kinetics argument for sparse attention is conditional on training, by the authors' own statement. (https://arxiv.org/abs/2506.05333): Verbatim in the Limitations paragraph, which names Qwen3 and DeepSeek-R1-Distilled-Qwen as the models studied.
+- [confirmed] DeltaS evicts KV on a Qwen3.5 hybrid for streaming video, on one backbone, with no full-attention comparison. (https://arxiv.org/abs/2609.27470): The limitations quote is verbatim; the backbone is Qwen3.5-9B only; no dense backbone and no attention statistics appear. Its Table 1 shows query-agnostic eviction to 8K/16K tokens averaging 58.7/60.5 against 63.2 for full KV, so eviction on a hybrid is workable in that setting.
+- [confirmed_with_caveat] Hybrid designs that want sparse attention train it in and treat post-hoc dropping as lossy (laLTE). (https://arxiv.org/abs/2510.20787): The quote is verbatim. The ICLR 2026 venue is not confirmed: the arXiv comments field says only '19 pages, 5 figures'.
+
+### Feasibility: yes
+
+Q23 is answerable on the student's hardware with the existing H1 harness, in about 4-5 GPU-days, but its founding anomaly may be a normalisation artifact that one day of work can confirm or rule out.
+
+- **The risk.** H1 counts missing attention as a share of total attention, including the pinned sink and recent window. In existing Qwen3-4B traces the first page holds 45-63% of attention in late layers, and the oracle at 512 already misses 19-46% of the remaining far mass. That is a rough check on three traces. Qwen3.5 uses gated attention, which the Qwen team reports cuts first-token attention from 46.7% to 4.8% (arXiv 2505.06708). The 22.7% vs 11.6% gap could therefore come from the gate removing the sink, not from the GDN layers. The card and harvest notes do not consider this.
+- **Day 1 decides it.** Re-measure the gap as a share of far mass on the existing 30 AIME sequences, with both models teacher-forced on the same text. If the gap collapses, the question as posed is dead. What remains is a methodology point about sink-inflated attention recall, which overlaps Q33 and Q32.
+- **If the gap survives.** Usable public controls exist, though none is a clean twin: Olmo-Hybrid-7B vs Olmo-3-7B (GDN, no gate, near-matched data; the hybrid is already cached), the m-a-p ratio-sweep checkpoints (same data, 2K context), and the gated-attention 1B pair (gate only). Qwen3.5-9B and Qwen3-8B are cached, as are all datasets.
+- **Weakest part.** The causal clause ("because the recurrent layers took over the sharp lookups") depends on those imperfect controls. The online consequence is also uncertain: the earlier online test gave a hybrid/dense loss ratio of 1.03.
+
+No vLLM feature is needed for the measurement. I ran no GPU jobs and changed no files. The web search budget ran out, so the prior-work check is one search deep.
+
+**Existing data.** What the student already has:
+
+1. The anomaly itself. /home/ryankert_l/kv-fetch/kv-fetch/results/h1_explore.json (per-problem shards in /home/ryankert_l/kv-fetch/kv-fetch/results/hybrid/h1_shards/): 30 AIME explore problems x 8 attention layers per model, each cut to equal length (mean 11,917 generated tokens). Oracle shared set at 512 misses 22.7% on Qwen3.5-4B vs 11.6% on Qwen3-4B. Per layer: hybrid 33.8/20.4/20.2/19.6/18.0/20.6/25.0/23.9% vs dense 20.1/8.3/12.5/16.9/12.0/10.2/5.0/7.7%. Teacher-forced KL is in the same file.
+
+2. The harness. /home/ryankert_l/kv-fetch/kv-fetch/scripts/h1_screen.py captures q/k through HF's AttentionInterface (so it works on any HF-native model), recomputes exact attention, and has a teacher-forced sparse-forward fidelity mode. Config: /home/ryankert_l/kv-fetch/kv-fetch/configs/hybrid.yaml. Online sparse engine for Qwen3 and Qwen3.5 (keys off config.layer_types): /home/ryankert_l/kv-fetch/kv-fetch/kvfetch/sparse_decode.py, driven by /home/ryankert_l/kv-fetch/kv-fetch/scripts/run_h3.py. Qwen3.5-4B full-attention token ids are stored in /home/ryankert_l/kv-fetch/kv-fetch/results/hybrid/h3_shards/qwen35_4b/full.
+
+3. Task loaders. RULER re-implementation in /home/ryankert_l/kv-fetch/kv-fetch/kvfetch/tasks/ruler.py; math500, longbench_v2, scbench_kv, repoqa, qmsum, pg19 and aime in /home/ryankert_l/kv-fetch/kv-fetch/kvfetch/tasks/sweep.py. Qwen3-4B and Qwen3-8B score 98-100 on RULER needle and multikey at 16K and 32K (/home/ryankert_l/kv-fetch/kv-fetch/results/model_gate/summary.md).
+
+4. Dense-model traces with full per-page attention mass. /share3/saves/ryankert_l/kvfetch/traces/reasoning (aime24, aime25, math500) and /share3/saves/ryankert_l/kvfetch/traces/sweep (six task families at 32K), Qwen3-4B, layers 4/18/29/32. No equivalent exists for Qwen3.5; the H1 shards store only aggregates, so the hybrid side needs a GPU replay.
+
+5. Local weights in /share2/huggingface/hub: Qwen3.5-0.8B/2B/4B/9B/27B-FP8, Qwen3-0.6B/1.7B/4B/8B/14B/32B, and allenai/Olmo-Hybrid-7B (another user's download, a second GDN hybrid family). Datasets cached: RULER, LongBench, LongBench-v2, MATH-500, AIME 24/25. /home/ryankert_l/kv-fetch/kv-fetch/.venv-hybrid (transformers 5.19, fla-core 0.5.2) imports qwen3_5, qwen3, olmo_hybrid and olmo3.
+
+What I found that shortcuts the question (a rough CPU check on existing traces, no GPU):
+
+- H1's "missing attention" divides by total attention, including the pinned sink page and the pinned recent 128 tokens (Scorer.whole in /home/ryankert_l/kv-fetch/kv-fetch/scripts/compare_pages.py, lines 125-129).
+- On three Qwen3-4B AIME traces (aime24 0000, 0004, 0008; second half of each trace; my own approximate replica of the pinned set), the first page takes 45-63% of attention in layers 29 and 32 and 6-12% in layers 4 and 18. The recent window takes 13-48%.
+- Only 21-67% of the dense model's attention is therefore "far" mass. Of that far mass, the oracle at 512 misses 19-46%. The dense model is not concentrated on far tokens either.
+- Qwen3.5's attention layers are "Gated Attention" (attn_output_gate: true in its config). The Qwen team's paper on that gate (arXiv 2505.06708) reports first-token attention falling from 46.7% to 4.8% with the gate.
+- So the 22.7% vs 11.6% gap may be partly or wholly a sink-normalisation effect caused by the gate, not by the GDN layers. Neither the card nor the harvest notes consider this. It is untested on Qwen3.5.
+
+**First-week experiment.** All measurement is offline HF forward passes in .venv-hybrid, bf16, one 48 GB card per job. No vLLM feature is needed.
+
+Day 1, kill test (about 0.3 GPU-day). Extend scripts/h1_screen.py to split each attention layer's mass per step into first token, recent 128 tokens, and far. Report oracle top-512 and top-1K missing as a share of far mass, at token level as well as 16-token pages, plus entropy and effective token count of the far distribution. Log Qwen3.5's attention output-gate values. Run on the existing 30 AIME sequences for Qwen/Qwen3.5-4B and Qwen/Qwen3-4B. Also teacher-force both models on the same text (each on the other's trace), which removes the confound of different sampling settings (T 1.0 with presence penalty 1.5 vs T 0.6).
+- Number measured: far-mass-normalised oracle@512 missing, per layer.
+- Comparison: hybrid vs dense, paired by problem.
+
+Days 2-4, generality (about 1.5-2 GPU-days). Same metric on:
+- Qwen/Qwen3.5-9B vs Qwen/Qwen3-8B.
+- allenai/Olmo-Hybrid-7B vs allenai/Olmo-3-1025-7B. This is a GDN hybrid without gated attention against a dense model on near-matched Dolma 3 data. Both are base models, so teacher-forced text only.
+- Three input families: RULER niah and multikey at 8K/16K/32K (50 samples per task, existing generator), LongBench-v2 short (existing loader), and MATH-500 level 5 plus AIME traces.
+
+Days 4-5, attribution (about 0.3 GPU-day).
+- Gate only: QwQZh/gated_attention 1B_baseline vs 1B_gate_headwise and 1B_gate_elementwise (dense, same data).
+- GDN dose-response: m-a-p/transformer_1.3B_baseline and the m-a-p GatedDeltaNet 1.3B hybrids at 3:1, 6:1, 12:1, 24:1 (same FineWeb-Edu data, no gate). Their context is 2,048 tokens, so use budgets of 64-128 tokens.
+
+Days 5-7, causal check (about 2 GPU-days). With kvfetch/sparse_decode.py, run oracle top-k at 512 and 1K against full attention on Qwen3.5-4B and Qwen3-4B, under one shared decoding setting and one cap. Tasks: RULER multikey at 16K (50 per task) and MATH-500 level 5 (not the 30 AIME problems, whose intervals were about +/-7 points).
+- Number measured: accuracy loss vs full, with cap-hit rate reported separately.
+- Comparison: loss per unit of far-mass missed, hybrid vs dense.
+
+Memory fit. Qwen3-8B is 16 GB of weights plus 4.7 GB of KV at 32K. Qwen3.5-9B is 18 GB with a smaller KV. The Olmo models are about 14 GB each. Exact attention is recomputed in 128-step chunks (about 0.5 GB). Qwen3.5-27B in bf16 (about 54 GB) would need two cards via device_map and is not needed in week one.
+
+**Result that kills it.** Any one of these means stop:
+
+1. Day 1: once missing attention is measured as a share of non-sink, non-recent mass, the Qwen3.5-4B vs Qwen3-4B gap falls to within problem-to-problem spread (about 2-3 points, or a ratio under about 1.2) in most layers. The anomaly would then be the sink removal already published for gated attention (arXiv 2505.06708) plus a denominator choice. The rough dense-side numbers above (oracle@512 misses 19-46% of far mass in Qwen3-4B) make this outcome plausible.
+
+2. The sink-corrected gap survives on the Qwen pairs but is absent in Olmo-Hybrid-7B vs Olmo-3-7B, shows no trend with the linear-to-full ratio in the m-a-p checkpoints, and appears in the gate-only pair. Then it is a gate or training effect, not a property of GDN hybrids, and the "recurrent layers took over the sharp lookups" account has no support.
+
+3. The gap is real offline, but oracle top-k costs the hybrid the same accuracy as the dense model on both retrieval and reasoning under one decoding setting. This would repeat the H-b online ratio of 1.03 and leave a descriptive statistic with no consequence for eviction.
+
+**Result that makes it a paper.** All of the following together:
+
+- A sink-corrected concentration gap of at least about 1.5x that holds for Qwen3.5-4B and 9B against Qwen3-4B and 8B on all three input families, including RULER retrieval, where the retrieval hypothesis predicts sharp attention.
+- The gap replicates in Olmo-Hybrid-7B vs Olmo-3-7B (no gate, near-matched data) and grows with the linear-to-full ratio in the m-a-p checkpoints.
+- The gate-only pair shows sink removal but no far-mass diffuseness. That separates the two mechanisms.
+- A behavioural consequence: at a fixed token budget, oracle top-k loses clearly more on the hybrid, or the selector ranking flip (mean-key beating Quest bounds) replicates across hybrid families.
+
+That supports the claim that the sparsity premise behind H2O- and Quest-style KV selection belongs to dense Transformers and their sinks, and that hybrid attention layers need a different compression primitive.
+
+A weaker but still publishable variant: the gap is a sink artifact, and the same artifact inflates attention-recall numbers across the dense KV-eviction literature. That is a methodology paper that merges with Q33, not the architectural claim in this card.
+
+**GPU-days.** About 4-5 GPU-days on single 48 GB cards: 0.3 for the day-1 kill test, 1.5-2 for the model and task sweep, 0.3 for the gate and ratio controls, 2 for the online check. For scale, the original H1 screen for both models finished in under about 3.5 hours. Two cards (GPUs 2 and 5) were idle when I checked; four others were partly in use by other people.
+
+**Blockers.** No hard blocker. Things that limit or cost time:
+
+1. No dense twin of Qwen3.5 exists. Qwen3 differs in training data, generation, head shape (32 heads x 128 vs 16 x 256) and the output gate. The causal half of the question rests on three imperfect controls:
+- The Olmo pair is near-matched, not matched: per the model card, the hybrid used the Olmo 3 32B data mix and a cosine schedule, 5.50T vs 5.93T tokens, and hidden size 3840 vs 4096.
+- The m-a-p checkpoints are 0.3-1.3B and limited to 2,048 tokens.
+- The gated-attention checkpoints are about 1B, with an unknown training context.
+No public dense-plus-gate model exists at 4B or larger.
+
+2. Licences. Qwen3.5-4B and both Olmo models are Apache-2.0 (checked on their cards). QwQZh/gated_attention and the m-a-p collection show no licence; that is fine for measurement, but flag it in a paper. Dataset licences (RULER, LongBench, MATH-500, AIME) I did not re-check on the web; all are already cached locally.
+
+3. Code to write (days, not weeks):
+- Mass decomposition and token-level metrics in h1_screen.py.
+- Attention hooks for the fla-based m-a-p models and for the gated-attention repo's custom Qwen3Attention (code at github.com/qiuzh20/gated_attention); neither goes through HF's AttentionInterface.
+- A base-model prompt path for Olmo.
+- sparse_decode.py is untested on Olmo-Hybrid (GDN with negative eigenvalues), so any online check on Olmo needs engine work.
+
+4. Disk. /home is 100% full (28 GB free) and /share2 is 98% full (93 GB free). allenai/Olmo-3-1025-7B (about 14 GB) and the small checkpoints must be downloaded; that fits, barely.
+
+5. Statistical power. Offline numbers are well powered (thousands of steps x 30 sequences, paired). The online check is not on 30 AIME problems; use MATH-500 level 5 and RULER, and report cap hits separately, since earlier losses were mostly non-termination.
+
+6. vLLM 0.32 has no token- or page-level sparse attention or eviction. The measurement does not need it, but any follow-on system would have to be written.
+
+7. The web search budget for this session ran out partway through. I could not run a second search for a 2026 paper that already measures attention concentration in hybrid attention layers. The one search I ran found none; DeltaS's abstract does not measure it.
+
+**Follow-on design space.** If positive (hybrid attention layers are diffuse over far tokens, and it matters):
+- KV compression for hybrids that is not top-k token choice: pooled or low-rank keys, page-mean summaries (the student's mean-key selector already beat Quest bounds on the hybrid), or merging instead of evicting.
+- Budgets set per task and per layer.
+- Guidance for hybrid designers on how many attention layers to keep and what they are for.
+- On the engine side, a hybrid-specific KV tier in vLLM that stores compressed summaries for far context instead of fetching selected pages. This reconnects to the H4 cost model.
+
+If negative because of the sink (the gap vanishes after correction):
+- A methodology result: attention-recall and "missing attention" numbers in dense-model eviction papers are inflated by sink mass. Sink-free models such as Qwen3.5 and other gated-attention models expose how diffuse far attention always was. This feeds Q33 (an offline metric that predicts online failure) and Q32 (the attention oracle is not an upper bound).
+- A cheap engine corollary: in dense models the sink token is one KV entry carrying roughly half the mass, so recall-per-byte comparisons should exclude it.
+
+If negative because of training (the gap is specific to Qwen):
+- Dense-model selectors carry over to hybrids and the topic closes. The remaining hybrid KV work would be pure systems (tiering), which the student's profiling already found crowded upstream.
+
+## Q02: speculative decoding when batch is memory-capped (weakened)
+
+### Already answered? partly_answered
+
+Verdict: partly answered. One arm is published; the core of the question is not, as far as this search reached.
+
+**What is already answered (hybrid arm, capacity cost).** That stock speculation on hybrids costs per-request state and therefore concurrency is now in two papers and in vLLM's own docs, more firmly than the card says:
+- ReplaySSM (arXiv 2610.13778): snapshots cap concurrency, so stock speculation stops gaining beyond batch 128 and loses at batch 512.
+- Twig (HPCA 2027, not in the card): snapshots "displace KV-cache and active-request capacity" on Qwen3.5-4B to 122B, with a 45% versus 96% cache-hit rate under online load. This is SGLang with tree speculation.
+- vLLM Qwen3.5 recipe: MTP "degrades text throughput under high concurrency" because "speculative tokens consume KV cache capacity, reducing effective batch size."
+
+A result of the form "MTP halves hybrid concurrency and so hurts when memory-capped" would therefore not be new.
+
+**What is not answered.**
+- **Speculation at saturation:** no paper measures speculation on versus off with the KV pool full and preemption happening. The two vLLM measurement papers both stop short of it: Liu et al. (MLSys 2026) restrict batch size to avoid preemption, and Kong et al. (arXiv 2605.15051) "exclude the saturation boundary, where preemption makes latency unstable" and list "preemption dynamics" as future work.
+- **Residency time:** no paper argues or measures that speculation changes how long requests hold memory. The nearest is one sentence in Twig about releasing batch slots sooner. H-Spec (arXiv 2609.24197) reports lower average KV utilisation but does not separate it from the missing drafter cache.
+- **Interaction with admission control:** S3R and SparseSpec vary the memory policy only with speculation on. S3R's admission scheduler adds about 8% over recompute; SparseSpec's KV manager is worth 1.61x. Neither runs the no-speculation column, so sub-additivity is untested.
+- **Dense versus hybrid:** no source compares them under the same memory pressure.
+
+**Corrections to the card.**
+- The premise that speculation "costs no per-request KV" on a dense model is contradicted by a DigitalOcean benchmark (blog, vLLM 0.27.1, Qwen3-14B, H200): EAGLE-3 removes 6.1% of KV slots and n-gram 2.8%. That post never runs with the pool full.
+- SparseSpec is an MLSys 2026 oral, not venue-less.
+- The ReplaySSM paper text I read does not contain the blog's "roughly 4x" figure.
+
+**Limits of this check.** The web-search budget ran out partway (8 of 13 queries ran). The Spexis paper (EMNLP 2026) could not be opened; from snippets it is multi-GPU speculative parallelism with a scheduler that predicts memory needs, on vLLM, and it should be read before committing. Most papers were read through a summarising fetch, some without their appendices. Conference programmes were not walked page by page.
+
+**Remaining gap.** No source runs MTP or EAGLE-3 speculation on versus off with the KV pool actually full and requests preempted or waiting, on either a dense or a hybrid model, so the sign of the effect on requests per second at saturation, the residency-time explanation, and the interaction with an admission-control setting (speculation x watermark) are all unmeasured. The dense-versus-hybrid comparison under the same memory pressure also does not exist.
+
+Closest papers:
+- An Interpretable Latency Model for Speculative Decoding in LLM Serving (Kong, Flynn, Peng, Shavit, Kurtz, Marques) (arXiv preprint 2605.15051, May 2026; https://arxiv.org/abs/2605.15051). Answers: Models speculative-decoding latency in vLLM 0.13.0 against request rate (Little's Law for effective batch), EAGLE-3-style drafters, dense Qwen3 0.6B-32B and MoE, A100/H100. Explains why the speedup shrinks with load in the stable regime. Leaves open: Stops exactly where Q02 starts. Its rate sweep ends 'just below the preemption ceiling'; it says 'We exclude the saturation boundary, where preemption makes latency unstable' and lists 'preemption dynamics' as future work. Outputs 256-1024 tokens, no hybrids.
+- Speculative Decoding: Performance or Illusion? (Liu, Yu, Park, Stoica, Cheung) (MLSys 2026; https://arxiv.org/html/2601.11580v1). Answers: Batch-size effect of EAGLE/EAGLE-3/draft-model speculation in vLLM v0.10.1.1 on H100, dense models. Section 5.2 computes (from model specs, not measured) the per-token KV added by a draft model. Leaves open: Section 3.2 avoids preemption on purpose by restricting reasoning runs to batch 1-16 ('rather than performance artifacts caused by memory pressure'). No KV occupancy, no preemption counts, no hybrids. Re-read this session; the card's description of it is accurate.
+- ReplaySSM: Cache SSM Inputs, Not State (Liou, Nover, Naik, Skliar, Shovkun, Shahaf, Dao) (arXiv preprint 2610.13778, Oct 2026; https://arxiv.org/abs/2610.13778). Answers: Hybrid arm, capacity cost: per-draft state snapshots in vLLM's stock speculation 'caps the concurrency that GPU memory allows, so conventional speculation stops gaining beyond B=128' and falls below plain decoding at B=512 on Qwen3.5-122B-A10B (MTP heads, B300). Fixes it with a replay buffer. Leaves open: No preemption, queueing, admission control or watermark anywhere in the first 100K characters of the paper (appendix tail not read). Speculative results are for the two 120B-class models only, GSM8K with 256 output tokens, fixed batch; no dense comparison; no residency-time argument.
+- Twig: Parallel and Memory-Efficient Tree Speculative Decoding for Hybrid-Attention LLMs (Wang et al.) (HPCA 2027 (accepted), arXiv 2608.01651; https://arxiv.org/abs/2608.01651). Answers: Hybrid arm, not in the card: on Qwen3.5-4B/9B/27B/122B in SGLang, speculative state snapshots 'displace KV-cache and active-request capacity' (4.7-14.1 GB per request at 100 tree nodes; Qwen3.5-27B at batch 8 OOMs with stock tree speculation). Under online agent load the stock speculative baseline's prefix-cache hit rate drops to 45% versus 96% for Twig. It also states that lower TPOT 'releases batch slots sooner and shortens queueing', which is the residency idea in one sentence. Leaves open: SGLang and tree speculation, not vLLM chain MTP; at most four concurrent requests online; A100 80 GB and GB10; no dense model under the same pressure; 'preemption' not mentioned; no speculation-on/off crossed with an admission-control setting; the last 12K characters were not read.
+- Accelerating Large-Scale Reasoning Model Inference with Sparse Self-Speculative Decoding (SparseSpec) (MLSys 2026 (oral per mlsys.org; the card says 'no venue listed'), arXiv 2512.01278; https://arxiv.org/html/2512.01278). Answers: Dense arm, own speculator: in long-reasoning serving (Qwen3 1.7B-14B, H100, max batch 256, 10K+ output tokens) a KV manager that admits aggressively and offloads to host instead of recomputing is worth 1.61x in the ablation, alongside 1.23x from the scheduler and 1.12x from delayed verification. vLLM-EAGLE3 (k=3) is an end-to-end baseline. Leaves open: All memory-management variants are with speculation on, so the memory fix's gain without speculation is unknown (no 2x2). No preemption counts, occupancy or residency numbers in text; no comparison with vLLM's recompute preemption; no hybrids, no MTP; H100 only.
+- S3R: Fast and Faithful RL Rollouts via Self-Sparse Speculative Decoding (He, Ge, Lin, Liu, Zhang) (arXiv preprint 2610.13202 (v2, 3 Nov 2026); https://arxiv.org/abs/2610.13202). Answers: Closest to the card's interaction term, on a dense model: RL rollouts (Qwen3-1.7B/8B, 8xH100, responses up to 16-24K, vLLM 0.12.0 baselines) with speculation on, comparing memory policies. Table 2(a) tok/s/GPU: AR 3,989; Recompute-256 5,895; Offload-256 6,015; KV-aware AIMD admission 6,362 (so admission control adds about 8% over recompute once speculation is on; offload episodes 1,097 to 59). Frozen EAGLE-3 (k=5) gives 1.11x / 1.09x over AR on these rollouts. Leaves open: The memory policies were only run with speculation on; AR was not run under recompute/offload/AIMD, so whether admission control gains more or less without speculation is not measured. No statement that speculation changes concurrency or residency. Sparse self-speculation, not MTP; no hybrids (listed as future work); H100.
+- Speculative Decoding's Hidden Cost: The KV Cache Capacity You Give Up, and Where Throughput Turns Negative (V. Baranwal, DigitalOcean) (Practitioner blog post with public harness, 21 Sep 2026 (not a paper); https://www.digitalocean.com/community/tutorials/speculative-decoding-kv-cache-capacity). Answers: Dense arm, static capacity: on stock vLLM 0.27.1, Qwen3-14B, one H200, enabling speculation removes KV slots even on a dense model: n-gram 2.8%, EAGLE-3 6.1%, separate Qwen3-0.6B draft 43.8% (almost all from the draft's own per-token KV). This contradicts the card's premise that on a dense model 'speculation costs no per-request KV'. Throughput at 2K context crosses below baseline at concurrency 30-49 (EAGLE-3). Leaves open: Never runs with the pool full: the crossover was timed at 2K only, 'far below each arm's measured slot ceiling', and the 128K conclusion is arithmetic, not a timed run. No preemption, no waiting requests, no residency argument, no hybrids or MTP, no reasoning-length outputs.
+- Nightjar: Dynamic Adaptive Speculative Decoding for Large Language Models Serving (Li et al.) (arXiv 2512.22420 v5 (Jun 2026); Semantic Scholar lists Journal of Systems Architecture; https://arxiv.org/abs/2512.22420). Answers: On vLLM with external draft models: when free KV blocks stay low and speculation is already off, move the draft weights to CPU to enlarge the KV pool (7B on RTX 4090 at 35 req/s: 6,316 vs 5,983 tok/s; TTFT -47%). Leaves open: The memory cost considered is the draft model's weights only. No speculation-on/off comparison at a full pool, no preemption counts, no residency argument, no MTP/EAGLE-3 experiments, no hybrids.
+- Taming the Long-Tail: Efficient Reasoning RL Training (TLT) (ASPLOS 2026, arXiv 2511.16665; https://arxiv.org/html/2511.16665v2). Answers: Speculative decoding for RL rollouts (SGLang backend, H100), enabled only when fewer than 32 requests remain. Its discussion names Q02's regime: when all rollouts are long 'each request demands substantial KV-cache capacity. This often makes the system KV-cache-bound and triggers request eviction, limiting the running batch size.' Leaves open: That passage is a discussion-section remark, not a measurement; speculation is simply switched off at large batch. No KV-occupancy effect of speculation measured. EfficientRollout (NeurIPS 2026, arXiv 2606.18967) is the same: its toggle uses batch size and sequence length, not memory, and has no preemption or capacity analysis in the main text.
+
+Searches run: Web search (shared budget ran out intermittently; 8 of 13 queries ran, 5 were refused): speculative decoding + memory-bound / KV cache / preemption / reasoning long outputs; + vLLM requests per second 2026; + MTP EAGLE-3 hybrid Qwen3.5 saturation; + 'requests finish faster free memory sooner'; OpenReview + memory-constrained / admission control; + 'KV-cache thrashing' rollouts sub-additive; MTP Qwen3.5 concurrency halved; Spexis. Refused and not rerun: a 'residency time / KV occupancy' phrasing. Citation lists via Semantic Scholar API: citing papers of Liu et al. MLSys 2026 (20), TurboSpec 2406.14066 (36 relevant from 2025-26), SparseSpec (13); the ReplaySSM list returned HTTP 429. Opened and queried (through WebFetch's summariser, so not raw text): Liu et al., Kong et al. 2605.15051, ReplaySSM, Twig, SparseSpec, S3R (both halves), Nightjar (both halves), SpecStream 2609.33184, H-Spec 2609.24197, EfficientRollout, TLT, vLLM Qwen3.5 recipe, vLLM issue #53670; DigitalOcean post read from page source. Abstracts only: OasisKV, ASPIRE, TreeSpark, ECHO, AngelSpec, SSR, Sparse-RL, Sparrow, SpecPilot, SpecActor, SPARK. Not done: page-by-page pass over the 2026 OSDI/SOSP/NSDI/EuroSys/ATC/ICML/ICLR/ACL programmes (covered only via keyword search and citation lists); Spexis (EMNLP 2026 main, aclanthology 2026.emnlp-main.29) could not be opened (connection refused 4 times) and is judged from search snippets only; TechRxiv 'Transactional KV Caching for Speculative Decoding' (Feb 2026) returned 403 and was not read.
+
+### Premise: weakened
+
+Q02's premise is weakened: every quote on the card is in its source, but the tension is thinner than the card presents, and most of the question has a confident expected answer.
+
+I could not run a fresh search for newer prior work (the session's web search budget was exhausted), so the "nobody has measured this" claim is checked only against the card's own sources. I opened each of those directly and re-read the notebook and raw run reports.
+
+- **Evidence:** all eight items are confirmed, including the EAGLE-3 1.38x at batch 64 that the card had marked unverified. Five carry caveats that matter:
+  - **Liu et al., second quote:** "we do not account for the overhead of maintaining the KV cache for EAGLE's proposing head" comes from their oracle upper-bound analysis, not from their end-to-end measurements.
+  - **TurboSpec:** Sec. 6.2 does cover capacity-limited batches on a 48 GB L40S and says SD helps there, so "without memory saturation" understates it.
+  - **SparseSpec:** it already runs vLLM-EAGLE3 in a memory-saturated reasoning workload and compares against a preemption baseline, which the card omits.
+  - **ReplaySSM:** its "roughly 4x" is a different quantity from the notebook's 2.2x (47 vs 21.6 running requests); they agree in direction only.
+  - **SparseSpec vs NanoFlow:** this is not a conflict. Both are about memory bandwidth, at very different output lengths.
+- **The real gap:** no source measures draft-based SD while the engine is preempting.
+- **What is already explained:** the hybrid net effect is 0.47x concurrency times 1.99x per-request rate, the observed 8% loss with the watermark on. The concurrency loss is the per-draft state blocks.
+- **What is predictable:** for a dense model, the "memory-time" framing and the per-step speedup predict the same number, and the sign reduces to Q01's batch crossover.
+- **What is untestable as designed:** the dense arm's watermark gain is 1.3%, inside noise, so sub-additivity cannot be seen there with that knob.
+- **What is left:** a one-run-per-cell interaction on the hybrid. Each avoided preemption saved about 0.16 s without MTP and about 0.02 s with it. It is probably real, but probably a vLLM align-mode readmission mechanic.
+
+The card's own "if_no" branch (per-step speedup carries over, anomaly specific to hybrid state blocks) is the expected outcome.
+
+**Is the tension real?** Partly. There is no conflict between sources; the card is a gap plus one local anomaly.
+
+**What holds:** no source measures draft-based SD while vLLM is actually preempting. Liu et al. explicitly avoid preemption, TurboSpec never mentions it, and ReplaySSM measures only how many requests fit.
+
+**What dissolves on reading:**
+- **SparseSpec vs NanoFlow** is not a contradiction. Both mean memory bandwidth, at 8K-13K versus 200-300 output tokens. Neither is about KV capacity capping the batch.
+- **"Papers assume memory slack" is overstated.** TurboSpec Sec. 6.2 treats capacity-limited batches on a 48 GB L40S and says SD helps there. SparseSpec runs vLLM-EAGLE3 in a memory-saturated reasoning workload.
+- **The hybrid half is already explained.** Throughput is running requests times per-request token rate. At watermark 0.05, MTP gives 21.1/45.3 = 0.47x concurrency and 62.7/31.5 = 1.99x per-request rate, which is 0.93x net — the observed 8% loss. The concurrency loss is the 12 extra state blocks per request (notebook, ReplaySSM).
+- **"Memory and residency time rather than per-step speedup" is not a clean dichotomy.** Residency scales as 1/speedup, so for a dense model, where SD adds about one layer of KV, both framings predict the same number.
+
+**What is left:** one interaction, one run per cell. Each avoided preemption saved about 0.16 s without MTP (795 s over 5,001) and about 0.02 s with MTP (52 s over 2,413). That 7x gap is well outside the 1.8% run-to-run token spread, so it is probably real. It is specific to the hybrid, and likely to vLLM's align-mode readmission ping-pong described in the notebook's 07:33 entry.
+
+**The dense arm cannot test sub-additivity with this knob.** The student's own dense run gains only 1.3% from the watermark (3,951 s to 3,900 s), which is inside the noise.
+
+**Obvious answer?** Mostly predictable for the headline; only the hybrid interaction is not.
+
+**Dense (EAGLE-3):** SD raises requests per second by roughly its per-step speedup at the memory-capped concurrency.
+- The cap was about 26 running requests in the student's dense run; the notebook's EAGLE-3 figures are 1.28-1.37x at batch 16 and below 1.0x at batch 64, with acceptance inflated by ignore_eos.
+- The draft head adds about one layer of KV (TurboSpec: under 4%), and dense preemption is cheap because readmission restores from the prefix cache.
+- The interaction with the watermark should therefore be about zero, within noise.
+- Whether the sign is positive depends only on where the capped batch sits relative to the batch crossover, which is Q01's question.
+- Basis: TurboSpec Sec. 6.2, Liu et al.'s batch curve, SparseSpec's motivation, and the student's dense watermark result.
+
+**Hybrid (MTP on vLLM 0.32):** roughly a wash, already measured at +9% without the watermark and -8% with it. Per-request rate doubles and concurrency halves because of the per-draft state blocks. ReplaySSM removes that cost.
+
+**Not confidently predictable:** why the watermark's gain falls from 16.7% to 1.2% (6.7% at TP2) once MTP is on. The likely answer is a vLLM scheduler mechanic: fewer, larger requests mean fewer block-boundary crossings and less readmission ping-pong. That is narrower than the general memory-time principle the card hopes for.
+
+Evidence checks:
+- [confirmed_with_caveat] Own measurement: on a KV-bound rollout step (Qwen3.5-4B, vime, one run per cell) the watermark cuts wall time 16.7% without MTP and 1.2% with MTP; MTP with the watermark is slower than plain decoding with it; no checked explanation. (/home/ryankert_l/kv-fetch/kv-fetch/results/profile/NOTEBOOK.md): Numbers match the 22:18 entry and the raw reports (results/profile/runs/vime_verify_report.json, vime_verify_mtp_report.json): 4,755 s / 5,531 preemptions vs 3,960 s / 530; MTP 4,327 s / 2,589 vs 4,275 s / 176; MTP+watermark is 8% slower than plain+watermark. The quote is verbatim. Caveats the card only partly carries: (1) the notebook itself says the MTP -1.2% 'is within what sampling alone can move' (output tokens differ up to 1.8% between runs at T=1); (2) the third row (MTP, TP2) shows -6.7%, so the gain shrinks less at a larger pool; (3) the notebook does have a checked explanation for the halved concurrency (12 extra state blocks per request, block arithmetic verified) and offers 'fewer, larger requests per engine' as the unchecked reason for the smaller watermark gain. Only the interaction is unexplained.
+- [confirmed_with_caveat] TurboSpec/SmartSpec treats speculation as having no KV-memory side and does not consider preemption. (https://arxiv.org/html/2406.14066v3): Both quotes are verbatim in Sec. 8.2 ('The proposed sequence length k has no impact on the key-value (KV) cache size'; 'remains consistently below 4% of total memory usage across all evaluated batch sizes'; Llama2-7B + 160M draft, H100). The word 'preempt' does not occur in the paper. Caveat: the paper does address capacity-limited batches. Sec. 6.2 says SD 'becomes particularly effective when a system has surplus computational capacity while being constrained by memory bandwidth or capacity', names 'low-end GPUs ... the KV cache quickly reaches its maximum capacity, resulting in restricted batch sizes', and reports up to about 2x on an L40S (48 GB), input = output = 256. Listing 2 also has an OOM check. So the card's 'goodput under load without memory saturation' understates it: TurboSpec already predicts the dense direction (SD helps when memory caps the batch), though it shows no evidence that memory was actually binding and has no preemption.
+- [confirmed_with_caveat] Liu et al. (MLSys 2026) note that reasoning runs can cause preemption and avoid that condition; they also leave out the draft head's KV cost. (https://arxiv.org/html/2601.11580v1): First quote verbatim in Sec. 3.2: 'we restrict our evaluation to medium batch sizes. Reasoning tasks ... can trigger request preemption once the KV cache becomes full. By avoiding such preemption, the reported results more accurately reflect the inherent efficiency of speculative decoding rather than performance artifacts caused by memory pressure.' Second quote is verbatim but out of context: it is one of three simplifications in the Oracle_Combine upper-bound analysis (Sec. 8), about partial prefills of EAGLE's head when switching methods ('which would otherwise require partial prefills if a request was paused and resumed'). It is not a statement that the end-to-end measurements ignore the draft head's KV memory.
+- [confirmed_with_caveat] ReplaySSM publishes the hybrid concurrency cost of per-token speculative states; it matches the notebook's 47 vs 21.6 running requests. (https://tridao.me/blog/2026/replayssm/): Quote verbatim: 'Under a fixed HBM budget (window = 4), the baseline's preallocated states cut the maximum decode batch by roughly 4x relative to standard serving. ReplaySSM ... recovering 3.0-3.3x of that concurrency (Figure 11).' arXiv 2610.13778 exists (Liou, ..., Dao; 9 Oct 2026); its abstract does not mention concurrency. 'Matches' is directional only: the notebook's ratio is 47/21.6 = 2.2x at about 7K-token requests on a shared attention+state pool, and its own pool figures give only a 19% loss for full-length requests (1.55x vs 1.26x). ReplaySSM's 4x is a maximum decode batch on H100/B300 with no model named for that figure. The post measures no preemption, admission control or throughput at the cap.
+- [confirmed] Liu et al.: speedup falls with batch size in vLLM; reasoning workloads only at batch 1-16; no hybrids. (https://arxiv.org/html/2601.11580): Verbatim: 'Increasing batch size improves absolute throughput but systematically reduces the relative speedup of speculative decoding'. Table 5: AIME and GPQA with Qwen3-8B-Thinking at batch 1-16, 32K max output (GLM-4.5-Air at 1-4); vLLM v0.10.1.1, H100 80 GB. No hybrid/SSM model appears. The same paragraph says the gain is largest 'with small/medium batch sizes, when the system is memory-bound, so lots of compute can be used for proposing and verification' (memory-bound here means bandwidth).
+- [confirmed_with_caveat] SparseSpec: long reasoning outputs make serving memory-bound, the regime where spare compute would exist. (https://arxiv.org/html/2512.01278): Both quotes verbatim (Qwen3-8B, H100, batch 128, output 8192; vLLM v0.11.0; up to 2.13x). Two caveats. (1) 'Memory-bound' here is memory bandwidth (KV loading per step), not the KV-capacity cap the card is about. (2) The card undersells the overlap: SparseSpec runs vLLM-EAGLE3 (k=3) as a baseline with max batch 256, 'large enough to saturate GPU memory in our setup', on AIME with about 12K-token outputs (Figure 11), and compares its KV manager against 'oracle and preemption' baselines on utilisation and recomputation (Fig. 5, Sec. 5.5). So a dense EAGLE-3 data point in a KV-saturated vLLM exists, though only as bars in a figure with no preemption counts and no SD-by-admission interaction.
+- [confirmed_with_caveat] NanoFlow: the opposite general claim, serving is compute-bound. (https://arxiv.org/html/2408.12757v2): Quote verbatim in the abstract. It does not oppose SparseSpec on reading: NanoFlow's analysis is a bandwidth-vs-compute cost model at the largest batch that fits in memory, for chat traces with 211-322 mean output tokens on A100s with 8B-72B models; its one long-decode cell on Llama-3 8B is near the boundary. SparseSpec is 8K-13K outputs. Different regimes, both about bandwidth rather than capacity.
+- [confirmed] Tree-free EAGLE-3 keeps 1.38x at batch 64 in SGLang v0.4.4 (card marked this unverified). (https://arxiv.org/abs/2503.01840): Table 3 of the arXiv HTML: SGLang v0.4.4, one H100, LLaMA-Instruct 3.1 8B, MT-Bench, chain length 3, no tree; EAGLE-3 1.81x (b=2) ... 1.38x (b=64). Text: 'EAGLE-3 still achieves a 38% throughput improvement at a batch size of 64.' Measured by the SGLang team, with memory slack. The paper's vLLM table falls to 1.01x at b=56.
+
+### Feasibility: yes
+
+Q02 is answerable on the student's node in a week for about 2 GPU-days, but the existing data already answers much of it and points toward the boring branch.
+
+**What is in place.** Models, drafter heads, datasets, vLLM 0.32 features and the replay harness all exist locally or are public under Apache-2.0. The only code to write is passing speculative_config through rollout_replay.py and adapting the Recorder and bound fit to multi-token steps (about 1 day).
+
+**What the existing runs already show** (my re-reduction of the eight vime runs, one run per cell):
+- On the hybrid Qwen3.5-4B, MTP k=4 raises the per-request rate 1.95x and cuts running requests to 0.47x (45.1 to 21.1). Net: -9% with watermark 0.05, +11% without.
+- The concurrency loss is the 1+k state blocks per group, explained in the notebook and public upstream in vllm#55533 since September.
+- So the hybrid sign is measured and mechanistically explained. What remains is repeats, the dense arm, and the watermark interaction: the watermark gains 16.7% without MTP and 1.2% with it.
+
+**Three things the card understates.**
+- Throughput = running requests x per-request rate is an identity. The only possible surprise is a residual against an unsaturated calibration at the capped batch, and nothing in the current data suggests one.
+- The 2x2x2 interaction term cannot be informative on the dense model, because the watermark moves it only 1-3%. The "sub-additive" clause is testable on the hybrid only.
+- The hybrid half is a moving target: RecoverSSM for GDN (vllm#58863) and the decode-transition fix (vllm#62878) are open and active.
+
+**Design changes I recommend.** Add a naturally memory-capped dense arm (Qwen3-14B bf16 on a full 48 GB card, about 11-14 running requests by my arithmetic, with a public EAGLE-3 head) and a hybrid k sweep. These are where a non-obvious result could appear: a draft-head memory tax near 9% of the pool, or an interior optimum in k.
+
+**Decision rule.** Kill if the null product model predicts the dense and hybrid ratios within about 5% and the only output is a setting. It is a paper if the model fails by more than 10-15% with a traced cause, or if dense gains persist at saturation while the hybrid flips sign and a load-aware k beats both fixed settings by at least 10%.
+
+**Not verified.** That the AngelSlim heads load in vLLM 0.32, that the Recorder works with speculation on, the 14B pool size, and the repeat-to-repeat spread.
+
+**Existing data.** The student already holds most of the hybrid half and all of the harness. Everything below is one run per cell.
+
+1. The anomaly itself: /home/ryankert_l/kv-fetch/kv-fetch/results/profile/NOTEBOOK.md (2026-10-30 entries 17:18, 19:42, 22:18) and the eight run folders /home/ryankert_l/kv-fetch/kv-fetch/results/profile/runs/vime_{qwen35_4b,qwen3_4b,mtp_qwen35_4b,mtp_tp2_qwen35_4b}_wm{0,05}/ (metrics.jsonl polled every 5 s, vime_verify.json).
+
+2. My re-reduction of those metrics.jsonl files over the saturated phase (requests waiting). No GPU was used.
+
+| Qwen3.5-4B, 0.5 memory share | running | per-request tok/s | output tok/s | preemptions |
+|---|---|---|---|---|
+| plain, watermark 0 | 46.9 | 25.1 | 1,175 | 5,474 |
+| plain, watermark 0.05 | 45.1 | 32.6 | 1,470 | 529 |
+| MTP k=4, watermark 0 | 21.6 | 60.4 | 1,305 | 2,584 |
+| MTP k=4, watermark 0.05 | 21.1 | 63.5 | 1,338 | 174 |
+
+- MTP roughly doubles the per-request rate (1.95x) and roughly halves concurrency (0.47x). Net: -9% with the watermark, +11% without.
+- Dense Qwen3-4B without speculation: 25.5 running, 815 tok/s at watermark 0.05 and 792 at 0. The watermark moves it about 3% in rate (1.3% in wall time).
+- So the hybrid sign of the question is already measured, and the concurrency loss is already explained in the notebook: 15 state blocks per request instead of 3.
+
+3. Dense baseline under the same memory budget, with the scheduler recorder (steps, preemption triggers, recompute tokens): /home/ryankert_l/kv-fetch/kv-fetch/results/profile/runs/r1_replay_qwen3_4b_m{50,70}_wm{0,05,10,20}/ and r1_replay_qwen35_4b_*; bounds in r1_bound_own.json and r1_bound_cross.json. Dense at 0.5 share: 22.5 running, 28.4 ms/step, 791 tok/s at watermark 0.05 against 779 at 0. The plain-decoding cells of the proposed 2x2x2 therefore exist once already.
+
+4. Step-level speculation speedups without memory pressure: /home/ryankert_l/kv-fetch/kv-fetch/results/profile/runs/spec_qwen3_4b/ and spec_qwen35_4b/ (batch 1/16/64, k 0-3, 1K context, greedy, ignore_eos). Dense EAGLE-3 at k=3: 1.85 / 1.28 / 0.69. Hybrid MTP at k=3: 2.31 / 1.86 / 1.18.
+
+5. Harness and inputs:
+- /home/ryankert_l/kv-fetch/kv-fetch/scripts/rl/rollout_trace.py, rollout_replay.py, rollout_bound.py (forced-length replay of 64 MATH-500 problems x 8 samples in-process, with the Recorder from /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/thrash_trace.py)
+- /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/spec_profile.py
+- /home/ryankert_l/kv-fetch/kv-fetch/scripts/rl/vime_verify.py and vime_verify_report.py
+- /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/harness.py (job queue)
+- configs /home/ryankert_l/kv-fetch/kv-fetch/configs/rl_rollout.yaml, vime_verify_mtp.yaml, profile.yaml (spec: section)
+- recorded length traces: /home/ryankert_l/kv-fetch/kv-fetch/results/profile/runs/r1_trace_qwen3_4b/trace_qwen3_4b.json and r1_trace_qwen35_4b/trace_qwen35_4b.json
+
+6. Prior kill on the same workload: /home/ryankert_l/kv-fetch/kv-fetch/EXPERIMENTS.md ("RL rollouts: kill test R1"). With a tuned watermark the hybrid is 6.4-6.8% from a no-preemption bound, and the direction was dropped because an existing knob recovers the gap.
+
+**First-week experiment.** All on vLLM 0.32.0 (the existing venv-vllm32), RTX 6000 Ada cards only for timed cells (GPUs 4-6; never mix A6000 and Ada inside one comparison), prefix caching at defaults, in-process engine with the Recorder.
+
+**Step 0, no GPU, half a day.** Write down the null model before running anything: saturated throughput ratio (speculation on / off) = [running requests on / off, from block arithmetic] x [per-request token rate on / off, measured without memory pressure at that batch and context mix]. Then reduce the eight existing vime runs against it.
+
+**Step 1, harness, about 1 day.**
+- Add speculative_config to rollout_replay.py and a k+1 rows-per-request term to the step-time fit in rollout_bound.py.
+- Check the Recorder's decode / recompute split with multi-token steps.
+- Smoke-test the AngelSlim EAGLE-3 heads against the brian920128 head and keep the one with higher acceptance.
+
+**Step 2, calibration without memory pressure, about 4 GPU-hours.** Per-request tok/s with speculation on and off, at batch {8, 12, 16, 24, 32, 48}, with contexts drawn from the R1 length traces, at the sampling settings of the main runs. Record acceptance per position.
+
+**Step 3, core 2x2x2 with 3 repeats, 24 runs of about 1.1 h.**
+- Models: Qwen/Qwen3-4B with AngelSlim/Qwen3-4B_eagle3 (k=3), and Qwen/Qwen3.5-4B with MTP (k=4, as vime ships).
+- Factors: speculation on / off x watermark 0 / 0.05.
+- Workload: the R1 rollout step. 64 MATH-500 level 3-5 problems x 8 samples, each forced to its recorded length, T=1, gpu_memory_utilization 0.5, max_num_seqs 512, max_num_batched_tokens 8192, bf16.
+- This puts KV usage at 96-98% with requests waiting, as in the existing runs.
+
+**Step 4, hybrid k sweep, 4 runs.** Qwen3.5-4B, MTP k=1 and k=2 at watermark 0.05, 2 repeats each. Block arithmetic predicts about 40 and 34 running requests against 47 (k=0) and 21 (k=4).
+
+**Step 5, natural memory cap, 8 runs.** Full card (gpu_memory_utilization 0.92), 128 requests, watermark 0.05, 2 repeats, speculation on / off.
+- Dense: Qwen/Qwen3-14B bf16 with AngelSlim/Qwen3-14B_eagle3. About 29.5 GB of weights leave roughly 13.5 GB of KV, about 88K tokens at 163,840 bytes per token, so 11-14 running requests. This is my arithmetic, not a measurement. Qwen/Qwen3-8B with AngelSlim/Qwen3-8B_eagle3 is the fallback.
+- Hybrid: Qwen/Qwen3.5-9B with MTP.
+
+**Numbers measured per run:** output tok/s over the saturated phase, makespan, mean running requests, preemptions per million generated tokens, recompute tokens and seconds, acceptance, KV usage.
+
+**Comparisons:**
+- (a) Measured saturated on/off ratio against the null-model prediction, per model, with the 3-repeat spread.
+- (b) Watermark gain with speculation minus without, on the hybrid only.
+- (c) Preemptions per generated token, on against off, on the dense models.
+
+**Result that kills it.** Stop if all three of these hold:
+
+1. **Dense matches the null model.** On Qwen3-4B and on Qwen3-14B (or 8B), the saturated on/off throughput ratio is within about 5% (or within twice the repeat spread) of [running-request ratio from block arithmetic] x [per-request rate ratio measured without memory pressure], and preemptions per generated token do not change with speculation beyond the spread. Per-step speedup at the capped batch then simply carries over, less a few percent for the draft head.
+
+2. **Hybrid is fully explained by state blocks.** The hybrid ratio is reproduced by the same product once running requests are computed from the 1+k state blocks per group. That formula is already public in vllm#55533 and in the student's notebook.
+
+3. **The watermark interaction is the known ping-pong.** The hybrid's watermark-by-speculation interaction either falls inside the repeat spread or is accounted for by recompute tokens (the align-mode ping-pong that open PR vllm#62878 targets).
+
+Also treat it as a kill if the only actionable output is a setting ("use k=1 and watermark 0.05 on hybrids under memory pressure"). That is the pattern the student's own R1 gate rejected: a tuned existing knob recovers the gap.
+
+Two reasons from the existing data to expect this outcome:
+- Throughput = running requests x per-request rate is an identity, so only the residual against the unsaturated calibration can surprise.
+- On the dense model the watermark's main effect is about 1-3%, so "sub-additive with other fixes for memory pressure" has nothing to act on there.
+
+**Result that makes it a paper.** Either of the following, replicated with 3 repeats and on two model sizes:
+
+**A. The null model fails on the dense model by more than 10-15% in a consistent direction, with a traced cause.** Candidates: speculation changes preemptions or recompute per generated token; or the draft head's weights and KV take a first-order share of a tight pool. On a 14B on 48 GB the 1.2 GB head is about 9% of a 13.5 GB pool, against TurboSpec's "below 4%".
+
+**B. A sign pattern that contradicts the published message, with a controller that exploits it.**
+- Under a natural memory cap the dense 14B keeps close to its small-batch speedup (at least about 1.3x at saturation), where the batch sweeps of Liu et al. (MLSys 2026) would predict fading gains at the same offered load.
+- The hybrid loses with its shipped k=4.
+- The k sweep shows an interior optimum: k=1 or 2 beats both k=0 and k=4 by at least 10%, and the best k moves with memory pressure.
+
+B would support a memory-time account of speculation and a load-aware choice of k made jointly with admission. One week gives only the signal. Without the controller, B is a characterisation paper.
+
+**GPU-days.** About 2 GPU-days (range 1.5-2.5), which is under one day of wall time on the three RTX 6000 Ada cards.
+
+| Part | Runs | GPU-hours |
+|---|---|---|
+| Core 2x2x2 x 3 repeats | 24 x ~1.1 h | ~27 |
+| Calibration grid | ~30 short points | ~4 |
+| Hybrid k sweep | 4 | ~4 |
+| 14B / 9B natural-cap arm | 8 | ~8 |
+| Smoke tests | — | ~1-2 |
+
+The card's own estimate of about 30 GPU-hours covers the core only and is consistent with this. Existing runs took 3,700-4,750 s each.
+
+**Blockers.** No hard blocker. Models, data and engine features are all available; the items below are soft.
+
+**Availability (checked today).**
+- Local, Apache-2.0, ungated: Qwen/Qwen3-4B, Qwen3-8B, Qwen3-14B (28 GB bf16), Qwen3.5-4B, Qwen3.5-9B, Qwen3.5-27B-FP8.
+- EAGLE-3 heads: AngelSlim/Qwen3-4B_eagle3 (local, weights arrived 2026-11-09, Apache-2.0 per its licence file), AngelSlim/Qwen3-8B_eagle3 (local), AngelSlim/Qwen3-14B_eagle3 (public, 1.22 GB, not local), RedHatAI/Qwen3-8B and Qwen3-14B speculator.eagle3 (public, Apache-2.0).
+- Data: AIME validation (Apache-2.0, now under project-numina) and MATH-500 are local. MATH-500 has no licence tag on its HF card and I did not verify its licence.
+- vLLM 0.32.0: watermark, MTP, eagle3 and the preemption counter are all present, and the student has run each.
+
+**Soft blockers.**
+1. **Untested loads.** The AngelSlim heads are untested in vLLM 0.32. The registry lists their architecture name, but the 8B and 14B heads ship as pytorch_model.bin. The only head tested so far (brian920128) has 0.33-0.65 acceptance under greedy decoding and loses at batch 64. At T=1 acceptance will be lower, so the dense arm may be limited by drafter quality, not by memory.
+2. **Recorder and bound fit.** The Recorder and rollout_bound.py assume one token per request per step. They need adapting and checking with speculation on; about 1 day.
+3. **Forced-length replay.** It holds work equal across cells but makes the model continue past its natural end, which distorts acceptance. Real sampling instead changes output tokens by up to 1.8% between runs. Report acceptance against the vime real-sampling value (0.58) as a validity check.
+4. **Design flaw in the card's 2x2x2.** The dense model's watermark effect is 1-3%, at the noise floor, so the interaction term is only informative on the hybrid.
+5. **The 4B models need an artificial 0.5 memory share** to be memory-capped. Even then the plain step at 23-47 running requests is 28-31 ms against 10 ms at batch 1, so it is partly compute-bound and not cleanly "memory-capped with spare compute". The 14B on a full card is the cleaner regime, but its pool size is my estimate.
+6. **Moving target upstream.**
+   - vllm#55533 (open since 2026-09-06) already documents MTP's 1+k state blocks cutting hybrid concurrency, with the formula.
+   - vllm#58863 (RecoverSSM for Qwen GDN, open, updated 2026-11-03) would remove that cost.
+   - vllm#62878 (open, updated 2026-11-08) targets the hybrid decode-transition preemption.
+   - v0.33.0rc3 (2026-11-02) already moves verify records out of the KV cache for Kimi KDA.
+   The hybrid half could be engineered away within weeks.
+7. **Repeat spread is unknown.** No identical replay has been repeated. One serving repeat differed by 8% when preempting. Step 3's repeats are the first measurement of it.
+8. **Shared node.** Timed cells need the three Ada cards free; GPU 4 was in use when checked.
+
+**Follow-on design space.** **If positive** (speculation's effect under saturation is set by memory-time and departs from per-step speedup):
+- A memory-aware speculation controller that picks k per engine or per request from pool pressure, maximising running requests x per-request rate, co-designed with admission (watermark) and victim choice.
+- A goodput model in the TurboSpec style with a memory-time term and the draft head's footprint.
+- For hybrids, state-light verification (ReplaySSM / RecoverSSM style) evaluated at saturation instead of at fixed batch.
+- Speculation-aware preemption: swap instead of recompute, since recompute is the part speculation does not accelerate.
+
+**If negative** (the product of capacity ratio and unsaturated speedup predicts everything):
+- No mechanism to build. The output is at most a short upstream note on k and watermark for hybrids under memory pressure.
+- The calibration grid from Step 2 (per-request rate with and without speculation across batch and context, dense and hybrid) is the measurement Q01 needs, so the week transfers to Q01 (cost-ratio predictor of the batch at which speculation stops paying).
+- A negative result also says that preemption and admission can be treated separately from speculation in later work.
+
+## Q20: append-only context vs compaction on self-hosted engines (weakened)
+
+### Already answered? mostly_answered
+
+The card's claim 'No self-hosted measurement of compaction against append-only was found' is no longer true. At least four preprints from Sep-Nov 2026 measure it, and one of them (ReFold, arXiv 2610.07863) runs nearly the card's own first experiment on the student's exact setup: Qwen3.6-27B, vLLM, 2x 48 GB RTX 6000 Ada at TP=2, prefix caching on, SWE-bench Verified, append-only vs periodic context rewriting vs LLM-summary compaction, concurrency swept 8 to 64 through KV saturation.
+
+What those papers establish about the sign:
+- No memory pressure (w=8, KV peak 42%): append-only is as good or better. ReFold: 38 vs 38 resolved, 9.8 vs 9.4 min; LLM-summary compaction at 16k is slower (11.6 min) at equal solves. Beyond Token Savings (self-hosted, fixed concurrency) agrees: compression is 0.79-1.0x latency on SWE-bench and 20-80% slower on Terminal-Bench, often with lower success.
+- Near and past KV saturation: context reduction wins by a wide margin. ReFold at w=32: 35 vs 20 resolved, 46 vs 70 min; at w=48 summary compaction resolves 36 vs append-only's 7 at similar duration; append-only's cache hit rate falls to 13.7% with preemptions.
+- The mechanism is also published: decode throughput 3.6-7x higher at 16K than 256K context on vLLM (Belcak et al.), 1.6-2.6x less self-hosted LLM time with compaction (CliffCompaction Table 11), and an operation-count cost model with hybrid-specific break-even lengths (Think or Remember).
+
+So the core answer ('the rule holds without pressure, compaction wins once concurrency nears the thrashing point') is already in print, though no paper states it as a test of the append-only rule. What is left is a detail-level contribution: the crossover location in measured GPU-seconds per solved task with noise bounds, below w=8 and between w=8 and w=48 for summary compaction; and the co-design step (memory-pressure-triggered compaction, or compaction vs admission control).
+
+Caveats on this verdict: all the closest papers are arXiv preprints with no confirmed venue; ReFold uses 50 tasks with 1-3 solves of rerun noise and an unexplained baseline collapse that may partly be a timeout artifact; Beyond Token Savings ran Qwen with prefix caching disabled. My search was limited by an exhausted web-search budget and relied mainly on citation chasing, so further overlapping work may exist that I did not see; it is unlikely that the question is more open than stated here. The card's evidence list should be updated: CliffCompaction's body does contain a self-hosted measurement, and Q21's compaction arm is affected by the same papers.
+
+Card file: /home/ryankert_l/kv-fetch/kv-fetch/research_notes/Research question search/questions_ranked.json (id Q20).
+
+**Remaining gap.** No paper reports measured GPU-seconds per solved task for append-only versus LLM-summary compaction across a fine concurrency sweep with prefix-cache hit rate and preemptions logged, so the crossover point (somewhere between no pressure and KV saturation; ReFold brackets it only as w=8 vs w=48 for summary compaction and tests nothing below w=8) is not located or given error bars. Compaction triggered by an engine memory-pressure signal, and a head-to-head of compaction against admission control at the cliff, were also not found.
+
+Closest papers:
+- ReFold: Training-Free Reversible Inter-Turn Context Folding for Long-Horizon Agents (Su, Tian, Zhang, Kundu) (arXiv 2610.07863, Oct 2026 (preprint, no venue found); https://arxiv.org/abs/2610.07863). Answers: Runs almost exactly the card's first experiment. Qwen3.6-27B on vLLM 0.19.1, 2x RTX 6000 Ada 48 GB at TP=2, prefix caching on, mini-swe-agent on 50 SWE-bench Verified tasks. Arms: append-only ('base'), ReFold (rewrites the prefix every 3 steps), and LLM-summary compaction at 75% of a budget ('compact'). Concurrency sweep w = 8, 16, 32, 48, 64 through KV saturation. Table 2, base vs ReFold as resolved-of-50 / minutes per task / KV peak: w=8 38 vs 38, 9.8 vs 9.4, 42% vs 29%; w=16 31 vs 38, 26.2 vs 15.4, 84% vs 48%; w=32 20 vs 35, 69.5 vs 46.4, 100% vs 84%; w=48 7 vs 32, 90.3 vs 69.3, 100% vs 99%. LLM-summary compaction at a 16k budget: w=8 38 resolved in 11.6 min (slower than append-only's 9.8 at equal solves); w=48 36 resolved in 87.3 min against append-only's 7 in 90.3. Appendix Table 12 (two replicas, w=32): append-only prefix-cache hit rate 13.7% with 10 and 63 preemptions, ReFold 31.2% with none. So on the student's hardware and model: append-only is equal or slightly better with no memory pressure, and context reduction wins clearly once KV fills. Leaves open: Not framed as a test of the append-only rule and no crossover is located: nothing below w=8, and LLM-summary compaction has only two concurrency points (w=8, w=48). Cost is hosted price-sheet cents, not GPU-seconds per solved task (derivable only roughly from duration). 50 tasks, resolve counts move 1-3 between identical reruns; the base collapse (7 at w=48, then 18 at w=64 over 71 tasks) is unexplained and may partly be the 600 s no-token timeout. Compaction is triggered by context budget, not by an engine memory-pressure signal. One model, one benchmark.
+- Beyond Token Savings: A Systematic Study of Context Compression in LLM Agents (Satish, Sinha, Kawada, Yadwadkar) (arXiv 2609.32961, Sep 2026 (preprint); https://arxiv.org/abs/2609.32961). Answers: Self-hosted vLLM (TP=4; 4x A100 80 GB for SWE-bench Verified, 4x RTX A6000 48 GB for Terminal-Bench 1.0), three open models (Qwen3.5-35B-A3B, Devstral-Small-2-24B, GLM-4.7-Flash), 65 compression policies against a full-context baseline, about 35,000 runs, 3 repeats. Measures task success and end-to-end wall-clock per trajectory. Finding: fewer tokens does not mean faster. SWE-bench: 0.4-0.7x tokens gives 0.79-1.0x latency. Terminal-Bench with Qwen: about one-third the tokens but 20-80% longer than full context, and 11 of 12 policies lose 5-13 points of success. Summary calls are 28-46% of solved-run wall-clock. Leaves open: Fixed concurrency (16 and 4), no sweep, no KV-memory pressure, preemption or thrashing. Appendix A.5.2 states 'Qwen was served with prefix caching disabled' and gives no measured cache-hit rate, so the cache-on regime the card is about is not what was measured for Qwen. Cost is an estimated price-sheet figure with a 0.1x cache discount; no GPU-seconds, no per-solved-task cost.
+- You Don't Need Long Context (Belcak et al., NVIDIA) (arXiv 2611.05306, 3 Nov 2026 (preprint); https://arxiv.org/abs/2611.05306). Answers: States the owned-GPU cost argument for compaction directly: on vLLM (8-16 H100s, prefix caching on) sustained decode throughput at 16K context is 3.6x-7x that at 256K, converted to cost at a dollars-per-H100-hour rate. Gives open-model accuracy under compaction, including Qwen 3.6 27B on SWE-bench Verified: 68.6 full history, 69.4 / 68.2 / 65.0 at 48K / 32K / 16K windows (Terminal-Bench 2.1: 43.8, 48.3, 49.4, 43.8). Leaves open: Throughput is from synthetic requests at the best no-preemption setting; configurations that preempt were excluded. Re-prefill after each compaction is not counted. Self-hosted cost per solved task is modelled, not measured from live runs. A Substack critique dated 10 Nov 2026 (nikolettabasiou.substack.com/p/you-dont-need-long-context-but-is) names 'GPU-hours per resolved issue, full history vs compaction, including re-prefill' as the missing experiment.
+- CliffCompaction: Cost-Efficient Compaction for Long-Horizon Coding Agents (Nguyen, Cho, Chen, Dettmers) (arXiv 2609.26779, Sep 2026 (preprint); https://arxiv.org/abs/2609.26779). Answers: Appendix A.2, Table 11: GLM-4.7-Flash on vLLM (RTX PRO 6000 Blackwell), mini-swe-agent on SWE-bench Verified, total time spent in LLM calls: 234.2 h full context, 146.0 h at 32K (1.60x), 111.6 h at 16K (2.10x), 88.9 h at 8K (2.62x). The authors conclude the benefit 'extend[s] to self-hosted serving setups'. Also argues cache-aware compaction (append-only between compaction points). The card listed this paper as unverified in the body; the body does contain a self-hosted time measurement. Leaves open: Table 11 has no success column, and the paper does not state concurrency, GPU count or whether prefix caching was on. No concurrency sweep, no memory pressure. All other cost numbers are API dollars.
+- Think or Remember: The Exchange Rate of Agentic Inference (Wisznia et al.) (arXiv 2611.10982, 7 Nov 2026 (preprint); https://arxiv.org/abs/2611.10982). Answers: A hardware-side cost model for context policies, validated against an instrumented vLLM: cost = c per processed token + beta per attended pair, with P* = c/beta the context length where attention cost overtakes processing. Reports P* per model, including hybrids: Qwen3.6-27B 123.85K versus 30.29K for a full-attention 27B counterfactual, Qwen3-8B 23.57K. Shows the serving setup alone flips which policy is cheaper (dropping earlier reasoning costs 1.74x keeping it with state reuse, 0.34x with no reuse) and gives a break-even 'retention horizon'. This covers the card's 'on hybrids the trade changes' point analytically. Leaves open: Cost is operation counts, not GPU-seconds. Cache capacity is assumed unlimited, so eviction, KV occupancy, concurrency and thrashing are excluded by construction. The policy studied is keep/drop reasoning; its one compaction study uses a hosted model billed in API dollars. No cost per solved task.
+- Practical Online KV Cache Compaction for LLM Agents: An Empirical Study (Liu et al., UCSB / LinkedIn) (arXiv 2608.00902, Aug 2026 (preprint); https://arxiv.org/abs/2608.00902). Answers: The same trade at the KV level (token eviction / attention matching, not text compaction) on hybrid models: Qwen3.5-27B no compaction 52.5% accuracy, 18 turns, batch 8, 217 queries/h; compacted 51-52%, 28-31 turns, batch 32, 717-918 queries/h. States that 'the increase in concurrency offsets the additional decode work'. Leaves open: Throughput is simulated from batch-1 trajectories and synthetic decode timings on H200s; engine-side KV edits, not harness-side compaction; prefix caching not discussed.
+- CONCUR: High-Throughput Agentic Batch Inference of LLM via Congestion-Based Concurrency Control (arXiv 2601.22705, Jan 2026 (preprint); see also 'When Cache Pressure Becomes a Trap: Metastability in Agent Serving', arXiv 2611.02543; https://arxiv.org/abs/2601.22705). Answers: The card's 'if append-only still wins' branch: treats the thrashing cliff by agent-level admission control that bounds aggregate cache pressure, with contexts left append-only. Leaves open: Does not consider compaction as an alternative lever, so it gives no comparison between admission control and context reduction.
+
+Searches run: Search was constrained: the session's shared WebSearch budget was exhausted for most of the run; only 6 WebSearch queries executed (phrasings around append-only vs compaction, self-hosted vLLM, KV cache pressure, concurrency, GPU-seconds per solved task, ReFold). The rest was done by citation chasing with direct fetches: Semantic Scholar 'cited by' lists for the card's sources (2605.26297 IISWC characterization, 10 citers; 2601.06007 Don't Break the Cache, 28 citers; 2511.02230 Continuum, 86 citers; 2609.26779 CliffCompaction, 3 citers; 2609.32961, 4 citers) and the reference list of 2611.10982. Opened and read body sections (arXiv HTML) of: 2610.07863, 2609.32961, 2611.05306, 2609.26779, 2611.10982, 2608.00902, 2609.31395 (ActKV), 2607.00151 (SmoothAgent), 2609.20804 (harness design study), 2610.06597 (HEAR). Abstract-level only: 2610.22863, 2608.15127, 2608.04458, 2609.37012, 2607.00692, 2610.34425, 2607.15516, 2607.19214, 2605.18854, 2609.35750, 2609.35540, 2609.37725, 2606.11213, 2606.23525, 2610.35496, 2611.07238, 2611.02543, 2611.10240, 2611.12304, 2606.30560, 2605.23296, 2601.22705. Also grepped the local harvest notes. NOT done: keyword search on arXiv / Semantic Scholar / Google Scholar / OpenReview search endpoints (avoided as a workaround of the search budget), systematic scan of the 2025-2026 OSDI/SOSP/NSDI/EuroSys/ASPLOS/ATC/MLSys/NeurIPS/ICML/ICLR/ACL/EMNLP programmes, and the 'cited by' lists of 2508.21433 (Complexity Trap), 2608.00101 (Copilot) and 2610.07863 (ReFold), which returned HTTP 429. Paper contents were read through a summarising fetch tool, so table numbers quoted here should be re-checked against the PDFs before they are relied on.
+
+### Premise: weakened
+
+Q20's quoted evidence is all accurate, but the premise is weakened: the "append-only rule" is partly a strawman, and a self-hosted measurement the card says does not exist was found in a paper the same search cites.
+
+- **Quotes:** all three evidence items are verbatim in their primary sources (Manus blog, arXiv 2601.06007, arXiv 2605.26297 v2 including the Table II numbers).
+- **Manus is misread by elision.** The card's "..." drops "whether you're using a self-hosted model or calling an inference API" and the latency argument, so the rule is not argued from price alone. The same post endorses restorable compression.
+- **"The one quantitative study" is an overclaim.** The Copilot study and CliffCompaction also quantify cache behaviour for agents.
+- **The central gap claim is contradicted.** CliffCompaction (arXiv 2609.26779, read only at abstract level on card Q21) reports in Appendix A.2, Table 11, an append-only mini-swe-agent baseline against threshold compaction on vLLM with an RTX PRO 6000 Blackwell: 234.2 h against 146.0 / 111.6 / 88.9 h of LLM-call time (1.60x to 2.62x).
+- **API-dollar results already favour compaction.** Complexity Trap (-52%) and CliffCompaction (-50%) include the cache discount, so there is no API-side "append-only wins" finding to test for transfer.
+- **Direction is predictable.** Compaction shrinks the resident KV footprint that defines the thrashing cliff, and its known turn-count penalty (about 15% for summaries, none for masking) is smaller than the 25-43% aggregate throughput loss past the cliff.
+
+What remains open is narrower than the card: a concurrency sweep across the cliff in GPU-seconds per solved task with success rates, the LLM-summary variant's crossover, hybrid models, and memory-pressure-triggered compaction. That is closer to a co-design or measurement increment than an open-sign question.
+
+I could not do an independent prior-work search because the session's web search budget was exhausted; only known URLs were fetched. Downloaded source text is in /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q20/. No repo files were modified.
+
+**Is the tension real?** Only partly. The three quotes are accurate, but the framing built on them does not survive reading the sources.
+
+- **The "rule" is not what the card says it is.** Manus argues from latency and cost, explicitly for self-hosted and API use alike, and "append-only" there means "do not edit the prefix", not "never compact". Don't Break the Cache recommends caching only the stable system prompt.
+- **On API pricing, compaction already wins.** Complexity Trap (-52%) and CliffCompaction (-50%, cache reads 78% of the bill) measure this with the cache discount included. There is no API-side "append-only is cheapest" result for a self-hosted cost model to overturn.
+- **The gap claim is too strong.** CliffCompaction Table 11 is a self-hosted vLLM measurement of threshold compaction against an append-only baseline, showing a 1.6-2.6x reduction in LLM-call time.
+- **What is still unmeasured** is narrower: the interaction with concurrency and the thrashing cliff, in GPU-seconds per solved task with success rate. The IISWC paper leaves compaction out of scope, and CliffCompaction's table has no concurrency, hit-rate or per-solved-task data. Hybrid models and a compaction trigger driven by engine memory pressure also look untouched.
+
+The IISWC and Manus/Don't-Break-the-Cache sources measure different things (engine time on H100s versus API dollars), so they do not conflict; they leave a gap, and that gap is smaller than the card states.
+
+I could not run an independent literature search: the session's web search budget was exhausted. The CliffCompaction finding came from opening a paper already cited in the same file, so other prior work may exist that I did not see.
+
+**Obvious answer?** Largely predictable in direction: cache-friendly threshold compaction (truncation or masking, no LLM summary call) beats append-only on GPU time at and beyond the append-only thrashing point, and probably below it too.
+
+- **The cliff is close to a memory identity.** Thrashing starts when the summed resident contexts exceed the KV pool, so halving mean resident context roughly doubles the concurrency at which it starts.
+- **Append-only past the cliff is expensive.** From IISWC Table II, aggregate throughput (my derivation: max concurrency times per-request tok/s) goes from about 451 to 339 to 258 tok/s at 15 / 20 / 25, a 25-43% loss.
+- **Compaction's known penalties are smaller than that.** Complexity Trap reports about 15% longer trajectories for LLM summaries and none for masking, with solve rates held; CliffCompaction reports success preserved at 16-32K thresholds.
+- **A self-hosted measurement already shows the sign.** CliffCompaction Table 11 gives 1.6-2.6x less LLM-call time on vLLM, with no concurrency pressure reported.
+
+What an expert could not predict with confidence: the size of the gain below the cliff, the exact crossover (if any) for the LLM-summarization variant the card's first experiment specifies (it adds a decode-heavy summary call and longer trajectories), whether a 27B open model keeps its solve rate under compaction, and how the trade shifts on hybrid models.
+
+Evidence checks:
+- [confirmed_with_caveat] The append-only rule is argued from provider cache pricing (Manus blog). (https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus): All three quoted fragments are on the page verbatim. The card's ellipsis removes text that cuts against its reading: the blog says the hit rate "directly affects both latency and cost" and that KV-cache "drastically reduces time-to-first-token (TTFT) and inference cost—whether you're using a self-hosted model or calling an inference API", and it tells vLLM self-hosters to enable prefix caching. The price ratio is offered as one illustration, not the whole argument. In context, "append-only" means do not modify earlier actions or observations and serialise deterministically; it is not a rule against compaction. The same post says "Long inputs are expensive, even with prefix caching" and describes restorable compression via the file system.
+- [confirmed_with_caveat] The one quantitative study of caching for agents covers provider APIs and treats summarizing as cache-breaking (Don't Break the Cache, arXiv 2601.06007). (https://arxiv.org/html/2601.06007): Both quotes are present (abstract: 41-80% cost, 13-31% TTFT; the body says TTFT gains range 6% to 31%). Section 6 has the summarizing/pruning sentence verbatim. Scope is provider APIs only (GPT-5.2, GPT-4o, Claude Sonnet 4.5, Gemini 2.5 Pro). Caveats: the summarizing sentence is a discussion remark, not a measured arm (the paper mimics it by excluding tool results from caching). The paper's own conclusion is that caching only the stable system prompt is more consistent than full-context caching, so it is not an endorsement of append-only. "The one quantitative study" is an overclaim: the Copilot production study (arXiv 2608.00101, cited on card Q21) and CliffCompaction (arXiv 2609.26779) also quantify cache behaviour for agents.
+- [confirmed] On a self-hosted engine agent serving is decode-dominated, thrashes past a concurrency threshold, and compaction was left uncharacterized (arXiv 2605.26297). (https://arxiv.org/html/2605.26297): All confirmed in v2 (21 Sep 2026; arXiv comments field says IISWC 2026). "decode accounts for 91.0–98.6% of LLM time, while prefill contributes only 1.4–9.0%" is verbatim and explicitly for the no-thrashing regime. The Section VII scope sentence is verbatim. Table II, Qwen3.6-27B, Terminal-Bench 2.0: hit rate 98.85 / 16.78 / 19.21% at max concurrency 15 / 20 / 25; per-request generation throughput 30.08 / 16.96 / 10.30 tok/s. Setup: two H100 NVL with NVLink, vLLM v0.20.0, TP=2, Claude Code harness. Caveat for the student: that node has roughly twice the memory of two 48 GB cards, so the cliff would sit at much lower concurrency there (my rough estimate, not measured: single digits).
+- [not_found_in_source] Card's closest_existing_answer: "No self-hosted measurement of compaction against append-only was found." (https://arxiv.org/html/2609.26779): Contradicted by a paper the same search cites on card Q21 but read only at abstract level. CliffCompaction Appendix A.2, Table 11: mini-swe-agent (described in the paper as "an append-only conversation history without native conversation-level compaction") on SWE-bench Verified with GLM-4.7-Flash served by vLLM on an RTX PRO 6000 Blackwell. Total time in LLM calls: 234.2 h full context, 146.0 h at a 32K threshold, 111.6 h at 16K, 88.9 h at 8K (1.60x, 2.10x, 2.62x). The paper states "the benefits of CliffCompaction extend to self-hosted serving setups". Limits of that table: it sums request latency rather than GPU-seconds, gives no concurrency, no hit rate, no success rate for that model, and has no concurrency sweep or thrashing analysis.
+- [confirmed_with_caveat] Context for the tension: under API pricing with the cache discount, does append-only minimise cost? (CliffCompaction and The Complexity Trap, both cited on Q21) (https://arxiv.org/html/2508.21433): These sources show that measured API-dollar results already favour context management over raw append-only. Complexity Trap: observation masking is "52% cheaper than the Raw Agent baseline" on Qwen3-Coder 480B with the solve rate up 2.6%; LLM summaries lengthen trajectories by about 15%. CliffCompaction: cache reads are 78% of the uncompacted bill and threshold compaction cuts cost by up to 50% with success preserved. So the "rule derived from API prices" the card sets up is not what the API-side measurements say. Complexity Trap served Qwen3-32B on vLLM (two H200, 15 workers) but reports cost in API dollars only; I found no wall-clock or GPU-time figures in it.
+- [confirmed] Card's closest_existing_answer: Continuum keeps KV pinned across tool calls and does not compact. (https://arxiv.org/html/2511.02230v2): Continuum pins KV in GPU memory with a time-to-live across tool calls; the page has no compaction or summarization mechanism.
+
+### Feasibility: yes_scaled_down
+
+Q20 is answerable on the student's node if it is scaled down, and a one-week kill test exists that needs no agent sandbox for its main half.
+
+- **Shortcut:** The Complexity Trap released 500-instance SWE-bench Verified trajectories for Qwen3-32B under raw, observation-masking and LLM-summary policies, with solve rates. Replaying them against vLLM 0.32 at rising concurrency gives GPU-seconds per solved task for every policy, using replay and instrumentation code the student already has.
+- **What must be built:** a multi-turn session replay driver (1-2 days), and for the live half a compaction hook in mini-swe-agent plus a working container setup.
+- **Engine features:** everything needed is in vLLM 0.32: prefix caching, native CPU offload, the watermark, the retention interval, cached-token and preemption counters, and the Qwen tool and reasoning parsers.
+- **Memory fit:** Qwen3.5/3.6-27B-FP8 leaves about 199K tokens of KV on one 48 GB card (measured), so the append-only cliff sits at only 3-5 sessions; at TP=2 I estimate about 0.8M tokens.
+- **Main risk to the question:** the answer may be boring. The student's own numbers show context length adds only about 23% to a decode step, so the result hinges on memory capacity and recompute. An existing flag (CPU offload) may remove the cliff, or a three-line capacity model may predict the crossover.
+- **Main practical risks:** disk space for SWE-bench images, no running Docker daemon, and only two idle cards when I checked.
+
+I could not open the IISWC figshare traces (403) or run a fresh search for competing work, because the session's search budget was exhausted.
+
+**Existing data.** The student already has most of the cost side. All paths are under /home/ryankert_l/kv-fetch/kv-fetch.
+
+**Measured numbers that bound the answer (Qwen3.5-27B-FP8, same geometry as Qwen3.6-27B: 64 layers, 16 attention, 4 KV heads)**
+- results/profile/harness/done/d2_base_qwen35_27b_fp8.json and NOTEBOOK.md "10:08": one 48 GB card at 0.92 gives a KV pool of 199,338 tokens (271 blocks x 784 tokens, 64 KiB/token) plus 144 MiB of GDN state per request.
+- Prefill for 1K / 8K / 32K tokens takes 522 / 4,402 / 19,658 ms. Decode takes 32.2 / 34.9 / 39.6 ms per step at 2K context and batch 1 / 4 / 16, and 43.1 ms at 32K x 4.
+- So 16x more context adds only about 23% to a decode step. The "attended over at every decode step" term is small on this model.
+- Recomputing a 60K-token context costs about 35 s, roughly 900 decode steps. On these cards memory capacity and recompute dominate, and a single card holds only about 3 sessions of 60K tokens.
+
+**Thrashing behaviour already characterised**
+- results/profile/harness/done/d2_serve_27b.json: at c=64 the 27B runs about 25 requests at 87-94% KV, with 1,006 preemptions at the default watermark and 46 at 0.1.
+- thrash_trace_qwen35_4b_{on,off}.json and thrash_trace_qwen3_4b_{on,off}.json: the hybrid readmission ping-pong.
+- serve_multiturn_4b_pair.json: hit rate 61% (dense) vs 70% (hybrid), decided by capacity.
+
+**Prefix-cache simulator and pilots**
+- scripts/k0_simulate.py with configs/prefix_k0.yaml and results/prefix/k0_v2.json: a CPU trace-driven simulator of vLLM's hybrid prefix cache (LRU, retention semantics, host tier at measured transfer rates, recompute-time fit from results/prefix/pilot/recompute_probe.json). It can predict the crossover from agent trajectories before any GPU run.
+- scripts/prefix_pilot/agent_loop.py: a 5-turn tool loop on the hybrid recomputes 316 ms per turn at retention 0 vs 115 ms dense.
+
+**Replay and measurement harness**
+- scripts/rl/rollout_replay.py: in-process engine, outputs forced to recorded lengths.
+- scripts/profile/thrash_trace.py: scheduler Recorder that logs decode, new prefill, recompute, preemptions and readmission hits per step.
+- scripts/rl/rollout_bound.py: step-time fit.
+- scripts/profile/serve_bench.py: Prometheus counter deltas per run. scripts/profile/harness.py: job queue.
+
+**What does not exist**
+- No multi-turn session replay driver with tool-wait gaps.
+- No agent harness, no SWE-bench data or images, and no solve-rate data of any kind.
+
+**Local models** (/share2/huggingface/hub): Qwen3.5-27B-FP8 (29 GB), Qwen3.8-27B bf16 (52 GB), Qwen3-32B-AWQ (19 GB), Qwen3.6-35B-A3B-FP8, gemma-4-31b-it-fp8. Qwen3.6-27B is not cached.
+
+**First-week experiment.** Split the question into a cost half (GPU, no containers) and a solve-rate half (containers, little GPU). The split is valid because agent behaviour does not depend on server load.
+
+**Part A, days 1-4: replay public trajectories across the cliff**
+- **Data:** JetBrains-Research/the-complexity-trap on HF (Apache-2.0; code fork MIT). The sweagent/ folder has Qwen3-32B trajectories on SWE-bench Verified, 500 instances each, for raw, observation masking (N_1_M_10) and LLM-summary (N_21_M_10), thinking and non-thinking, about 2.5 GB compressed. The paper (arXiv 2508.21433) gives solve rates of 17.0 / 15.0 / 16.0 non-thinking and 23.0 / 24.6 / 24.8 thinking, none significantly different. I did not open the archives, so the per-turn format is assumed to be SWE-agent .traj.
+- **Day 1, CPU only:** extract per-turn prompt and output tokens and tool times, feed them to k0_simulate.py, and write down the predicted GPU-seconds per task for each policy and concurrency.
+- **Engine:** vLLM 0.32.0, Qwen/Qwen3.5-27B-FP8 (cached) or Qwen/Qwen3.6-27B-FP8 (Apache-2.0, official FP8, about 30 GB to download). Flags: --language-model-only, --max-model-len 131072, prefix caching on, --watermark 0.05, gpu-memory-utilization 0.92. Cost replay needs only token counts, so weight identity does not matter; the text is re-tokenized.
+- **Workload:** a 100-instance subsample, the same instances in every arm. Closed loop at concurrency 2, 3, 4, 6, 8, 12 on one card (pool about 199K tokens, so the append-only cliff should sit near 3-5 sessions). Outputs forced with ignore_eos and max_tokens set to the recorded length; tool waits from the trace.
+- **Arms:**
+  1. Raw (append-only).
+  2. Raw plus native CPU offload (--kv-offloading-size).
+  3. Observation masking, which rewrites history every turn.
+  4. LLM-summary, which rewrites every 21 turns and adds summary decode.
+  5. On the hybrid, repeat arms 3 and 4 with --prefix-cache-retention-interval set to a periodic value. At the default 0 a mid-context rewrite may find no state checkpoint and re-prefill everything.
+- **Then:** repeat three concurrencies at TP=2 on two cards. I estimate the pool at about 0.8M tokens (not measured), which puts the cliff near 10-14 sessions, close to the IISWC setup.
+- **Numbers measured:** GPU-seconds per attempted task and per solved task (using the paper's 500-instance labels), split into decode, new prefill and recompute. Also cached-token share, preemptions, and the concurrency at which each compaction arm's GPU-seconds per solved task falls below arm 1 and below arm 2.
+- **Comparison:** against the day-1 prediction and against the paper's API-dollar ranking (masking was cheapest in dollars).
+
+**Part B, days 3-7: live solve rates on the model the card names**
+- Qwen/Qwen3.6-27B-FP8 at TP=2, with --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 (both parsers are in 0.32).
+- mini-swe-agent (MIT) on 100 SWE-bench Verified tasks, using --environment-class singularity (Apptainer 1.4.2 is installed) or rootless Docker.
+- Raw vs summary-at-50%-of-limit, run below the cliff. Evaluate with sb-cli or the local harness.
+- This checks that the solve-rate and trajectory-length effects from Qwen3-32B carry over. Qwen self-reports 77.2 on SWE-bench Verified for the bf16 model, so the card's "low solve rate" worry may be outdated; the rate under mini-swe-agent and FP8 is unknown.
+
+**Result that kills it.** Any one of these means stop or shrink the question.
+
+- **An existing flag removes the cliff.** Append-only with native CPU offload (plus watermark) keeps GPU-seconds per task within about 15% of its below-cliff value across the whole range where the compaction arms would otherwise cross. This is the student's rule (c) again. What remains is the decode-attention term, which the student's own data already caps at about 20-25% per step for 16x context, roughly cancelled by compaction's re-prefill, summary decode and about 15% longer trajectories. Outcome: the rule transfers, and thrashing is an admission and offload problem that Continuum, ThunderAgent and others already occupy.
+- **The answer is arithmetic.** The day-1 simulator or a three-line model (cliff = pool / resident context; cost = decode + recompute) predicts every arm's measured GPU-seconds per task and the crossover within about 15%. The measurement then adds nothing beyond a formula, and is at most a short note.
+- **Only this hardware shows it.** Prefill here is about 5x slower relative to decode than on the H100s in the IISWC paper, where prefill stayed under 10% of request time even while thrashing. If the gap between compaction and append-only shrinks to noise once recompute is priced at H100 rates, the result is a property of slow FP8 prefill on these cards.
+
+**Result that makes it a paper.** A paper needs a crossover that survives the strongest append-only configuration, plus a sign the price sheet gets wrong.
+
+- **Crossover that survives tuning.** Against append-only with offload, watermark and tuned retention, some compaction policy gives at least 1.3x lower GPU-seconds per solved task over a range of concurrency. Solve rate must be statistically no worse, paired, on 300 or more tasks in the follow-up.
+- **A ranking reversal.** Observation masking, cheapest in API dollars in The Complexity Trap, is the most expensive in GPU-seconds because it breaks the prefix every turn, while infrequent summarization wins only past the cliff. A policy ranking that flips with the cost model and with concurrency is the headline.
+- **A hybrid-specific term.** On Qwen3.5/3.6 at vLLM's default retention 0, each history rewrite forces a near-full re-prefill that a dense model does not pay, so the crossover moves by a factor a reviewer can check.
+- **A cliff location that transfers.** The crossover is stated as a ratio of pool to resident context and holds on both one card and TP=2.
+
+The paper would then be the measurement plus a mechanism: compaction triggered by an engine memory-pressure signal, compared against compaction triggered at the context limit.
+
+**GPU-days.** About 5 GPU-days, range 3-7.
+- Part A on one card: 5-6 arms x 6 concurrencies x 100 trajectories, about 2-3 GPU-days. Cells past the cliff run 3-5x longer.
+- Part A at TP=2: 3 concurrencies x 4 arms on 2 cards, about 1.5-2 GPU-days.
+- Part B live runs: 2 policies x 100 tasks at TP=2, about 1 GPU-day.
+Part A on one card alone (about 3 GPU-days) is enough for the kill test. These are estimates from the student's measured step times and assumed trajectory lengths (about 60 turns, about 9K output tokens per task); day 1 replaces the assumption with the real distribution.
+
+**Blockers.** None is fatal; several cost days.
+
+- **Disk.** /home has 38 GB free (100% used), / has 19 GB, /share2 has 93 GB. SWE-bench images for 100 tasks need roughly 50-120 GB, more as Apptainer SIFs because layers are not shared. Qwen3.6-27B-FP8 is another 30 GB. Part B needs space freed or a subset from one or two repositories.
+- **Containers.** The Docker daemon is not running. Rootless Docker binaries and 28 GB of old data are in the student's home, subuid is configured, and Apptainer 1.4.2 is installed. mini-swe-agent documents a singularity backend. Local SWE-bench evaluation needs Docker; sb-cli is a free cloud evaluator but uploads predictions to an outside service, which is the student's call. Terminal-Bench 2.0 (Harbor, Docker builds with internet) is not realistic in week one.
+- **Code to write.** A multi-turn session replay driver with tool waits (1-2 days on top of rollout_replay.py and the Recorder). Compaction for mini-swe-agent, which has none; the Complexity Trap SWE-agent fork has both policies but needs Docker.
+- **Replay bias.** Forced outputs differ from the recorded text, so each turn re-prefills the previous output. That overcounts prefill on a dense model; on the hybrid at retention 0 the real engine recomputes it anyway. It must be bounded and reported.
+- **Model mismatch in Part A.** Solve labels come from Qwen3-32B with SWE-agent at 17-25% solve rate, so cost per solved task is 4-6x cost per attempt, with about 9% relative error from the solve rate at n=500 and about 20% at n=100.
+- **Statistical power in Part B.** 100 tasks resolve solve-rate differences of about 9 points or more; The Complexity Trap needed 500 and still found none significant for this model size.
+- **GPUs.** When I checked, only GPU 2 (A6000) and GPU 5 (Ada) were idle. TP=2 would mix card types over PCIe. I found no record of FP8 on the A6000 in the notebook (the 27B runs were on Ada). The vLLM 0.32 venv lives in a session scratchpad under /tmp.
+- **Thinking mode.** If the chat template drops earlier reasoning from history, the prefix breaks every turn regardless of policy. Fix preserve_thinking or run thinking off, and say which.
+- **Not verified by me.** The IISWC figshare page returned 403, so its trace contents are unknown. The web-search budget for this session was exhausted, so I did no fresh search for a competing paper and only fetched known URLs.
+- **Two corrections to the card.** The Complexity Trap did self-host Qwen3-32B on vLLM (2x H200, 15 workers) for raw, masking and summary, but priced it with API rates and no cache discount. CliffCompaction (arXiv 2609.26779) has one self-hosted single-stream timing (GLM-4.7-Flash on vLLM) and no concurrency sweep. So "no self-hosted measurement" should read "no GPU-time measurement across concurrency".
+
+**Follow-on design space.** **If compaction wins past some concurrency**
+- An engine-to-agent memory-pressure signal (a metrics field or response header saying the pool is near eviction), with compaction triggered by it instead of by the context limit.
+- Compaction on eviction: rewrite history exactly when the session's cached prefix is about to be evicted during a tool wait, so the cache break costs nothing extra.
+- Cut points chosen for the cache: rewrite only behind a block or state-checkpoint boundary. On hybrids this pairs with retention-interval policy, which the student knows well.
+- A scheduler that chooses per session between offloading, compacting and queueing.
+- The evaluation setup would be the IISWC one (Qwen3.6-27B, TP=2, agent benchmarks), which fits the student's agreed method of adopting a published setup.
+
+**If append-only wins everywhere**
+- The rule transfers to self-hosted serving, and the cliff is handled by admission control, session-aware scheduling and offload. That is the Continuum / ThunderAgent / Autellix line, which the student's own notes mark as crowded.
+- The reusable leftovers are a public session-replay benchmark for vLLM built from open trajectories, and a GPU-seconds cost model for agent context policies that Q21 can use directly.
+- Q19's by-cause prefix-breakage breakdown can be computed from the same token logs.
+
+## Q26: does accumulated context cause agent failure (weakened)
+
+### Already answered? partly_answered
+
+Verdict: partly answered. The exact experiment on the card has not been published as far as I could find, but the card's claim that no forward test exists is too strong, and one of its three arms is already run. My search was cut short by the web-search budget, so treat "not found" as weaker than usual.
+
+What the card missed:
+- **Forward injection exists in neighbouring settings.** Web agents drop from 40-50% to under 10% when irrelevant trajectories are injected up to 150K tokens (arXiv 2512.04307). Workflow agents fall from 64-96% to 3-21% as environment data grows from 8K to 256K (LOCA-bench, 2602.07962). A Codex code-audit task goes from 8/10 to 3/10 with about 299K characters of added context, though at p=0.07 (2607.17937).
+- **A coding-agent forward test appeared ten days ago.** Switch-SWE (2611.02017) uses matched pairs and finds an 11.5-point drop, but the added context is real work on other tasks, with no padding control and no dose variation.
+- **The masked arm is essentially done on the student's setup.** "Beyond Token Savings" (2609.32961) runs mini-swe-agent on vLLM with three open-weight 24-35B models on SWE-bench Verified, about 35,000 runs. Clearing tool results leaves Qwen's resolve rate about level with full context, and compression overall moves success by -11.0 to +0.7 points.
+- **Evidence already leans toward "symptom" at natural context lengths.** The decisive error in failed Terminal-Bench runs has a median onset at step 7 of 27 (2607.09510). Compact-Bench's same-state replay shows no rescues from dropping history (2610.31710), and Jia et al. recover under 10% by repairing context.
+
+What is still open is the padded arm: error-like text at the 20-35K dose, on SWE-bench trajectories, with a model near 30B. A reviewer could reasonably predict the result from the above: little effect at that dose, clear harm only at 100K and beyond.
+
+One practical point for the first experiment: on mini-SWE-agent with Qwen3-32B, runs average about 9K tokens when passed and 18K when failed (2602.16069). The card's 20-35K dose comes from a different harness and would more than double this context.
+
+**Remaining gap.** No paper found adds passive, error-like output in a controlled dose (the 20-35K-token failed-minus-successful gap) to otherwise identical SWE-bench trajectories on open models of about 30B and reports the solve-rate change, so the causal-versus-symptom question is not settled for coding agents at realistic doses. The existing forward injections are in other domains or at 75K-256K tokens, and the one coding-agent case (Switch-SWE) confounds length with task interference.
+
+Closest papers:
+- Beyond Token Savings: A Systematic Study of Context Compression in LLM Agents (Satish, Sinha, Kawada, Yadwadkar) (arXiv 2609.32961, Sep 2026 (preprint); https://arxiv.org/abs/2609.32961). Answers: The removal arm, on almost exactly the student's setup: mini-swe-agent, vLLM, three open-weight models (Qwen3.5-35B-A3B, Devstral-Small-2-24B, GLM-4.7-Flash), 100 SWE-bench Verified issues plus 40 Terminal-Bench tasks, 3 runs each, about 35,000 runs over 65 policies. On Qwen, clearing tool results leaves the resolve rate about where full context is (53.7% vs 53 of 100 solved); across policies compression changes SWE-bench success by between -11.0 and +0.7 points, and policy rankings reverse between models. Leaves open: No arm adds context, none targets failed tool output specifically, and failed vs successful run lengths are not compared. The authors say the cross-model reversals need 'further controlled analysis'. Removal from step 0 changes the whole trajectory, so it does not isolate context size at a fixed state.
+- Switch-SWE: Do Coding Agents Hold Focus When Switching Between Unfinished Tasks? (Chang et al.) (arXiv 2611.02017, 1 Nov 2026 (preprint); https://arxiv.org/abs/2611.02017). Answers: A forward, matched-pair intervention on coding agents: 200 focus tasks, each run uninterrupted and with stages of four other unfinished same-repo tasks interleaved. Focus-task resolution drops by 11.5 points on average (6.0 to 15.0) across 7 agent configurations. Leaves open: The added context is real work on other tasks, so length is confounded with task interference and cross-task confusion. No padding control, no dose variation (one schedule of four interruptions), single runs without intervals, API-served frontier models in vendor harnesses, not SWE-bench Verified. The paper itself says token usage cannot separate the effects.
+- When and How Context Rot Appears in Coding Agents: A White-Box Study of Agent Skills in Code Auditing (arXiv 2607.17937v2, Jul 2026 (preprint); https://arxiv.org/html/2607.17937v2). Answers: A direct context-addition test on a coding agent with everything else held fixed (Codex, gpt-5.4-mini, one code-audit workflow): clean context passes 8/10, about 299K characters of relevant or irrelevant added context passes 3/10 each. It finds no stable dose threshold ('Raw length alone is insufficient'). Leaves open: n=10 per arm, Fisher p=0.07, sample extended after seeing pilot results, 28 of 57 extension attempts excluded, one task and one closed model, context added up front rather than as accumulated tool errors, dose roughly 75K tokens rather than 20-35K. Not SWE-bench, no open model in the main experiment.
+- LOCA-bench: Benchmarking Language Agents Under Controllable and Extreme Context Growth (arXiv 2602.07962, Feb 2026 (preprint); https://arxiv.org/abs/2602.07962). Answers: An experimenter-set dose-response for tool-using agents with task semantics held fixed: 15 seed tasks at 8K to 256K tokens of environment data, 75 samples per length. Accuracy falls steeply for every model, e.g. Claude-4.5-Opus 96.0 to 14.7, DeepSeek-V3.2-Thinking 78.7 to 6.7, Kimi-K2-Thinking 74.7 to 2.7. Leaves open: Workflow tasks (email, spreadsheets, databases), not repository repair. The added content is task data the agent must process, so length is confounded with task difficulty. No intervals. Models are frontier or very large; nothing at 30B. Says nothing about whether failing runs merely run longer.
+- Evaluating Long-Context Reasoning in LLM-Based WebAgents (Chung et al.) (NeurIPS 2025 LAW Workshop; arXiv 2512.04307; https://arxiv.org/abs/2512.04307). Answers: The forward injection design the card says is missing, on web agents: irrelevant trajectories injected between two dependent subtasks to reach 25K to 150K tokens, with a no-noise baseline. Success falls from 40-50% to under 10% (GPT-4.1 44.4% to 2.7%, o4-mini 46.2% to 21.2% at 150K). Leaves open: Web tasks on live sites, 56 tasks, task requires retrieving a fact from before the injected block (so it tests retrieval across noise as much as length), per-length numbers only in figures, one open model (Llama 4 Maverick) capped at 75K. Not coding, not error output.
+- Causal Decomposition of LLM Agent Failure via Oracle-State Intervention (Jia et al.) (NeurIPS 2026 workshop poster (Who Verifies the Agents?); https://neurips.cc/virtual/2026/172976). Answers: Already in the card for the reverse arm (replacing context after failure recovers under 10% of 420 failed WebArena runs; 11.7% of failures attributed to context). The abstract also reports a forward arm the card omits: continuously maintained oracle state raises success by 19-38%, with the gap over self-generated state growing from 8% to 12.5% as trajectories lengthen. Uses Qwen3.5-27B and GPT-5.2. Leaves open: WebArena only; replaces history with structured ground truth rather than varying its volume; no coding tasks. Read from the NeurIPS abstract page only (OpenReview was behind a browser check).
+- Compact-Bench: Measuring What Context Compaction Costs Long-Horizon Coding Agents (Sun et al.) (arXiv 2610.31710v2, Oct 2026 (preprint); https://arxiv.org/abs/2610.31710). Answers: A same-state paired replay on SWE-bench repairs: after at most 10 steps, continue from full history or from a summary with the same repository snapshot. Defines 'rescue' (full history fails, summary passes); the first-round outcome table shows none, while 5% to 64% of 22 full-history successes are damaged depending on summarizer. Leaves open: Built to measure compaction damage, not harm from accumulation: 35 repairs, fork after only 10 steps (little accumulated context), 8-step continuation, one continuation agent (Kimi-K3), no aggregate rescue count, no relation between history size and outcome.
+- Diagnosing and Mitigating Context Rot in Long-horizon Search (Xia, Wang, Huang, Liu) (arXiv 2606.29718, Jun 2026 (preprint); https://arxiv.org/html/2606.29718v1). Answers: For search agents on open models (GLM-4.7, GLM-5.0, Qwen3.5-397B, MiniMax-2.5): accuracy drops with trajectory length, and keeping only the last 3 turns 'almost completely eliminates the rot phenomenon' at the cost of more unfinished runs. A length-threshold sweep gives rot rate 2.4% / 7.2% / 20.2% at 32K / 48K / 64K. Leaves open: Removal only, no injection, search not coding. The authors' own limitations say it is unclear whether results generalize to software development. Does not address selection (struggling runs accumulate more).
+- Failure as a Process: An Anatomy of CLI Coding Agent Trajectories (Zhao et al.) (arXiv 2607.09510, Jul 2026 (preprint); https://arxiv.org/abs/2607.09510). Answers: Observational support for the 'symptom' reading: in 1,184 failed Terminal-Bench runs (7 models incl. open-weight, 3 scaffolds incl. MiniSWE), the decisive error has a median onset at step 7 against a median failed-run length of 27 steps, i.e. within the first quarter, before most context has accumulated. False premises are the largest trigger (30.7%); output misreading is 4.4%. Leaves open: Manual annotation, no replay or counterfactual, and context length is not analysed at all.
+- The Limits of Long-Context Reasoning in Automated Bug Fixing (Raju et al., SambaNova) (arXiv 2602.16069, Feb 2026 (preprint); https://arxiv.org/html/2602.16069v1). Answers: Replicates the correlation on the student's exact setup (mini-SWE-agent, 100 SWE-bench Verified tasks, open models): Qwen3-32B averages 8,854 tokens on passed vs 17,627 on failed runs; DeepSeek R1 8,538 vs 15,554. Also shows single-shot patching at 64K context collapses (Qwen3-Coder-30B 7%). Leaves open: Correlation only for the agentic arm; the long-context arm is single-shot, not a live trajectory. Note the trajectories stay under about 20K tokens, so the card's 20-35K padding dose would more than double the context for this harness and model size.
+- The Illusion of Diminishing Returns: Measuring Long Horizon Execution in LLMs (Sinha et al.) (ICLR 2026; arXiv 2509.09677; https://arxiv.org/abs/2509.09677). Answers: A controlled injected-history experiment that separates length from error content on a synthetic running-sum task: with an error-free history, turn-100 accuracy is already below turn-1 (length effect); raising the injected error rate lowers it further (self-conditioning). Qwen3 thinking models do not show the self-conditioning effect. Tested on Qwen3 4-32B and Gemma3 4-27B among others. Leaves open: Synthetic task, no tools, no coding. The agentic part is a manual re-read of existing failure annotations, not an experiment.
+
+Searches run: Coverage is incomplete: the session's shared WebSearch budget ran out, so only 7 web searches executed (context length / context rot / padding / distractor / tool-output noise / causal phrasings for coding agents and SWE-bench, plus one title lookup); about 9 further queries were refused. I did not keyword-search arXiv, Semantic Scholar, Google Scholar or OpenReview directly and did not browse the 2025-2026 venue programmes. Semantic Scholar's citation API returned 429 three times; OpenReview was behind a browser check; the ACL Anthology page refused the connection. One stray fetch of a Google search URL returned only an access notice and was not used.
+What I did instead: OpenAlex cited-by lists for The Complexity Trap (59 citers, all titles read) and for the IISWC paper arXiv 2605.26297 (13 citers); one OpenAlex title lookup to resolve an EMNLP 2026 paper; reference lists of arXiv 2607.17937 and 2606.29718 followed.
+Papers read in the body (via WebFetch summaries of the arXiv HTML): 2607.17937, 2606.29718, 2602.07962, 2606.07297, 2512.04307, 2611.02017, 2609.32961, 2610.31710, 2602.16069, 2607.09510, 2509.09677, 2602.11348, 2604.11978, 2601.07226. Abstract page only: 2610.08722, 2608.16370, 2606.00408, 2605.24279, 2608.31057, 2610.36114, 2609.31381, 2610.26836, 2510.05381, 2512.22087, the AutoCompact project page, and the NeurIPS page for Jia et al.
+
+### Premise: weakened
+
+Q26's premise is weakened: every quote and number on the card is in its source, but the tension is thinner than the card presents.
+
+- **Evidence accuracy.** All eight items check out against the primary pages (arXiv HTML for 2605.26297, 2508.21433, 2604.22750, 2608.00101, and the NeurIPS poster page). One bibliographic error: the Copilot paper's real title is "Agentic Coding in the Wild: Characterizing GitHub Copilot Traces at Production Scale". Two items are the same IISWC paper counted twice.
+- **IISWC does not make the causal claim.** Its mechanism explains why failed runs accumulate context, and it says outright that "large context is not inherently a failure mode".
+- **"Opposite signs" is mostly noise.** In Complexity Trap only Gemini 2.5 Flash thinking changes significantly (-4.0 and -9.0 pp); the other four configurations are nulls, and the card omits two of them (Qwen3-32B non-thinking 17.0/15.0/16.0 and Qwen3-Coder 480B 53.4/54.8/53.8).
+- **Jia et al. is quoted selectively.** The same abstract reports that continuous oracle state improves success by 19-38%, which is forward-direction evidence that context quality matters.
+- **The narrow gap looks real but is weakly checked.** I found no forward dose-response test on a multi-turn coding agent, but the web-search budget ran out after one query. Adjacent work covers pieces of it: SWE-Explore's noise injection into a patcher's context, Sinha et al.'s controlled error rate in history, and Du et al.'s length-only padding.
+- **The answer is largely predictable.** Mostly symptom, with a small causal harm of a few points, which is below the roughly 8-point resolution of the proposed 100-task experiment. The searcher's own note in harvest_question_papers.md (line 217) already says the masking result leaves this "partly answered".
+- **The first experiment does not test the stated mechanism.** It pads with unrelated stderr from other tasks, which is a distractor test, not a test of the run's own error output.
+
+Nothing was modified, run on GPU, or posted. Downloaded source pages are in /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/q26.
+
+**Is the tension real?** Partly. The gap is real in its narrow form, but the "conflict" between sources mostly dissolves on reading.
+
+- **IISWC does not assert the causal claim.** Its mechanism runs from failing tool calls to more context, and it states that "large context is not inherently a failure mode". The card's question is one the paper raises only by implication.
+- **The "opposite signs" in Complexity Trap are one significant drop against four nulls.** Only Gemini 2.5 Flash thinking moves significantly (-4.0 and -9.0 pp); the other four configurations, including both Qwen3-32B ones, are within noise. The card shows three of five configurations and none of the significance markers.
+- **The sources measure different things.** IISWC is context at end of run by outcome (Claude Code, 27-31B open models, five benchmarks). Complexity Trap is a whole-policy change that removes old observations and also changes trajectory length. Jia et al. is post-failure replacement with oracle state on WebArena. The token paper is total billed tokens across four reruns on frontier models. None of them holds the state fixed and varies context size.
+- **Jia et al. is quoted selectively.** The same abstract reports that continuous oracle state improves success by 19-38%, with the gap widening as trajectories lengthen. That is evidence that context quality matters in the forward direction.
+
+The gap statement ("no paper adds context in a controlled dose to a coding agent and measures solve rate") survived the checking I could do, but that checking was thin: the session's web-search budget ran out after one query. The nearest work I found or already knew, opened by arXiv ID:
+- SWE-Explore (2606.07297, Sec. 4.4): pads a patcher's context with random non-core code, n=150, GPT-5.4 and GPT-5.4-mini. Redundant context costs 7-9 pp only when core evidence is absent and is tolerated once it is present. This is a single-shot patcher, not a multi-turn trajectory.
+- Sinha et al. (2509.09677): injects a controlled error rate into the model's history and finds per-step accuracy falls with it, beyond the pure length effect; thinking models are reported as unaffected. Synthetic task, with only an anecdotal agentic appendix.
+- Du et al. (2510.05381): length alone, even whitespace padding, degrades single-shot performance 13.9-85%, including coding tasks. Abstract only.
+- SWE-ContextBench (2602.08316): a search summary says a full raw prior trajectory in context gave 27.27% vs 26.26% with none and 34.34% with a summary. I did not verify these numbers in the paper.
+
+A 2026 paper doing exactly the forward-dose test on coding agents could exist and I would not have found it.
+
+**Obvious answer?** An expert would predict "both, with the symptom direction dominating", with fairly high confidence on direction and less on magnitude.
+
+- **Symptom direction: near-certain by construction.** Context grows monotonically with turns. Successful runs stop at submit; failed runs continue into retry loops or the turn limit. IISWC documents this directly (Gemma Instant on ADE, Edit failing 95.4%, up to 786 turns), and the token paper attributes high-cost failures to repeated view/edit cycles and task difficulty. Most of the 1.8x gap is expected to be duration and selection.
+- **Causal direction: a small negative effect.** Padding 20-35K tokens of unrelated stderr into a ~30B model's trajectory should cost a few points at most. Basis: Complexity Trap (removing roughly half the context moves solve rate by under 3 pp, not significant, in four of five configurations, including Qwen3-32B); SWE-Explore (irrelevant code tolerated once the needed evidence is present); Du et al. and the context-rot literature (length and distractors hurt somewhat, more for smaller models); Sinha et al. (thinking models largely immune to errors in history).
+- **Consequence for the first experiment.** The predicted effect is at or below the roughly 8-point resolution the card states for 100 tasks, so the likely outcome is an uninformative null.
+
+Two things keep this from being fully obvious. The magnitude for 27-32B open models at 60-100K tokens is not pinned down by any of these sources. And a padded run that approaches the context limit (Qwen3-32B needed YaRN to reach 122K in Complexity Trap) would fail for a mechanical reason that has to be separated out.
+
+The proposed padded arm also tests irrelevant distractor text from other tasks, which is not the IISWC mechanism (the run's own error output, which Complexity Trap treats as a useful failure signal).
+
+Evidence checks:
+- [confirmed_with_caveat] IISWC 2026 workload paper: failed runs carry more context; authors propose error output as the mechanism; one configuration has the sign reversed (Gemma Instant, SWE-bench Pro, 82.2K successful vs 72.3K failed). (https://arxiv.org/html/2605.26297): All quotes and numbers are in v2 (Sec. on Fig. 6): 79.2K vs 44.4K for Qwen Thinking on Terminal-Bench, the 'failed Bash, Edit, or Read actions append error messages, stack traces, failed patches' sentence, and the 82.2K vs 72.3K exception. Caveat on meaning: the stated mechanism explains why failed runs end up with more context (failed tool calls add error text and more turns). It is the symptom direction, not a claim that context causes failure. The paper says so itself right after the exception: 'This suggests that large context is not inherently a failure mode.' It also documents a failure-driven retry loop (Gemma Instant on ADE, Edit failing 95.4%, up to 786 turns). Models are Qwen3.6-27B and Gemma4-31B under Claude Code, served by vLLM. arXiv comment field says IISWC 2026, so the venue is author-stated, not only inferred.
+- [confirmed_with_caveat] Complexity Trap: removing context changes solve rate with opposite signs across models (Gemini 2.5 Flash thinking 40.4/36.4/31.4; Qwen3-32B thinking 23.0/24.6/24.8; Gemini 2.5 Flash 32.8/35.6/36.0), and the paper does not account for the difference. (https://arxiv.org/html/2508.21433): Numbers match Table 1 (n=500, SWE-agent, SWE-bench Verified). Caveat: only the Gemini 2.5 Flash thinking drops are significant in the paper's paired bootstrap (Table 4: masking -4.0 pp [-7.8, -0.2], p=0.04; summary -9.0 pp, p<0.0001). The positive changes are within noise (Gemini Flash +2.8 pp [-0.8, 6.4], p=0.15; +3.2 pp, p=0.09; Qwen3-32B thinking +1.6/+1.8 pp against a CI of about +/-3.8). The card omits two of the five configurations: Qwen3-32B non-thinking 17.0/15.0/16.0 (negative, not significant) and Qwen3-Coder 480B 53.4/54.8/53.8 (flat). So 'opposite signs' is one significant drop against four nulls. Each configuration is a single run at temperature 0.8. I found no explanation of the Gemini thinking drop in the text, so 'does not account for' looks right. The paper's own summary is that context management reduces cost 'without significantly reducing solve rate'. The intervention also removes old observations, so it changes information content and trajectory length together with context size.
+- [confirmed_with_caveat] Jia et al. (NeurIPS 2026 workshop poster): 420 failed WebArena trajectories; replacing context after failure recovers under 10%; annotators attribute 11.7% of failures to context. (https://neurips.cc/virtual/2026/172976): All three numbers are in the abstract on the NeurIPS page (workshop 'Who Verifies the Agents? Toward Reliable Agent Development'; models Qwen3.5-27B and GPT-5.2). Caveat: the card leaves out the other half of the same abstract. 'continuous oracle state throughout the trajectory improves success by 19-38%, and the gap between oracle-maintained and self-generated state widens from 8% to 12.5% as trajectories lengthen.' That is a forward-direction intervention showing that context quality maintained throughout matters a lot, on web tasks. The abstract also opens with 'LLM agents degrade as trajectories lengthen'. So this paper does not simply support the 'context is a symptom' reading. Only the abstract was read; the full paper (OpenReview YwrRO2qfsr) was not opened.
+- [confirmed_with_caveat] Token-consumption paper: 'higher token usage does not translate into higher accuracy; instead, accuracy often peaks at intermediate cost and saturates at higher costs.' (https://arxiv.org/html/2604.22750v2): Quote is in the v2 abstract/intro and still in v3 (2 Oct 2026). Basis: each task run four times, runs ranked by cost; accuracy rises from the cheapest to the next run and then saturates. Caveats: the quantity is total billed tokens per run, not context length at a given step; models are eight frontier LLMs, not 30B open models; within a task the costlier runs are not clearly worse (saturates), which fits 'symptom' at least as well as 'cause'. The paper itself attributes the across-task negative correlation to task difficulty and ties expensive failed runs to repeated view/edit of the same file. v2's text is inconsistent in one place ('degrades at the highest cost levels'). No venue found in the arXiv record.
+- [confirmed] IISWC paper: 'Failed agents often carry larger contexts (up to 1.8x in terms of mean) and longer tails'. (https://arxiv.org/abs/2605.26297): This is the Fig. 6 caption, verbatim. Same paper as the first item, so it is not independent evidence.
+- [confirmed] IISWC paper leaves dynamic context compaction or summarization out of scope. (https://arxiv.org/abs/2605.26297): Verbatim in the limitations paragraph: 'Advanced orchestration techniques, including speculative or overlapped tool execution, dynamic context compaction or summarization, and branching or tree-search workflows, are outside the scope of this study.'
+- [confirmed] Complexity Trap: 'LLM-Summary consistently leads to longer trajectories, suggesting they mask failure signals that would otherwise prompt earlier termination.' (https://arxiv.org/abs/2508.21433): Verbatim in the Figure 4 caption. Section 4.4 adds 'context summaries act as a reinforcing signal, encouraging the agent to keep going.' Exception stated in the paper: for Qwen3-32B it was masking, not summarization, that lengthened trajectories (13%). Venue per arXiv comment: DL4C workshop at NeurIPS 2025 (camera-ready, v3). Note this quote treats error output as useful signal, which cuts against the card's proposed 'masked' arm being a pure context-size manipulation.
+- [confirmed_with_caveat] Copilot trace paper: sessions with at least one compaction event are 7.8% of sessions and 44.2% of total tokens; no quality signal ('Without prompt/response content, we cannot correlate infrastructure efficiency with task completion quality'). (https://arxiv.org/abs/2608.00101): Numbers are in Table 6 and the surrounding text; the limitation sentence is verbatim. Caveat: the card's title is wrong. The paper is 'Agentic Coding in the Wild: Characterizing GitHub Copilot Traces at Production Scale' (Liu, Qiu, Goiri, Fonseca, Bianchini, Choukse; 30 Jul 2026). This item only shows the absence of a quality signal; it adds nothing on causality.
+
+### Feasibility: yes
+
+Q26 is answerable on this node, and more cheaply than the card assumed, but nothing has been run: the estimates below rest on the student's step-time measurements and public numbers, not on an agent run.
+
+- **What changed from the card**: its power worry assumed a 17-25% solve rate (Qwen3-32B, 2025). Vals.ai's 2026-09-01 snapshot lists Qwen 3.6 27B at 70.0% on SWE-bench Verified with mini-SWE-agent. The cached Qwen3.6-35B-A3B-FP8 decodes about 5x faster than the 27B and has a 402K-token KV pool on one card, so all 500 tasks per arm are affordable (about ±4 points paired).
+- **Cost**: about 4-6 GPU-days in week one. GPUs are not the limit; containers and disk are.
+- **Real blockers**: no agent harness in the repo, no running Docker daemon (apptainer and rootless Docker binaries are present), and disks at 98-100% full.
+- **Weakest point of the design**: the 1.8x failed-vs-successful gap was measured with Claude Code via Harbor, mostly on Terminal-Bench and GAIA, and the same paper shows the reversed sign on SWE-bench Pro for one configuration. mini-swe-agent also truncates observations at 10K characters. A CPU-only check on the public Complexity Trap trajectories (context at matched turn, resolved vs unresolved) should come first; it can kill the question in a day.
+- **Likely outcome**: the existing evidence (masking vs raw at -2.0 points, p=0.21; under 10% recovery from context repair) leans toward "symptom". A null at +30K and +100K would confirm the expected answer and leave nothing to build.
+- **Paper outcome**: a clear dose-response at the natural dose on two models, with error-like text worse than neutral filler, followed by a forked-state test and a Terminal-Bench replication.
+
+My web-search budget ran out mid-check, so I did not recheck novelty and could not confirm image sizes, sb-cli, or the contents of the IISWC trace.
+
+**Existing data.** Nothing in the repo answers any part of Q26. There is no agent harness with a real task environment and no SWE-bench, Terminal-Bench, mini-swe-agent or swebench install.
+
+What exists and shortcuts the work:
+- **Engine**: vLLM 0.32.0+cu129 venv at /tmp/claude-1025/-home-ryankert-l-kv-fetch-kv-fetch/b232f66b-c1cf-477e-b08d-10c5771f3def/scratchpad/venv-vllm32. The `qwen3_coder` tool parser and qwen3 reasoning parser are present in it, so no engine code needs writing.
+- **Job queue with the GPU policy**: /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/harness.py and /home/ryankert_l/kv-fetch/kv-fetch/configs/harness.yaml (never GPU 0, idle cards among 1-6).
+- **Serving and scheduler instrumentation**: serve_bench.py, thrash_trace.py and thrash_report.py under /home/ryankert_l/kv-fetch/kv-fetch/scripts/profile/.
+- **Models already cached** in /share2/huggingface/hub: Qwen/Qwen3.6-35B-A3B-FP8 (35 GB), Qwen/Qwen3.5-27B-FP8 (29 GB), Qwen/Qwen3.8-27B (bf16, 52 GB, does not fit one card), Qwen/Qwen3-30B-A3B-Instruct-2507-FP8, Qwen/Qwen3-32B-AWQ, and gemma-4-31B-it FP8/AWQ community quants. Qwen3.6-27B-FP8 (the IISWC paper's model) is not cached.
+- **Measured capacity and speed on one 48 GB card** (/home/ryankert_l/kv-fetch/kv-fetch/results/profile/NOTEBOOK.md, day-2 entries at 09:55, 10:08, 16:41):
+  - Qwen3.6-35B-A3B-FP8: pool 381 x 1056 = about 402K tokens; decode 6.3 ms at batch 1 and 18.3 ms at batch 16 (8K context); prefill of 32K in 2.4 s.
+  - Qwen3.5-27B-FP8: pool 199K tokens (64 KiB per token); decode 32 ms at batch 1 and 43 ms at 32K x 4; prefill of 32K in 19.7 s.
+  - Watermark 0.1 is needed to avoid preemption ping-pong on hybrids.
+- **Hybrid prefix cache in an append-only loop**: /home/ryankert_l/kv-fetch/kv-fetch/results/prefix/pilot/agent_ret0.json shows about 2.4-2.6K tokens recomputed per turn at upstream-default retention. This is a synthetic loop with random tokens (scripts/prefix_pilot/agent_loop.py), not an agent.
+- **Card and searcher notes**: /home/ryankert_l/kv-fetch/kv-fetch/research_notes/Research question search/questions_ranked.json (Q26) and harvest_anomalies.md lines 84-99, harvest_question_papers.md lines 208-217.
+
+**First-week experiment.** **Day 1, CPU only: does the anomaly exist in this harness?**
+- Data: the Complexity Trap trajectories (HF dataset JetBrains-Research/the-complexity-trap, Apache-2.0, 22.5 GB tar.gz; SWE-agent on SWE-bench Verified n=500, includes Qwen3-32B raw).
+- Measure: context tokens at matched turn index for resolved vs unresolved runs, tokens added per turn, and the share of observation tokens that are error output (non-zero return code, tracebacks).
+- Comparison: is the failed-minus-successful gap made of more tokens per turn (the IISWC mechanism) or only more turns (the symptom reading)?
+- Also download and inspect the IISWC trace (figshare 10.6084/m9.figshare.33188042, CC BY 4.0). I could not open it today (HTTP 403), so whether it holds content or only token counts is unknown.
+
+**Days 1-2: harness setup**
+- mini-swe-agent (MIT) with `mini-extra swebench --subset verified --split test -w N`, pointed at a local `vllm serve`.
+- Environment class: `singularity` with apptainer 1.4.2 (installed; subuid range present for `--fakeroot`), or rootless Docker.
+- Write a padding hook of about 50 lines: wrap the environment's `execute()` to append filler to the returned output. The stock observation template cuts outputs over 10,000 characters to head 5,000 plus tail 5,000, so the pad must go outside that truncation.
+- Scoring: sb-cli, or the local swebench harness (needs a Docker daemon).
+
+**Models**
+- Primary: Qwen/Qwen3.6-35B-A3B-FP8 (Apache-2.0, cached). One model per card, thinking on, model-card sampling (temperature 1.0, top_p 0.95), `--enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --watermark 0.1`, prefix caching on, bf16 KV, `--max-model-len 200000`. The 402K-token pool gives about 6 concurrent agents at 60K context, or 2-3 in the +100K arm.
+- Replication: Qwen/Qwen3.6-27B-FP8 (Apache-2.0, block FP8, about 29 GB, to download; it is the IISWC model). The 199K-token pool gives about 3 agents per card at 60K. Run the +30K arms only.
+
+**Arms** (same 100 Verified tasks, stratified by repo, paired by task)
+1. Raw.
+2. Raw again with a different seed. This A/A run gives the flip rate, which is the noise floor.
+3. +30K tokens of stderr from other tasks' failed runs, spread over tool calls. This is the natural failed-minus-successful dose.
+4. +100K of the same, an oversized dose.
+5. +30K of neutral filler (benign log lines), to separate length from error-like content.
+6. Masked: failed tool outputs cut to 200 tokens.
+
+Then rerun arms 1, 3 and whichever of 4 or 5 is most informative on all 500 tasks with the MoE model.
+
+**Number measured**
+- Paired solve-rate difference vs raw with a paired bootstrap 95% interval, read against the A/A band.
+- Turns per run, exit status (submitted, step limit, context overflow), and prefix-cache hit rate, to confirm no arm was thrashing.
+
+**Power**
+- If 15-25% of tasks flip between two runs, the 95% half-width is about ±9 points at n=100 and about ±4 points at n=500.
+- The card assumed a 17-25% solve rate. That is outdated: Vals.ai (snapshot 2026-09-01, mini-SWE-agent, 500 tasks) lists Qwen 3.6 27B at 70.0%. The local FP8 solve rate is unknown until arm 1 runs.
+
+**Result that kills it.** Any of these means stop:
+
+1. **Day-1 trajectory analysis**: at matched turn index, resolved and unresolved runs carry the same context and the same error-output share, so the gap is entirely "failed runs take more turns". The motivating anomaly then does not exist for SWE-bench-style coding runs. The IISWC paper itself reports the reversed sign on SWE-bench Pro for Gemma Instant; its 1.8x gap is on Terminal-Bench and GAIA under Claude Code.
+2. **Intervention null**: +30K error text, +30K neutral filler and +100K all sit inside the A/A band (interval within about ±4-5 points at n=500) with unchanged turn counts. That is the "symptom" answer, which the Complexity Trap (masking vs raw on Qwen3-32B: -2.0 points, CI [-5.0, 1.0], p=0.21) and the under-10% oracle-repair recovery already point to. It makes a short negative note with no serving mechanism to build.
+3. **Effect only at the oversized dose**: a drop at +100K with nothing at +30K is generic long-context degradation, not the accumulated-error mechanism, and that is already a known literature.
+
+A fourth early stop is practical: if arm 1 on the local FP8 models lands above about 85% or below about 15%, the benchmark has no room to show a paired effect at this size.
+
+**Result that makes it a paper.** A monotone dose-response with a drop of at least 5-8 points at the natural dose (+20-35K), clearly outside the A/A band at n=500, replicated on both models. It gets stronger if any of these also hold:
+- Error-like padding hurts more than neutral filler of equal length (content, not length).
+- The masked arm recovers part of the loss.
+- Padded runs take more turns before failing.
+
+To carry a full paper it would still need two things beyond week one:
+- A forked-state version: replay recorded runs to turn k, inject the pad, and continue with several seeds.
+- A replication where the 1.8x gap was actually observed: Claude Code through Harbor on Terminal-Bench 2.0, which needs a Docker daemon and is a heavier setup.
+
+Sign heterogeneity that tracks something measurable (thinking on vs off, as in the Complexity Trap's Gemini split, or model family) would also be publishable, but it needs more arms than week one holds.
+
+Even the positive result is an agent-evaluation finding. The systems contribution would have to come from the follow-on.
+
+**GPU-days.** About 4-6 GPU-days, on the 3 cards idle at check time (GPUs 2, 5, 6; cards 1, 3, 4 had 15-29 GB used by others). That is roughly 2 days of wall-clock once the harness works.
+
+Breakdown:
+- Six arms x 100 tasks on Qwen3.6-35B-A3B-FP8: about 1-1.5 GPU-days.
+- Three arms x 500 tasks on the same model: about 2-2.5.
+- Three arms x 100 tasks on Qwen3.6-27B-FP8: about 1.5.
+- Pilot and debugging: about 0.5.
+
+These are estimates, not measurements. They come from the student's decode step times and an assumed 30K output tokens and 50 turns per task (Vals reports 1.44M total tokens per task for Qwen 3.6 27B). No agent run has been timed on this node. Container CPU time and disk, not GPUs, are the likely limit.
+
+**Blockers.** 1. **No agent harness exists.** mini-swe-agent, swebench and the padding hook must be installed or written; allow 1-2 days.
+2. **Containers.**
+   - The Docker daemon is not running. Rootless Docker binaries are in /home/ryankert_l/bin and worked in 2025-09 (28 GB of old images in ~/.local/share/docker).
+   - Apptainer 1.4.2 is installed. mini-swe-agent's singularity class builds a writable sandbox per instance under the temp dir, so TMPDIR and APPTAINER_CACHEDIR must be redirected.
+3. **Disk is nearly full.** Free space: / 19 GB, /home 35 GB, /share2 93 GB. /share1/saves is world-writable with 401 GB free but is not the student's directory, so ask first. SWE-bench Verified images run to tens of GB or more; I did not verify the size today.
+4. **Scoring.** The local swebench harness needs Docker. The alternative is sb-cli cloud scoring, which needs an API key and uploads patches; I did not re-verify it today.
+5. **Image pulls.** 100-500 pulls from Docker Hub need a logged-in account because of rate limits.
+6. **Statistical power.** n=100 resolves only about 9 points; the decisive contrast needs all 500 tasks, and local FP8 solve rates are unknown.
+7. **External validity.**
+   - The IISWC gap was measured with Claude Code via Harbor on two H100s and is largest on Terminal-Bench and GAIA.
+   - mini-swe-agent already truncates observations at 10K characters, so the natural error-accumulation mechanism is muted in this harness.
+8. **Shared node.** 96 cores and 251 GB RAM are shared; 15-20 concurrent containers running test suites will be visible to other users.
+9. **Limits of this check.** The web-search budget ran out partway through. I did not recheck novelty, the IISWC figshare contents (HTTP 403), or Qwen3.6-35B-A3B's mini-SWE-agent score; its model card states 73.4 on an internal scaffold.
+
+No licence, model-size or engine-feature blocker: both models are Apache-2.0, fit one 48 GB card at FP8 with 200K context, and need nothing beyond vLLM 0.32.
+
+**Follow-on design space.** **If context is causal (positive):**
+- Context hygiene becomes a serving problem. Masking or deduplicating failed tool output mid-history breaks the prefix cache, so the mechanism to build is cache-preserving compaction: where to cut so the KV prefix (and, for hybrids, the recurrent-state checkpoint) survives. This is the student's existing strength.
+- Context growth rate becomes a scheduler signal with a causal reason: admission and preemption that favour sessions whose context is still clean, or that trigger compaction before thrash.
+
+**If context is a symptom (negative):**
+- Context management buys cost only. The systems question reduces to GPU-seconds at fixed accuracy: eviction and compaction policies judged on cost, with no accuracy claim.
+- Growth is still a failure predictor, so a scheduler could deprioritise or stop sessions predicted to fail. That space already has a neighbour: AgentStop (arXiv 2605.15206) does early termination from token log-probabilities, so the remaining room is the serving-side policy, not the predictor.
+
+Either way the engine work is a second project; the first-week result itself contains no serving mechanism.
+
+# Completeness critic: what the search did not cover (not verified)
+
+I read all 35 question lines in /home/ryankert_l/kv-fetch/kv-fetch/research_notes/Research question search/questions_ranked.json, the lens and overlap fields, and the set-aside sections of the nine harvest_*.md files, then searched the web for each candidate gap. Nothing was modified.
+
+The search is deep but narrow: reasoning-length outputs, KV compression, speculative decoding, scheduling, agent prefix caching and hybrid numerics, almost all on one autoregressive Qwen model on one vLLM engine, costed in GPU-seconds. Eight gaps, most important first:
+
+1. Structured output and constrained decoding: dismissed from memory, but the papers disagree on accuracy and all measured at batch size 1.
+2. Theory versus measurement: a 2025 proof that work-conserving scheduling is throughput-optimal ignores memory, and the student's watermark result contradicts it; open-problems lists were not mined.
+3. Simulator versus real system: simulators claiming about 1% error have not been tested in the memory-bound, preempting regime.
+4. MoE under batching: expert sparsity shrinks as the batch fills, which moves the crossovers the top cards depend on.
+5. Energy and power: the main 2026 measurement study leaves the GPU power limit untested.
+6. Diffusion language models: batch scaling is measured as much worse than autoregressive, with no head-to-head under load.
+7. Multi-model routing and cascades on a fixed node.
+8. Multimodal serving and visual-token pruning.
+
+Gaps 1-4 fit the student's hardware and skills most directly; 2 and 4 can start from data already in the repo.
+
+Areas I checked and did not card: multi-LoRA and fine-tuning systems (ForkKV, arXiv 2604.06370, reports that LoRA switching breaks KV reuse; search result only), on-device inference (Intelligence per Watt, arXiv 2511.07885), cache-sharing side channels and privacy (zero mentions in the notes), and the tensor-versus-pipeline-parallelism residue. Determinism and reliability are reasonably covered (Q13, Q29, Q34).
+
+Verification: for each gap's source I opened the arXiv abstract or HTML page through a summarising fetch, so quoted phrases may be slightly paraphrased. Items marked 'search result only' or 'not confirmed' were not opened. The fetch tool refused to return full abstracts verbatim, so numbers come from its extraction of the paper body.
+
+## Biases in the ranking
+
+Counts are from questions_ranked.json unless noted.
+
+1. Toward the student's existing harness and dropped directions. 28 of 35 cards declare overlap with dropped directions D1-D4, and most 'first experiments' reuse the oracle@k harness, the D2 cache simulator or the D3 profiling curves. The feasibility judge (doable on 4x 48 GB in a month) rewards exactly this, so the ranking partly measures 'already instrumented' rather than 'important'.
+
+2. Toward reasoning models and one model family. 19 of 35 question texts mention reasoning or thinking, 10 mention agents, 7 hybrids; 33 of 35 cards mention Qwen, 26 mention 48 GB, 23 vLLM, 18 AIME. The top seven are all reasoning-length or agent or hybrid questions. Chat, embedding, multimodal, MoE-as-such and diffusion workloads are absent.
+
+3. Toward one question shape: 'does a published gain survive a batched engine, a stronger baseline or a deployer's metric'. This is a re-measurement or negative-result shape. It scores well with the skeptical reviewer and on feasibility, but the 'opens a solution space' score reaches 5 on only three cards. Lens averages show it: regime_shifts 4.05, stale_baselines 3.10 (lowest), with noise and replication cards (Q08, Q13, Q35) at the bottom. Constructive questions (what mechanism or design would work) are almost missing.
+
+4. One cost metric. Cost is always GPU-seconds, tokens or requests per second on a single engine. No energy, no tail-latency-under-SLO question as the primary variable, no multi-model or multi-tenant setting, no simulator.
+
+5. Source skew. arXiv is mentioned 743 times; ML and NLP venues dominate (ACL 117, NeurIPS 104, ICLR 56) over systems venues (NSDI 29, OSDI 18, ASPLOS 4, SOSP 3, EuroSys 1). Four workshop items, no keynote or open-problems list, no vision paper, no award paper, no theory paper beyond one classic queueing result. Industry material is vLLM issues and model cards rather than tech reports.
+
+6. Set-asides made from memory. Several topics were dismissed without a check: 'structured output versus reasoning quality ... (from memory, not re-verified here)', and provider-to-provider variance on the strength of one article. At least the first is wrong as stated (gap 1). The pipeline-versus-tensor-parallelism item (OSDI 2026) was set aside as answered although the note itself lists an open residue (vLLM, reasoning-length outputs, MoE and hybrids) that matches the student's four PCIe-connected cards.
+
+7. Architecture assumption. Every card assumes autoregressive decoding on a dense or GDN-hybrid model with text input; the memory-bound versus compute-bound crossover that drives the top cards is treated as a property of the engine, although it differs for MoE and diffusion models.
+
+## Gaps
+
+- **Structured output and constrained decoding (grammar/JSON-schema masks, tool-call arguments). No card covers it. The practitioner-disputes harvest set aside 'structured output versus reasoning quality' as 'appeared to have a published answer (from memory, not re-verified here)'. The published answers actually disagree, and every one of them was measured at batch size 1 on non-thinking models.**
+
+  Example question: For open thinking models served on vLLM, where the grammar applies only after the thinking block, does constrained decoding still change answer accuracy (Tam et al. say it falls, JSONSchemaBench says it rises by about 3 points), and does the per-token speedup JSONSchemaBench measured at batch size 1 turn into a throughput loss at the batch sizes a 48 GB card holds because the CPU-side mask computation stalls the whole batch?
+
+  Why it matters: Tam et al. (EMNLP 2024 Industry, arXiv 2408.02442) report that format restrictions lower reasoning accuracy. JSONSchemaBench (arXiv 2501.10868, fetched) reports the opposite on Llama-3.1-8B: GSM8K 80.1% unconstrained versus 83.7-83.8% with XGrammar or Guidance, and a per-token time of 6.37 ms with Guidance versus 15.40 ms unconstrained, but states 'The batch size is set to 1 for all experiments'. CRANE (ICML 2025, arXiv 2502.09061) takes the accuracy loss as given and fixes it by leaving reasoning unconstrained. On the systems side, the vLLM blog says synchronous mask computation blocks the whole batch, and a vLLM pull request found threading the mask only pays above about 128 structured requests per batch (search results, not opened). This is a contradiction plus a batch-1 assumption in exactly the student's strengths (vLLM internals, reasoning benchmarks), and almost every agent tool call goes through this path.
+
+  Source: https://arxiv.org/abs/2501.10868
+
+- **Theory versus measurement as a kind of tension, and 'open problems' lists as a source. The search used one classic queueing result (closed versus open loop, Q11) but did not mine the 2025 queueing-theory papers on LLM serving, whose stated model assumptions are directly testable. Mitzenmacher and Shahout's 'Queueing, Predictions, and LLMs: Challenges and Open Problems' (arXiv 2503.07545, also a SIGMETRICS 2025 tutorial) is an explicit open-problems list naming KV memory limits and the choice of preemption approach; it was not used.**
+
+  Example question: When KV memory rather than compute caps the batch (long reasoning outputs on a 48 GB card), is a work-conserving scheduler still throughput-optimal as Li, Dai and Peng prove for a model without a memory constraint, or does maximum throughput require deliberately leaving batch slots empty, and by how much does the optimal admission level sit below 'full' as output length grows?
+
+  Why it matters: Li, Dai and Peng (arXiv 2504.07347, fetched) prove that work-conserving schedulers (fill every batch to the token limit) are throughput-optimal and conclude that vLLM with chunked prefill is throughput-optimal. Their model states '(Our model has completely ignored the memory constraint.)' and does not model preemption; KV memory for long-context or test-time workloads is listed as future work. The student's own measurement contradicts the conclusion in the memory-bound regime: holding back admission with a 0.05 watermark cut preemptions 15-25x and step time by about 17% (no MTP), which means a less work-conserving policy served more. A theorem with a named missing constraint and a measurement that violates it is a cleaner tension than most harvested cards, and both answers are useful (either the theory needs a memory term or the 17% is an engine artifact).
+
+  Source: https://arxiv.org/abs/2504.07347
+
+- **Simulator versus real system. No card tests a serving simulator. The word 'simulator' appears in the notes only for the student's own D2 cache simulator. Vidur (MLSys 2024), LLMServingSim 2.0, TokenSim and the 2026 Vidur extension KernelSight-LM (arXiv 2606.28565, search result only) were not harvested.**
+
+  Example question: Does a profile-based serving simulator that reports about 1% average error (LLMServingSim 2.0) keep that error on vLLM 0.32 when long reasoning outputs make the batch memory-bound and the engine preempts and recomputes requests, and if the error grows, which unmodelled mechanism (preemption recompute, prefix-cache eviction, hybrid recurrent state) accounts for it?
+
+  Why it matters: Configuration searches, autoscalers and several scheduling papers are evaluated in simulators whose fidelity was validated on chat-length workloads. LLMServingSim 2.0 (arXiv 2602.23036, abstract fetched) claims it reproduces performance, memory and power 'with an average error of 0.95%'; Vidur claimed under 9%. Cascadia's own simulator reports 2-7% error. The student has measured effects that profile-based simulators typically do not model: preemption and recompute under KV pressure, the watermark setting, prefix-cache thrash, per-request recurrent state on hybrids. A fidelity study in the memory-bound reasoning regime is feasible on A6000s (the search summary said LLMServingSim 2.0 was validated on RTX A6000 and H100 with vLLM; I did not confirm that in the paper), and the result either licenses simulator-based papers for this regime or shows which mechanism they lack.
+
+  Source: https://arxiv.org/abs/2602.23036
+
+- **MoE-specific behaviour under batching. MoE appears in only 4 of 35 cards and only through speculative decoding (MoESD). No card asks how expert sparsity itself changes with batch size, although the student already has baseline runs for Qwen3-30B-A3B and Qwen3.6-35B-A3B in results/profile/harness/done/.**
+
+  Example question: For Qwen3-30B-A3B and Qwen3.6-35B-A3B on a 48 GB card, at what batch size does the union of experts activated per decode step saturate so that the model reads as many weights per step as a dense model, and does that saturation point (rather than the KV size) predict where batch-dependent results measured on dense models, such as the speculative-decoding break-even or the parallel-chains crossover, move for MoE?
+
+  Why it matters: Several top-ranked cards (Q03, Q02, Q01, Q22) turn on the batch occupancy at which an engine moves from memory-bound to compute-bound. For MoE models that crossover is not the dense one. MoE-CAP (arXiv 2412.07067v6, fetched) states 'the sparsity of MoE systems is closely influenced by the batch size' and measures that at batch size 8 already 53.05%, 46.79% and 18.44% of parameters are activated for DeepSeek-V2-Lite, Qwen1.5-MoE and DeepSeek-R1; it also says its bandwidth metric 'is only meaningful in memory bandwidth-bounded scenarios'. So the per-token weight-read saving that defines an MoE shrinks as the batch fills, at a rate that depends on how tokens share experts. Nobody has tied this curve to serving decisions on current A3B-class models, and the 2026 open models people actually deploy on 48 GB cards are increasingly MoE.
+
+  Source: https://arxiv.org/abs/2412.07067
+
+- **Energy and power as the cost metric. Every card counts cost in GPU-seconds, tokens or requests per second. 'Energy' occurs in the notes only in the sense of 'low-energy directions' of a state matrix. On-device and constrained hardware is absent too (Kinetics' own 'left open' note about local deployment was recorded but not carded; Intelligence per Watt, arXiv 2511.07885, was not harvested).**
+
+  Example question: When long reasoning outputs cap the batch by KV memory so the GPU sits below compute saturation, how far can the GPU power limit be lowered before tokens per second fall, and does that make the energy-optimal operating point for reasoning workloads differ from the throughput-optimal one that 'Where Do the Joules Go?' treats as equivalent?
+
+  Why it matters: 'Where Do the Joules Go?' (Chung et al., arXiv 2601.22076, fetched; 46 models, 1,858 configurations, vLLM 0.11.1, H100 and B200 only) finds reasoning uses about 25x more energy per response than chat, partly because 'higher energy per token due to memory pressure limiting batch size', and that energy per token 'drops at first, then plateaus' with batch size. It explicitly leaves the main knob untested: 'While not explored in this paper, GPU power limit' shapes the time-energy frontier. In the memory-capped regime the student has characterised, the GPU is under-utilised, which is the condition under which a power cap should cost little throughput. This needs only nvidia-smi power limits and the existing harness, and extends to a different GPU class (A6000) than the paper covers.
+
+  Source: https://arxiv.org/abs/2601.22076
+
+- **Diffusion language models. One incidental mention in the notes, no card. All 35 questions assume autoregressive decoding (dense or GDN hybrid). A 2026 serving literature now exists: Sangam (arXiv 2607.04206), dLLM-Serve (arXiv 2512.17077), Optimus (arXiv 2605.24832), DiLaServe (arXiv 2606.29094) and an IISWC 2026 characterisation from Virginia (the last four seen in search results only).**
+
+  Example question: At what concurrency on one GPU does a diffusion LLM's single-request speed advantage over an equal-size autoregressive model turn into a lower tokens-per-second-per-GPU figure, given Sangam's measurement that diffusion iteration time grows several-fold with batch size while autoregressive iteration time grows only modestly, and is the crossover set by the diffusion model being compute-bound from batch 1?
+
+  Why it matters: This is a regime shift with the same shape as the cards the judges ranked highest (a batch-1 claim that may not survive load). Vendors claim 4-10x single-request speedups over autoregressive models. Sangam (fetched; H100, LLaDA-8B and Dream-7B versus Llama-3-8B and Qwen2.5-7B) measures that 'For both dLLMs, iteration time grows several-fold across the measured range, while for the AR models it grows only modestly' and concludes decode batching is 'significantly less impactful' for diffusion models, but it does not report a head-to-head throughput comparison under load, and bidirectional attention rules out chunked prefill and exact KV caching. LLaDA-8B and Dream-7B fit a 48 GB card. The answer decides whether diffusion LLMs are a latency product only or also a throughput product.
+
+  Source: https://arxiv.org/abs/2607.04206
+
+- **Multi-model serving on fixed hardware: routing, cascades, and co-located models. 'Router' and 'routing' occur zero times in the notes. Every card studies one model on one engine (the only two-model card, Q22 on SpecReason, is a draft-verify pair). The 2026 vision paper from the vLLM Semantic Router project (arXiv 2603.21354, abstract fetched), which lists 'twenty-one concrete research directions', was not used; no vision paper or keynote list was.**
+
+  Example question: On a fixed node of four 48 GB GPUs, does a small-to-large cascade of the kind Cascadia reports as up to 5x faster on 32 H100s still beat the best single model given all four cards at full batch occupancy when quality is exact-match on reasoning benchmarks rather than an LLM judge, or does splitting the cards and re-running escalated queries cancel the gain, and does routing between thinking budgets of one model beat routing between models?
+
+  Why it matters: Cascade and router papers report large gains but under conditions a single-node deployer does not have. Cascadia (arXiv 2506.04203, listed as ICLR 2026 in search results; fetched) claims up to 5x (2.4x average) higher throughput than single-model deployment, evaluated on 32 H100s with DeepSeek 7B/70B/671B and Llama 8B/70B cascades, quality scored by GPT-4o as judge, and the paper does not state the GPU count given to the single-model baselines. On a fixed 4-card node, splitting cards between models thins each model's batch (losing the batching efficiency the student has measured), and escalated queries pay twice. Q04 asks 'think longer versus bigger model' but as a static choice; the per-query routing version, with thinking budget as a third arm, is uncovered.
+
+  Source: https://arxiv.org/abs/2506.04203
+
+- **Multimodal serving (image, video, audio inputs). 'Multimodal' occurs zero times in the notes. Not covered: encoder cost, visual-token count as the context-length driver, visual-token pruning as the multimodal sibling of KV eviction. Related serving work exists (ModServe, SoCC 2025, arXiv 2502.00937; HeteroServe arXiv 2603.12707 and TCM-Serve arXiv 2603.26498, search results only).**
+
+  Example question: On a batched engine serving a current open vision-language model, does visual-token pruning raise requests per second at all before KV memory caps the batch, given that Wen et al. show FLOPs do not predict latency and random pruning matches designed methods, and is whatever gain remains explained by the number of tokens removed alone rather than by which tokens the method selects?
+
+  Why it matters: The same 'does the gain survive a batched engine' question that produced the search's best KV-compression cards is open here with a ready-made critical paper. Wen et al., 'Token Pruning in Multimodal Large Language Models: Are We Solving the Right Problem?' (ACL 2025 Findings, arXiv 2502.11501, fetched) state 'FLOPs are not a reliable metric for evaluating speed gains', show SparseVLM with 2.8% more FLOPs than FastV but 26.8% more latency, and find random and pooling baselines beating designed methods on most benchmarks; they give no batch size, hardware or serving engine. Search summaries say ModServe found the image encoder can dominate time to first token (up to 79% for cross-attention models; not confirmed in the abstract). If the encoder and prefill dominate, pruning inside the LLM may buy little throughput until KV memory binds. Lower priority than the others because it is furthest from the student's current harness.
+
+  Source: https://arxiv.org/abs/2502.11501
