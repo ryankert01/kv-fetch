@@ -1,0 +1,480 @@
+<title>The Length Tax</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: one reading column (about 66 characters); figures sit in white cards the same width; each question opens with a ruled label. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4a5664; --ink-3:#5f6b79; --axis:#768290; --rule:#dbe1e8;
+  --s1:#2a78d6; --s2:#eb6834; --s0:#7f8b98; --link:#1c5cab; --note:#eef2f7;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --ui:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#12151a; --surface:#1b1f26; --ink:#e9edf2; --ink-2:#b5bec9; --ink-3:#8a95a2; --axis:#8a95a2; --rule:#2d343f;
+    --s1:#3987e5; --s2:#d95926; --s0:#5f6b79; --link:#86b6ef; --note:#1f252e;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12151a; --surface:#1b1f26; --ink:#e9edf2; --ink-2:#b5bec9; --ink-3:#8a95a2; --axis:#8a95a2; --rule:#2d343f;
+  --s1:#3987e5; --s2:#d95926; --s0:#5f6b79; --link:#86b6ef; --note:#1f252e;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.62;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+main>*{margin:0}
+a{color:var(--link);text-underline-offset:2px}
+a:focus-visible,.tablewrap:focus-visible{outline:2px solid var(--s1);outline-offset:2px;border-radius:3px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.14;font-weight:700}
+h1{font-size:clamp(34px,6.2vw,52px);letter-spacing:-0.02em}
+h2{font-size:clamp(25px,4.2vw,32px);letter-spacing:-0.01em}
+h3{font-size:20px;font-weight:500;margin-top:10px}
+.kicker,.qlabel{font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.lede{font-size:21px;line-height:1.5;color:var(--ink-2)}
+.qhead{border-top:2px solid var(--ink);padding-top:14px;margin-top:34px;display:flex;flex-direction:column;gap:8px}
+.note{font-family:var(--ui);font-size:15px;line-height:1.5;background:var(--note);border-radius:8px;padding:14px 16px;color:var(--ink-2);display:flex;flex-direction:column;gap:8px}
+.note p{margin:0}
+.note strong{color:var(--ink)}
+ul{padding-left:1.15em;display:flex;flex-direction:column;gap:8px}
+.toc{list-style:none;padding:0;font-family:var(--ui);font-size:16px;gap:0;border-top:1px solid var(--rule)}
+.toc li{border-bottom:1px solid var(--rule);padding:10px 0;display:flex;gap:12px;align-items:baseline}
+.toc .n{font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:1.4em}
+blockquote{border-left:3px solid var(--s2);padding-left:16px;color:var(--ink-2);font-style:italic}
+blockquote cite{display:block;font-style:normal;font-family:var(--ui);font-size:13.5px;color:var(--ink-3);margin-top:4px}
+
+/* figures */
+figure{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px}
+.ftitle{font-family:var(--ui);font-weight:600;font-size:16px;line-height:1.35;color:var(--ink)}
+.fsub{font-family:var(--ui);font-size:13.5px;color:var(--ink-3);margin-top:2px;font-weight:400}
+figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:10px}
+.sketch{display:inline-block;font-family:var(--ui);font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 6px;margin-right:6px}
+.dia svg{display:block;width:100%;max-width:500px;height:auto;margin:0 auto;color:var(--ink);font-family:var(--ui)}
+/* token strips (background figure) */
+.tokfig{display:flex;flex-direction:column;gap:14px;font-family:var(--ui);font-size:13.5px}
+.tokrow{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;gap:6px 14px;align-items:center}
+.tl b{display:block;font-weight:600}.tl span{color:var(--ink-3);font-size:12.5px}
+.toks{display:flex;gap:5px}
+.tk{flex:1 1 0;max-width:44px;aspect-ratio:1/.9;border-radius:4px;border:1.2px solid var(--s1);background:rgba(42,120,214,.2);background:color-mix(in srgb,var(--s1) 20%,transparent);display:grid;place-items:center;font-style:normal;color:var(--ink)}
+.tk.diff{border-color:var(--s2);background:rgba(235,104,52,.3);background:color-mix(in srgb,var(--s2) 30%,transparent)}
+.tk.drop{border:1px dashed var(--ink-3);background:none}
+.tr{color:var(--ink-2);line-height:1.3}
+.legend i.tk{width:13px;height:13px;aspect-ratio:auto;vertical-align:-2px}
+/* trace strip (question 3) */
+.trace{font-family:var(--ui);font-size:13px;color:var(--ink)}
+.tscale{position:relative;height:6px;margin:5px 0}
+.tm{position:absolute;top:0;height:6px;border-radius:3px}
+.tbar{display:flex;height:34px}
+.seg{display:grid;place-items:center;white-space:nowrap;overflow:hidden}
+.seg.a{background:rgba(42,120,214,.25);background:color-mix(in srgb,var(--s1) 25%,transparent)}
+.seg.b{flex:1;background:rgba(154,166,179,.28);background:color-mix(in srgb,var(--s0) 28%,transparent)}
+.tends{display:flex;justify-content:space-between;color:var(--ink-3);font-size:12.5px}
+/* position grid (question 2) */
+.pgrid{display:flex;flex-direction:column;gap:7px;font-family:var(--ui);font-size:13.5px}
+.grow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:3px 10px;align-items:center}
+.cells{display:flex;gap:2px}
+.cells i{flex:1 1 0;height:16px;border-radius:2px}
+.c0{background:var(--s0);opacity:.45}
+@media (max-width:560px){
+  .tokrow{grid-template-columns:minmax(0,1fr) 84px}.tl{grid-column:1/-1}
+  .grow{grid-template-columns:minmax(0,1fr)}
+}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px 26px}
+.pair h4{margin:0 0 8px;font-family:var(--ui);font-size:13.5px;font-weight:600;color:var(--ink-2)}
+
+/* bar charts (HTML). --valw reserves room at the right of each track for the value label. */
+.bars{--valw:4.6em;display:flex;flex-direction:column;gap:7px;font-family:var(--ui);font-size:14px;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:minmax(92px,34%) 1fr;gap:10px;align-items:center}
+.row.gap{margin-top:8px}
+.lab{color:var(--ink);line-height:1.25}
+.lab span{display:block;color:var(--ink-3);font-size:12.5px}
+.track{position:relative;display:flex;align-items:center;gap:7px;min-height:22px;border-left:1px solid var(--axis);padding-right:var(--valw)}
+.bar{height:18px;border-radius:0 4px 4px 0;flex:none;min-width:2px}
+.bar.zero{min-width:0;width:0}
+.bar.ext{opacity:.5;margin-left:-7px;border-radius:0 4px 4px 0}
+.bar.lo{border-radius:0}
+.s0{background:var(--s0)} .s1{background:var(--s1)} .s2{background:var(--s2)}
+.val{color:var(--ink);font-weight:500;white-space:nowrap}
+.ref{position:absolute;top:-6px;bottom:-6px;width:0;border-left:1.5px dashed var(--ink);opacity:.7}
+.reflab{font-family:var(--ui);font-size:12.5px;color:var(--ink-3)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--ui);font-size:13.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* svg classes */
+.t{fill:currentColor;font-size:14px} .tb{fill:currentColor;font-size:14px;font-weight:600}
+.t2{fill:var(--ink-2);font-size:13px} .t3{fill:var(--ink-3);font-size:12.5px}
+.box{fill:var(--note);stroke:var(--axis);stroke-width:1}
+.ln{stroke:currentColor;stroke-width:1.5;fill:none} .ln1{stroke:var(--s1);stroke-width:2.5;fill:none} .ln2{stroke:var(--s2);stroke-width:2.5;fill:none}
+.dash{stroke:var(--axis);stroke-width:1.2;stroke-dasharray:4 4;fill:none}
+.ah{fill:currentColor}
+
+/* table */
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:680px;font-family:var(--ui);font-size:14.5px;line-height:1.4}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--rule)}
+th{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums}
+.scrollhint{font-family:var(--ui);font-size:12.5px;color:var(--ink-3);margin-top:-14px}
+@media (min-width:760px){.scrollhint{display:none}}
+.src{font-family:var(--ui);font-size:14px;line-height:1.5;color:var(--ink-2);columns:2 280px;column-gap:28px;padding-left:1.1em;display:block}
+.src li{margin-bottom:6px;break-inside:avoid}
+footer{font-family:var(--ui);font-size:13.5px;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:14px;margin-top:20px}
+</style>
+
+<main>
+  <p class="kicker">Research notes · 11 November 2026 · corrected after a fact-check</p>
+  <h1>Fast decoding has a length tax</h1>
+  <p class="lede">Most methods that make a language model faster change a few of the tokens it writes. A reasoning model can react to those tokens by writing a longer chain of thought. This page calls the extra tokens the <em>length tax</em>. In some cases the tax is larger than the time the method saved. The page introduces that problem and three other questions from the search.</p>
+
+  <div class="note">
+    <p><strong>How the questions were found.</strong> AI agents (Claude) ran a literature search in one day. Search agents read papers in nine areas and proposed 40 questions. For the best nine, checking agents looked for earlier answers and tried to predict the result the way an expert would; a question that is easy to predict scored low. A final critic agent looked for what the others had missed. “The checks” on this page means these agents, not people.</p>
+    <p><strong>How to read the claims.</strong> Every search for earlier answers was cut short by rate limits at arXiv and Semantic Scholar, so “open” and “not shown” mean only “the search did not find it”. None of the four questions survived its check as first written; the page shows the narrower versions. The numbers come from papers and from the kv-fetch and SubSpec experiment logs, as read by the agents. A second set of agents re-checked every number on this page, and this version includes their corrections. No person has re-read the papers. Drawings marked <span class="sketch">Sketch</span> show an idea and contain no data.</p>
+  </div>
+
+  <ul class="toc">
+    <li><span class="n">1</span><a href="#q1">Why do lossy speedups make reasoning models think longer?</a></li>
+    <li><span class="n">2</span><a href="#q2">Is there a set of positions where every draft fails?</a></li>
+    <li><span class="n">3</span><a href="#q3">What decides when a reasoning model stops?</a></li>
+    <li><span class="n">4</span><a href="#q4">Why does reading fewer bytes not buy time?</a></li>
+  </ul>
+
+  <h2 id="bg" style="margin-top:20px">Background in one picture</h2>
+  <p>Speculative decoding has two parts. A cheap <em>draft</em> proposes several tokens. The full model then checks all of them in one pass. The methods differ in how strict that check is.</p>
+
+  <figure>
+    <div class="ftitle">Three ways to check eight drafted tokens<div class="fsub">One round: the draft proposes eight tokens and the full model checks them once. In every row the draft gets token 6 wrong. In row 3 it also gets token 8 wrong, and no check looks at either.</div></div>
+    <div class="tokfig" role="img" aria-label="Three rows of eight tokens. Exact checking keeps five tokens and replaces the sixth. Relaxed checking keeps all eight, one of which differs from the full model. No checking keeps all eight, two of which differ.">
+      <div class="tokrow"><div class="tl"><b>Exact check</b><span>lossless, e.g. SparseSpec</span></div><div class="toks"><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk diff">✗</i><i class="tk drop"></i><i class="tk drop"></i></div><div class="tr">keeps 5, replaces 1</div></div>
+      <div class="tokrow"><div class="tl"><b>Relaxed check</b><span>accepts “close enough”</span></div><div class="toks"><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk diff">≈</i><i class="tk"></i><i class="tk"></i></div><div class="tr">keeps 8, 1 differs</div></div>
+      <div class="tokrow"><div class="tl"><b>No check</b><span>accept everything</span></div><div class="toks"><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk"></i><i class="tk diff">?</i><i class="tk"></i><i class="tk diff">?</i></div><div class="tr">keeps 8, 2 differ</div></div>
+    </div>
+    <div class="legend"><span><i class="tk"></i>what the full model would write here</span><span><i class="tk diff"></i>a different token</span><span><i class="tk drop"></i>thrown away</span></div>
+    <figcaption>Rows 2 and 3 keep all eight tokens where the exact check keeps five, so each round looks faster. (A real relaxed check still rejects tokens that are far from the full model's choice.) The cost is that tokens the full model would not have written enter the text. Question 1 asks what those tokens do to the rest of the output.</figcaption>
+  </figure>
+
+  <p>The same trade appears outside speculative decoding. Quantizing weights, quantizing or evicting the KV cache, and sparse attention all act like the bottom row: the model runs faster per token and nothing checks the tokens.</p>
+
+  <!-- ============ Q1 ============ -->
+  <div class="qhead" id="q1">
+    <span class="qlabel">Question 1 · the strongest of the four</span>
+    <h2>Why do lossy speedups make reasoning models think longer?</h2>
+  </div>
+
+  <h3>What has been measured</h3>
+  <p>A relaxed check keeps more tokens per round. In one study the completions also grew. Averaged over all model pairs, they grew by more than the check gained. For the pairs whose target is a reasoning model, the growth was smaller than the gain.</p>
+
+  <figure>
+    <div class="ftitle">Relaxed checking: the gain and the tax<div class="fsub">Mean change against exact checking, each acceptance rule at its loosest setting</div></div>
+    <div class="legend"><span><i class="s1"></i>Tokens kept per round (the gain)</span><span><i class="s2"></i>Length of the completion (the tax)</span></div>
+    <div class="bars" id="c1"></div>
+    <figcaption>The upper pair is the paper's headline: a mean over 360 cells (5 rules × 6 tasks × 12 model pairs). It is pulled up by one target that has no thinking trace (Llama-3.1-8B-Instruct). The lower pair is the checking agent's arithmetic from the paper's Table 3. The median cell grew 8%, and 112 of 360 cells did not grow. The paper also counts rounds directly: 10% more on average, 7% fewer in the median cell, and 114 of 360 cells need more rounds than exact checking. Source: Acceptance Is Not Speed, arXiv 2610.23818, Sec 3.4.</figcaption>
+  </figure>
+
+  <p>So a relaxed check is usually not a loss. In the median cell it still needs 7% fewer rounds than exact checking, a small net win. In about a third of the cells (114 of 360) it needs more rounds, which means the tax took back more than the whole gain.</p>
+
+  <p>The same happens with no token check at all. In one test (R1-Distill-Llama-8B, 200 MATH-500 problems), a sparse-attention method chose a small set of KV entries to read and reused that choice for four steps. It lost 16.5 points of accuracy and its answers were 61% longer; 31 of the 200 runs hit the length cap. Choosing the entries again at every step removed two thirds of the accuracy loss.</p>
+
+  <figure>
+    <div class="ftitle">Sparse attention without a token check, on 200 reasoning problems</div>
+    <div class="pair">
+      <div><h4>Accuracy (%)</h4><div class="bars" id="c2a"></div></div>
+      <div><h4>Extra length over the full model (%)</h4><div class="bars" id="c2b"></div></div>
+    </div>
+    <figcaption>The paper attributes most of the loss to the reuse of the selection. With a new selection at every step, runs that hit the length cap fall from 31 to 13 of 200, and a 20% length increase remains. The paper does not give the full model's cap count. Source: CVSA, arXiv 2611.10634, Appendix P.</figcaption>
+  </figure>
+
+  <p>Weight quantization also makes reasoning longer. How much longer depends on the quantization method, even when every method uses 4 bits per weight.</p>
+
+  <figure>
+    <div class="ftitle">Extra reasoning tokens after 4-bit weight quantization (%)<div class="fsub">Four methods (RTN is plain rounding; AWQ, GPTQ and HQQ reduce the rounding error), two models</div></div>
+    <div class="legend"><span><i class="s1"></i>Qwen3-4B</span><span><i class="s2"></i>Qwen3-30B</span></div>
+    <div class="bars" id="c3"></div>
+    <figcaption>Plain rounding inflates length three to twelve times more than the other three. The search did not find which property of the method decides this. The source used one greedy run and 100 questions per benchmark, with no error bars, so only the large gap between RTN and the rest is safe to read. Source: Quantization Inflates Reasoning, arXiv 2606.25519.</figcaption>
+  </figure>
+
+  <p>Models also differ in how they react. The authors of the first study ran a control with no approximation at all: they only raised the sampling temperature. Every token still comes from the full model, but the model now picks low-probability tokens more often, which is also what a relaxed check lets through. One model wrote 27% more. The other barely moved.</p>
+
+  <figure>
+    <div class="ftitle">Extra length from a higher sampling temperature (%)<div class="fsub">GSM8K, full model only, temperature raised from 1.0. GPT-OSS-20B at 1.2; Qwen3-8B at 1.2 and 1.5.</div></div>
+    <div class="bars" id="c4"></div>
+    <figcaption>The +27% has an interval of +10% to +47%, and accuracy was unchanged (0.96 against 0.97). Caveat for Qwen3-8B: 25% of its exact runs already hit the 2,048-token cap, so part of its flat response may be the cap. Source: arXiv 2610.23818, Appendix C.</figcaption>
+  </figure>
+
+  <h3>What the search did not find</h3>
+  <blockquote>“They do not show why an unlikely token makes a reasoning model think more rather than less.”<cite>Acceptance Is Not Speed, arXiv 2610.23818, Sec 3.7, on its own results</cite></blockquote>
+  <p>The effect is published many times. The mechanism is not. After the checks, three parts stayed at least partly open. The checking agents' bets on them run from about 2 to 1 up to 4 to 1, so none is a coin flip.</p>
+
+  <h3>Part A. Does only the dose matter, or also what the model could not see?</h3>
+  <p>Call the <em>dose</em> how often a method changes a token and how unlikely the changed token is under the full model. Take three ways to disturb a model (sparse attention, random token swaps, a higher temperature) and tune them to the same dose. If all three lengthen the reasoning by the same amount, then the dose, which can be measured without generating anything, predicts the tax of any lossy method. If sparse attention is worse at the same dose, the harm comes from the earlier text that sparse attention cannot see, and the fix is a better choice of what it sees.</p>
+  <p>One paper suggests that the kind of token matters and not only the dose. Under quantization, at uncertain positions the model picks hesitation words such as “wait”, “but” and “alternatively” more often than it should. Boosting those words lengthens the reasoning; boosting random tokens does not (arXiv 2606.00206).</p>
+
+  <h3>Part B. Does the tax stop when the errors stop?</h3>
+  <figure>
+    <div class="ftitle"><span class="sketch">Sketch</span>Two possible outcomes of one experiment</div>
+    <div class="dia">
+    <svg viewBox="0 0 400 232" role="img" aria-label="Sketch. Extra tokens grow while a lossy method runs. After switching to the exact method, either the growth stops, or it continues.">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+      <path class="ln" d="M44 16V188H390" marker-start="url(#ar)" marker-end="url(#ar)"/>
+      <text class="t2" transform="translate(20 150) rotate(-90)">extra tokens</text>
+      <text class="t2" x="390" y="226" text-anchor="end">tokens generated</text>
+      <path class="dash" d="M196 20V188"/>
+      <text class="t2" x="196" y="207" text-anchor="middle">switch to the exact method</text>
+      <path class="ln" d="M44 188L196 124" style="stroke-width:2.5"/>
+      <text class="t2" x="54" y="102">lossy method</text><text class="t2" x="54" y="119">running</text>
+      <path class="ln2" d="M196 124L384 52"/>
+      <text class="tb" x="318" y="64" text-anchor="end">keeps growing</text>
+      <path class="ln1" d="M196 124H384"/>
+      <text class="tb" x="384" y="148" text-anchor="end">growth stops</text>
+    </svg>
+    </div>
+    <div class="legend"><span><i class="s2"></i>Lasting damage: length keeps growing. The system has to go back and generate again from before the bad token (rollback).</span><span><i class="s1"></i>Per-token cost: growth stops. Limiting how many bad tokens get through is enough.</span></div>
+    <figcaption>Run a lossy method up to some token, then continue with the exact method (the full model). If the rest of the trace has normal length, each bad token costs a fixed number of extra tokens. If the rest is still too long, a few bad tokens have changed the reasoning so that the model does not finish. The published clue is mixed. In arXiv 2610.23818, on GSM8K, 50% (GPT-OSS-20B) and 82% (Qwen3-8B) of the extra tokens come after the correct answer has already appeared, counting cases that both arms get right. On AIME24 the reverse holds: at least 59% of the extra tokens come before the answer.</figcaption>
+  </figure>
+
+  <h3>Part C. Does the harm travel through the token or through the cache?</h3>
+  <p>An approximate step leaves two things behind. Later steps read both.</p>
+  <figure>
+    <div class="ftitle">Two channels, two repairs</div>
+    <div class="dia">
+    <svg viewBox="0 0 400 296" role="img" aria-label="An approximate step emits a token that joins the text and writes a KV entry that joins the cache. Every later step reads both. Repair one re-checks the token. Repair two rewrites the KV entry with a full pass.">
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+      <rect class="box" x="110" y="8" width="180" height="50" rx="6"/>
+      <text class="tb" x="200" y="29" text-anchor="middle">Approximate step</text><text class="t2" x="200" y="47" text-anchor="middle">sparse or low-bit</text>
+      <rect class="box" x="8" y="98" width="184" height="98" rx="6"/>
+      <text class="tb" x="100" y="120" text-anchor="middle">Token it emits</text><text class="t2" x="100" y="138" text-anchor="middle">joins the text</text>
+      <path class="dash" d="M20 150H180"/>
+      <text class="tb" x="100" y="170" text-anchor="middle">Repair 1</text><text class="t2" x="100" y="187" text-anchor="middle">re-check the token</text>
+      <rect class="box" x="208" y="98" width="184" height="98" rx="6"/>
+      <text class="tb" x="300" y="120" text-anchor="middle">KV entry it writes</text><text class="t2" x="300" y="138" text-anchor="middle">joins the cache</text>
+      <path class="dash" d="M220 150H380"/>
+      <text class="tb" x="300" y="170" text-anchor="middle">Repair 2</text><text class="t2" x="300" y="187" text-anchor="middle">rewrite with a full pass</text>
+      <rect class="box" x="110" y="240" width="180" height="48" rx="6"/>
+      <text class="tb" x="200" y="261" text-anchor="middle">Every later step</text><text class="t2" x="200" y="278" text-anchor="middle">reads both</text>
+      <path class="ln" d="M170 58L104 96" marker-end="url(#ar2)"/><path class="ln" d="M230 58L296 96" marker-end="url(#ar2)"/>
+      <path class="ln" d="M104 196L170 238" marker-end="url(#ar2)"/><path class="ln" d="M296 196L230 238" marker-end="url(#ar2)"/>
+    </svg>
+    </div>
+    <figcaption>In practice both repairs come from the same full-model pass, so published systems do not separate them cleanly. ReSA (arXiv 2506.04108) runs the pass every few tokens, rewrites the KV and keeps the tokens: math accuracy 60.52 against 60.72 for the full model and 57.72 for plain sparse (averages for 7B models). SparseSpec runs it too, but also throws away tokens that fail the check and generates again from that point, so it repairs both channels at once and its output is exact. The search found nobody who ran the token-only repair for sparse attention, and no paper that splits the length tax between the two channels on long reasoning traces. Sirius (arXiv 2409.03856) compared rollback and KV rewrite for a different kind of sparsity and found rollback the stronger repair, so it must be read first.</figcaption>
+  </figure>
+  <p>One result from the kv-fetch logs shows how large the problem can be, though it does not separate the two channels. On AIME (30 problems, 8 samples each, Qwen3-4B, output cap of 16,384 tokens), letting each step read only 512 cached tokens lowered accuracy from 48.3% to 33.3%. Most of the loss was answers cut off at the cap. The cap is tight in this test: the full model itself hits it in 41% of samples.</p>
+
+  <h3>What could be built</h3>
+  <p>Today there are two ends. Exact checking verifies every token and pays no length tax. Accept-all verifies none. If Parts A to C show that a small, recognisable set of tokens causes the tax, the design in the middle is <strong>selective verification</strong>: run the cheap path, and check or roll back only where it matters. If the harm is in the cache, the design is a cheap periodic KV rewrite. Either one has to beat exact checking end to end, which is a high bar because SparseSpec is already exact and pays no tax.</p>
+
+  <h3>What could sink it</h3>
+  <ul>
+    <li><strong>It is crowded.</strong> At least five 2026 preprints measure the effect. A full search of prior work has to come first, because the searches behind this page were stopped early.</li>
+    <li><strong>The headline is weaker than it first looks.</strong> For reasoning models in the main study, the mean tax (+23%) is smaller than the mean gain (+30%), and the median case is a small net win. The interesting cases are the third where the tax wins, and the unchecked methods (sparse attention, quantization) where there is no check to fall back on.</li>
+    <li><strong>Noise.</strong> One paper reports that numerical noise alone (GPU count, batch size) changed a reasoning model's response length by up to 9,000 tokens (arXiv 2506.09501). Every arm needs a noise-only control.</li>
+    <li><strong>The checking agents lean one way on each part.</strong> They would bet 4 to 1 or better against a single dose curve (Part A), about 2 to 1 toward lasting damage (Part B), and about 2.5 to 1 that the current step's sparse read, not the stored KV, carries most of the harm (Part C). One of them would also bet about 3 to 1 that tokens to which the full model gives very low probability carry most of the extra length. If that is right, a simple filter on such tokens removes most of the tax, and the result is not surprising.</li>
+  </ul>
+  <p>First experiment: about 4 GPU-days on models that fit one 48 GB card.</p>
+
+  <!-- ============ Q2 ============ -->
+  <div class="qhead" id="q2">
+    <span class="qlabel">Question 2</span>
+    <h2>Is there a set of positions where every draft fails?</h2>
+  </div>
+  <p>In a self-draft the model drafts for itself with a cheaper copy of its own computation. In the example below the draft reads only about 5% of the KV cache. Its first drafted token is accepted about 95% of the time. The sixth token of the same draft is accepted less often.</p>
+
+  <figure>
+    <div class="ftitle">Later tokens in one draft are accepted less often (%)<div class="fsub">Sparse self-draft, 5% KV budget, temperature 1.0</div></div>
+    <div class="bars" id="c5"></div>
+    <figcaption>A cheap draft still fails often enough to limit the speedup, and giving it more of the cache does not help: a budget of 50% instead of 5% lifts overall acceptance from 80.4% to 96.7% but cuts the speedup from 1.370× to 1.058×. Note that “position” here means the place inside one draft, not the place in the text, which is what the question is about. Source: S3R, arXiv 2610.13202.</figcaption>
+  </figure>
+
+  <p>Separately trained draft models end up with similar speedups. One study retrained six drafter recipes under one protocol. For the four drafters it compares before and after, most of the gap between best and worst disappeared.</p>
+
+  <figure>
+    <div class="ftitle">Speedup gap between the best and worst of four drafters (MT-Bench)<div class="fsub">Maximum minus minimum speedup, in speedup multiples. On GSM8K the same gap goes 4.60, 2.84, 1.53.</div></div>
+    <div class="bars" id="c6"></div>
+    <figcaption>This shows that the recipes are close to equivalent in speed. It does not show a ceiling: accepted length still differs by 12–35% across recipes. Another paper reports that one more epoch of standard drafter training changes accepted length by at most 0.03 tokens, while changing the training objective adds up to 0.23. The check read this plateau as a limit of the training objective, not of the target model. Sources: arXiv 2610.24993, arXiv 2611.10432.</figcaption>
+  </figure>
+
+  <p>That leaves the question of where the remaining rejections sit. One possibility is that some of them sit at positions set by the target model, where any approximation fails.</p>
+
+  <figure>
+    <div class="ftitle"><span class="sketch">Sketch</span>Rejections of four different drafts along one text</div>
+    <div class="pgrid" id="grid" role="img" aria-label="Sketch: four drafts along 28 token positions. Four positions are rejected for every draft; other rejections are scattered."></div>
+    <div class="legend"><span><i class="c0"></i>accepted</span><span><i class="s1"></i>rejected for this draft only</span><span><i class="s2"></i>rejected for every draft</span></div>
+    <figcaption>The experiment: run several approximations of one model over the same text and record where each is rejected. Then measure how much of the rejection is shared (orange columns) and how much is specific to a method (blue).</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>If the shared part dominates,</strong> acceptance has a ceiling set by the target. Better drafts give little, and the effort should go to spotting those positions early.</li>
+    <li><strong>If the method-specific part dominates,</strong> drafts with different weaknesses can be stacked.</li>
+  </ul>
+  <p><strong>Status.</strong> The search first asked this for two draft types at a time (for example: do a sparse draft and a 4-bit draft fail at the same tokens?). For any one pair an expert can guess the answer, so those versions were rated as too predictable, and the two that were checked in depth (trained drafters, sparse self-drafts) did not survive. Measuring the shared part over many draft types at once, as in the sketch, was proposed only by the critic at the end. Nobody has searched for earlier work on it yet.</p>
+
+  <!-- ============ Q3 ============ -->
+  <div class="qhead" id="q3">
+    <span class="qlabel">Question 3</span>
+    <h2>What decides when a reasoning model stops?</h2>
+  </div>
+  <p>A reasoning model often settles on its final answer well before it stops writing. With hindsight, one study (Qwen3.5-9B) could have stopped every trace at the point after which its answer no longer changed. That uses 35–44% of the tokens overall and keeps every answer. Rules that must decide during generation either stop later or lose accuracy. DEER shortens the output by 19–43% on average. In the hindsight study itself, a simple rule (stop when three checks in a row agree) gets down to 45% of the tokens on the hard set but costs 9.2 points of accuracy.</p>
+
+  <figure>
+    <div class="ftitle">Where a trace could stop, and where one published rule stops<div class="fsub">Two different studies, shown on one trace from first token to last</div></div>
+    <div class="trace" role="img" aria-label="A bar for a full reasoning trace. The hindsight stop point is at 35 to 44 percent of the tokens. One published early-exit rule leaves an average length of 57 to 81 percent.">
+      <div class="tscale"><span class="tm s1" style="left:35%;width:9%"></span></div>
+      <div class="tbar"><div class="seg a" style="width:40%">needed</div><div class="seg b">after the answer is settled</div></div>
+      <div class="tscale"><span class="tm s2" style="left:57.1%;width:23.8%"></span></div>
+      <div class="tends"><span>0%</span><span>100% = the full trace</span></div>
+    </div>
+    <div class="legend"><span><i class="s1"></i>Hindsight stop: 35–44% of the tokens</span><span><i class="s2"></i>One real rule (DEER): average length 57–81%</span></div>
+    <figcaption>The boundary between the two segments is drawn at 40%, the middle of the hindsight range. The two bands come from different papers, models and tasks, so read the distance between them only as a rough sign that on-the-fly rules stop later than necessary. Newer rules claim about 50% (for example GLOBE, arXiv 2610.25970; abstract only). Sources: Concise-9B, arXiv 2611.02278 (hindsight point); DEER, arXiv 2504.15895 (length reduced by 19.1% to 42.9%).</figcaption>
+  </figure>
+
+  <p>A natural project is a better signal for when to stop. The checks give a reason to be careful. A <em>probe</em> is a small classifier that reads the model's internal state and predicts whether the final answer will be correct. An early probe looks good over many problems, but it mostly detects how hard the problem is.</p>
+
+  <figure>
+    <div class="ftitle">How well a probe on the state after the first 4 generated tokens predicts a correct answer<div class="fsub">AUROC: 1.0 is perfect, 0.5 is a coin flip</div></div>
+    <div class="bars" id="c7" style="--valw:3.4em"></div>
+    <div class="reflab">Dashed line: chance (0.5)</div>
+    <figcaption>Across problems the probe looks strong (0.849, interval 0.74 to 0.92; R1-Distill-Qwen-7B on 128 MATH problems). Between different attempts at the same problem it is at chance. The third bar is from a separate, larger dataset: there a difficulty proxy that never looks at the trace reaches a similar value. The probe reads only the start of the trace: pooled AUROC falls to 0.586 at token 16 and about 0.55 from token 32 to 512. Later positions, where a stop rule would act, and larger models were not tested. Source: It's the Problem, Not the Path, arXiv 2609.03436.</figcaption>
+  </figure>
+
+  <p><strong>Status.</strong> Many groups already work on this. Part of the gap exists by definition, because the hindsight point is defined with the trace's own final answer. And a stop signal built on an early probe would mostly separate easy problems from hard ones; it would not find the moment when the answer is ready. A narrow question remains: on problems where the model's own attempts disagree, does the text so far say anything about the final answer that the question alone does not?</p>
+
+  <!-- ============ Q4 ============ -->
+  <div class="qhead" id="q4">
+    <span class="qlabel">Question 4</span>
+    <h2>Why does reading fewer bytes not buy time?</h2>
+  </div>
+  <p>Sparse attention reads less of the KV cache, so it should be faster in proportion. On a real GPU kernel at batch size 1, the gain flattens early. At batch size 16 the same kernel keeps scaling.</p>
+
+  <figure>
+    <div class="ftitle">Speedup of a sparse decode-attention kernel over the dense one (×)<div class="fsub">H100, 128K context. Sparsity is counted per query head (32 query heads over 8 KV heads), so bytes read fall by about a quarter of the sparsity: 25×, 50×, 125× (the checking agent's arithmetic).</div></div>
+    <div class="legend"><span><i class="s1"></i>Batch size 1</span><span><i class="s2"></i>Batch size 16</span></div>
+    <div class="bars" id="c8"></div>
+    <figcaption>At batch 1, reading five times fewer bytes (100× to 500× sparsity) buys 9%. At batch 16 it buys 3.8 times. Source: Inference Time Context Sparsity, arXiv 2605.24168, Table 1.</figcaption>
+  </figure>
+
+  <p>Related numbers from work you know (not all in the same regime):</p>
+  <ul>
+    <li><strong>FlashInfer</strong> (arXiv 2501.01005, Table 5): at batch 16, the shared-prefix kernel reads the prefix once instead of 16 times. With a 1,024-token prefix it is still only 3% faster (45.17 µs against 46.52 µs). With an 8,192-token prefix it is 2.6 times faster (88.67 µs against 226.57 µs).</li>
+    <li><strong>SparseSpec</strong> (arXiv 2512.01278): attention time falls 3.29×, from 17.1 ms to 5.2 ms. If time followed the bytes read, the paper's own acceptance and sparsity figures would give about 5.1× (the search agent's arithmetic). The paper calls 3.29× consistent with its estimate, and this is a large-batch regime with other explanations (tile shape, 9-token verification queries, top-K bookkeeping), so it is not evidence for a fixed cost per call.</li>
+    <li><strong>The SubSpec notes</strong> (subspec_v2): a fused single-launch cascade kernel was 1.15–1.37× faster than the multi-level cascade kernel when timed alone, and about 2% slower end to end, which is inside the run-to-run spread. Attention was under 1% of the forward pass and the extra planning call cancelled the gain. This one is about attention's share of step time, not about bytes read.</li>
+  </ul>
+  <p>A probable cause at small batch is a fixed cost for every kernel call (starting the kernel, merging partial results, a minimum amount of memory traffic) that stays the same however few KV entries are read. The checking agent guessed 10–50 µs per call. Nobody has measured it for this case.</p>
+  <p><strong>Status.</strong> Predictable, and it reads as engineering; the check left no narrower version. The critic (not verified) suggested merging it with two other kernel questions into a cost model that screens the other three questions: before any accuracy work, estimate what share of step time a design can touch on a 48 GB card.</p>
+
+  <!-- ============ compare ============ -->
+  <h2 style="margin-top:34px">Side by side</h2>
+  <div class="tablewrap" role="region" aria-label="Side by side comparison of the four questions" tabindex="0">
+  <table>
+    <thead><tr><th scope="col">Question</th><th scope="col">What is still open</th><th scope="col">First test</th><th scope="col">Verdict from the checks</th></tr></thead>
+    <tbody>
+      <tr><td>1. The length tax</td><td>Dose or hidden context; per-token cost or lasting damage; token or cache</td><td class="num">≈ 4 GPU-days</td><td>Closest to SparseSpec. Crowded; the tax beats the gain in about a third of cases, not in the typical one. Needs a prior-work pass and a noise control.</td></tr>
+      <tr><td>2. Shared failure positions</td><td>Size of the part that every draft shares</td><td class="num">≈ 1.5–3 GPU-days for one draft type; no estimate for the joint version</td><td>Pairwise versions predictable. Joint version proposed by the critic, not checked.</td></tr>
+      <tr><td>3. When to stop</td><td>Whether the text so far knows more than the question</td><td class="num">≈ 3–3.5 GPU-days</td><td>Crowded. Mostly explained by problem difficulty.</td></tr>
+      <tr><td>4. Bytes against time</td><td>The fixed cost per sparse kernel call at small batch on 48 GB cards</td><td class="num">≈ 1 GPU-day</td><td>Predictable; no narrower version. Possible use as a screen (critic's idea, not checked).</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="scrollhint">The table scrolls sideways on a narrow screen.</p>
+
+  <div class="note"><p><strong>Limits of this page.</strong> None of the four survived its checks as first written. Questions 1 and 3 are shown in their narrowed form. The joint form of Question 2 and the screen idea in Question 4 come from the critic and were not checked. “Open” means “not found by a search that was cut short”. The full cards, evidence and checks are in <code>research_notes/Inference speed question search/</code> in the kv-fetch repository.</p></div>
+
+  <h2 style="margin-top:20px">Sources</h2>
+  <ul class="src">
+    <li><a href="https://arxiv.org/abs/2610.23818">2610.23818</a> Acceptance Is Not Speed</li>
+    <li><a href="https://arxiv.org/abs/2611.10634">2611.10634</a> CVSA</li>
+    <li><a href="https://arxiv.org/abs/2606.25519">2606.25519</a> Quantization Inflates Reasoning</li>
+    <li><a href="https://arxiv.org/abs/2606.00206">2606.00206</a> Quantized Reasoning Models Think They Need to Think Longer</li>
+    <li><a href="https://arxiv.org/abs/2506.04108">2506.04108</a> Rectified Sparse Attention (ReSA)</li>
+    <li><a href="https://arxiv.org/abs/2409.03856">2409.03856</a> Sirius</li>
+    <li><a href="https://arxiv.org/abs/2506.09501">2506.09501</a> Understanding and Mitigating Numerical Sources of Nondeterminism in LLM Inference</li>
+    <li><a href="https://arxiv.org/abs/2512.01278">2512.01278</a> SparseSpec</li>
+    <li><a href="https://arxiv.org/abs/2610.13202">2610.13202</a> S3R</li>
+    <li><a href="https://arxiv.org/abs/2610.24993">2610.24993</a> Drafter recipes retrained under one protocol</li>
+    <li><a href="https://arxiv.org/abs/2611.10432">2611.10432</a> D-REAL</li>
+    <li><a href="https://arxiv.org/abs/2611.02278">2611.02278</a> Concise-9B</li>
+    <li><a href="https://arxiv.org/abs/2504.15895">2504.15895</a> DEER</li>
+    <li><a href="https://arxiv.org/abs/2610.25970">2610.25970</a> GLOBE (abstract only)</li>
+    <li><a href="https://arxiv.org/abs/2609.03436">2609.03436</a> It's the Problem, Not the Path</li>
+    <li><a href="https://arxiv.org/abs/2605.24168">2605.24168</a> Inference Time Context Sparsity: Illusion or Opportunity? (sparse decode kernel, Table 1)</li>
+    <li><a href="https://arxiv.org/abs/2501.01005">2501.01005</a> FlashInfer</li>
+  </ul>
+
+  <footer>Written with Claude from the question search of 11 November 2026 (kv-fetch, branch phase0). Second version: corrected after an agent fact-check of every number.</footer>
+</main>
+
+<script>
+(function(){
+  // cfg: {max, ref?, rows:[{label, sub?, v, hi?, text, s:0|1|2, gap?, tip?}]}
+  function bars(id, cfg){
+    var el=document.getElementById(id); if(!el) return;
+    var max=cfg.max, html='';
+    el.setAttribute('role','list');
+    cfg.rows.forEach(function(r){
+      var w=100*r.v/max, w2=(r.hi!=null)?100*(r.hi-r.v)/max:0;
+      var tip=r.tip||(r.label+': '+r.text);
+      var ref=(cfg.ref!=null)?'<span class="ref" style="left:calc((100% - var(--valw))*'+(cfg.ref/max)+')"></span>':'';
+      html+='<div class="row'+(r.gap?' gap':'')+'" role="listitem" aria-label="'+tip+'" title="'+tip+'">'
+        +'<div class="lab">'+r.label+(r.sub?'<span>'+r.sub+'</span>':'')+'</div>'
+        +'<div class="track">'+ref+'<div class="bar s'+r.s+(w2?' lo':'')+(r.v===0?' zero':'')+'" style="width:'+w+'%"></div>'
+        +(w2?'<div class="bar ext s'+r.s+'" style="width:'+w2+'%"></div>':'')
+        +'<div class="val">'+r.text+'</div></div></div>';
+    });
+    el.innerHTML=html;
+  }
+  bars('c1',{max:56,rows:[
+    {label:'All 12 model pairs',sub:'paper headline',v:34,text:'+34%',s:1,tip:'All 12 model pairs: 1.34× as many tokens kept per round (arXiv 2610.23818)'},
+    {label:'',v:54,text:'+54%',s:2,tip:'All 12 model pairs: 1.54× longer completions (arXiv 2610.23818)'},
+    {label:'9 reasoning-target pairs',sub:'from Table 3',v:30,text:'+30%',s:1,gap:1,tip:'Reasoning-target pairs: about +30% tokens kept per round (arithmetic from Table 3)'},
+    {label:'',v:23,text:'+23%',s:2,tip:'Reasoning-target pairs: about +23% longer completions (arithmetic from Table 3)'}]});
+  bars('c2a',{max:82,rows:[
+    {label:'Full model',v:80.5,text:'80.5',s:0},
+    {label:'Sparse, selection reused 4 steps',v:64.0,text:'64.0',s:2},
+    {label:'Sparse, new selection every step',v:75.0,text:'75.0',s:1}]});
+  bars('c2b',{max:62,rows:[
+    {label:'Full model',v:0,text:'0',s:0},
+    {label:'Sparse, selection reused 4 steps',v:61,text:'+61%',s:2},
+    {label:'Sparse, new selection every step',v:20,text:'+20%',s:1}]});
+  bars('c3',{max:44,rows:[
+    {label:'RTN',sub:'plain rounding',v:42.5,text:'+42.5%',s:1,tip:'RTN, Qwen3-4B: +42.5%'},
+    {label:'',v:43.0,text:'+43.0%',s:2,tip:'RTN, Qwen3-30B: +43.0%'},
+    {label:'AWQ',v:8.2,text:'+8.2%',s:1,gap:1,tip:'AWQ, Qwen3-4B: +8.2%'},
+    {label:'',v:14.4,text:'+14.4%',s:2,tip:'AWQ, Qwen3-30B: +14.4%'},
+    {label:'GPTQ',v:12.0,text:'+12.0%',s:1,gap:1,tip:'GPTQ, Qwen3-4B: +12.0%'},
+    {label:'',v:3.7,text:'+3.7%',s:2,tip:'GPTQ, Qwen3-30B: +3.7%'},
+    {label:'HQQ',v:6.0,text:'+6.0%',s:1,gap:1,tip:'HQQ, Qwen3-4B: +6.0%'},
+    {label:'',v:3.9,text:'+3.9%',s:2,tip:'HQQ, Qwen3-30B: +3.9%'}]});
+  bars('c4',{max:28,rows:[
+    {label:'GPT-OSS-20B',sub:'temperature 1.2',v:27,text:'+27%',s:2,tip:'GPT-OSS-20B: 1.27× longer on GSM8K at T=1.2, interval 1.10 to 1.47'},
+    {label:'Qwen3-8B',sub:'temperature 1.2 and 1.5',v:2,hi:4,text:'+2% to +4%',s:1,tip:'Qwen3-8B: length ratio 1.02 to 1.04 at T=1.2 and 1.5'}]});
+  bars('c5',{max:96,rows:[
+    {label:'First drafted token',v:95.8,text:'95.8',s:1},
+    {label:'Sixth drafted token',v:67.9,text:'67.9',s:2}]});
+  bars('c6',{max:1.4,rows:[
+    {label:'As published',v:1.36,text:'1.36',s:0},
+    {label:'Remeasured on one setup',v:0.85,text:'0.85',s:0},
+    {label:'Retrained under one protocol',v:0.23,text:'0.23',s:1}]});
+  bars('c7',{max:0.9,ref:0.5,rows:[
+    {label:'Probe, all problems pooled',sub:'128 MATH problems',v:0.849,text:'0.849',s:1},
+    {label:'Probe, within one problem',sub:'same data',v:0.496,text:'0.496',s:2},
+    {label:'Pass rate of the problem’s other attempts',sub:'never sees the trace; different dataset (192K DeepSeek-R1 generations)',v:0.873,text:'0.873',s:0,gap:1}]});
+  bars('c8',{max:78,rows:[
+    {label:'100× sparsity',v:10.25,text:'10.25×',s:1,tip:'100× sparsity, batch 1: 10.25×'},
+    {label:'',v:20.09,text:'20.09×',s:2,tip:'100× sparsity, batch 16: 20.09×'},
+    {label:'200× sparsity',v:11.05,text:'11.05×',s:1,gap:1,tip:'200× sparsity, batch 1: 11.05×'},
+    {label:'',v:37.32,text:'37.32×',s:2,tip:'200× sparsity, batch 16: 37.32×'},
+    {label:'500× sparsity',v:11.14,text:'11.14×',s:1,gap:1,tip:'500× sparsity, batch 1: 11.14×'},
+    {label:'',v:76.77,text:'76.77×',s:2,tip:'500× sparsity, batch 16: 76.77×'}]});
+
+  // Sketch grid for Question 2: fixed, hand-chosen positions (illustration only).
+  var rows=[['Small draft model',[1,8,15,22]],['Sparse-KV self-draft',[7,16]],['4-bit self-draft',[2,13,23]],['Layer-skip draft',[6,9,17,21,26]]];
+  var shared=[4,11,19,25], N=28;
+  var g='<div class="grow"><div></div><div class="reflab">token position →</div></div>';
+  rows.forEach(function(r){
+    g+='<div class="grow"><div>'+r[0]+'</div><div class="cells">';
+    for(var c=0;c<N;c++) g+='<i class="'+(shared.indexOf(c)>=0?'s2':(r[1].indexOf(c)>=0?'s1':'c0'))+'"></i>';
+    g+='</div></div>';
+  });
+  document.getElementById('grid').innerHTML=g;
+})();
+</script>
