@@ -1,0 +1,266 @@
+<title>Length-tax study notes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: one reading column, same look as "The Length Tax" page. One lesson = short text + one or two pictures in cards. New lessons are added at the bottom. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4a5664; --ink-3:#5f6b79; --axis:#768290; --rule:#dbe1e8;
+  --s1:#2a78d6; --s2:#eb6834; --s0:#7f8b98; --link:#1c5cab; --note:#eef2f7;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --ui:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#12151a; --surface:#1b1f26; --ink:#e9edf2; --ink-2:#b5bec9; --ink-3:#8a95a2; --axis:#8a95a2; --rule:#2d343f;
+    --s1:#3987e5; --s2:#d95926; --s0:#5f6b79; --link:#86b6ef; --note:#1f252e;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12151a; --surface:#1b1f26; --ink:#e9edf2; --ink-2:#b5bec9; --ink-3:#8a95a2; --axis:#8a95a2; --rule:#2d343f;
+  --s1:#3987e5; --s2:#d95926; --s0:#5f6b79; --link:#86b6ef; --note:#1f252e;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+main>*{margin:0}
+a{color:var(--link);text-underline-offset:2px}
+a:focus-visible{outline:2px solid var(--s1);outline-offset:2px;border-radius:3px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.14;font-weight:700}
+h1{font-size:clamp(32px,6vw,48px);letter-spacing:-0.02em}
+h2{font-size:clamp(24px,4.2vw,31px);letter-spacing:-0.01em}
+h3{font-size:20px;font-weight:500;margin-top:8px}
+.kicker,.qlabel{font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.lede{font-size:20px;line-height:1.5;color:var(--ink-2)}
+.qhead{border-top:2px solid var(--ink);padding-top:14px;margin-top:30px;display:flex;flex-direction:column;gap:8px}
+.note{font-family:var(--ui);font-size:15px;line-height:1.5;background:var(--note);border-radius:8px;padding:14px 16px;color:var(--ink-2);display:flex;flex-direction:column;gap:8px}
+.note p,.note ul{margin:0}
+.note strong{color:var(--ink)}
+ul,ol{padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+.toc{list-style:none;padding:0;font-family:var(--ui);font-size:16px;gap:0;border-top:1px solid var(--rule)}
+.toc li{border-bottom:1px solid var(--rule);padding:10px 0;display:flex;gap:12px;align-items:baseline}
+.toc .n{font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:1.4em}
+.toc .todo{color:var(--ink-3)}
+.say{font-family:var(--ui);font-size:16px;font-weight:500;border-left:3px solid var(--s1);padding:2px 0 2px 14px;color:var(--ink)}
+
+/* figures */
+figure{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px}
+.ftitle{font-family:var(--ui);font-weight:600;font-size:16px;line-height:1.35;color:var(--ink)}
+.fsub{font-family:var(--ui);font-size:13.5px;color:var(--ink-3);margin-top:2px;font-weight:400}
+figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:10px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--ui);font-size:13px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;box-sizing:border-box}
+
+/* shared fills: token A (blue), token C (orange), rejected, redrawn */
+.fa{border:1.5px solid var(--s1);background:rgba(42,120,214,.22);background:color-mix(in srgb,var(--s1) 22%,transparent)}
+.fc{border:1.5px solid var(--s2);background:rgba(235,104,52,.26);background:color-mix(in srgb,var(--s2) 26%,transparent)}
+.frej{border:1.5px dashed var(--ink-3);background:none}
+.fnew{border:1.5px dashed var(--s2);
+  background:repeating-linear-gradient(135deg,rgba(235,104,52,.34) 0 5px,rgba(235,104,52,.10) 5px 10px)}
+
+/* 100-tries bars */
+.tries{display:flex;flex-direction:column;gap:12px;font-family:var(--ui);font-size:13.5px}
+.trow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;align-items:center}
+.tl b{display:block;font-weight:600;color:var(--ink)}
+.tl span{color:var(--ink-3);font-size:12.5px;line-height:1.3;display:block}
+.tbar{display:flex;height:42px}
+.sg{box-sizing:border-box;display:grid;place-items:center;text-align:center;border-radius:4px;color:var(--ink);
+  font-size:13px;line-height:1.15;font-variant-numeric:tabular-nums;padding:0 2px;overflow:hidden}
+.sg.frej{color:var(--ink-2)}
+@media (max-width:520px){ .trow{grid-template-columns:1fr} }
+
+/* token strip */
+.strip{display:flex;flex-direction:column;gap:12px;font-family:var(--ui);font-size:13.5px}
+.srow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;align-items:center}
+.toks{display:flex;gap:6px}
+.tk{flex:1 1 0;max-width:62px;height:38px;border-radius:4px;box-sizing:border-box;display:grid;place-items:center;color:var(--ink);font-size:13px;font-style:normal}
+.tk.frej{color:var(--ink-3)}
+.tk.mark{border:none;background:none;font-size:17px;font-weight:600}
+@media (max-width:520px){ .srow{grid-template-columns:1fr} }
+
+/* line chart */
+.dia svg{display:block;width:100%;max-width:470px;height:auto;margin:0 auto;color:var(--ink);font-family:var(--ui)}
+.dia .t{font-size:14px;fill:currentColor}
+.dia .t2{font-size:13px;fill:var(--ink-2)}
+.dia .ax{stroke:var(--axis);stroke-width:1;fill:none}
+.dia .grid{stroke:var(--rule);stroke-width:1;fill:none}
+.dia .ln{stroke:var(--s1);stroke-width:2.5;fill:none;stroke-linejoin:round}
+.dia .pt{fill:var(--s1);stroke:var(--surface);stroke-width:2}
+
+/* skill map */
+.map{display:flex;flex-direction:column;gap:0;font-family:var(--ui);font-size:14.5px;border-top:1px solid var(--rule)}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 96px 34px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}
+.mrow .nm{color:var(--ink)}
+.mrow .nm em{font-style:normal;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+.cells{display:flex;gap:3px}
+.cells i{flex:1;height:10px;border-radius:2px;background:var(--rule)}
+.cells i.on{background:var(--s1)}
+.mrow .lv{color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right}
+</style>
+
+<main>
+  <div class="kicker">Study notes · started 13 November 2026</div>
+  <h1>Length-tax study notes</h1>
+  <p class="lede">One page for the whole course. Each lesson is a short text with one or two pictures. New lessons are added at the bottom, and a check question follows in the chat.</p>
+
+  <ul class="toc" aria-label="Lessons">
+    <li><span class="n">1</span><a href="#l1">Exact speculative decoding: how the target corrects the draft's guess</a></li>
+    <li class="todo"><span class="n">2</span>Relaxed checks and where the length tax comes in (next)</li>
+  </ul>
+
+  <h3>Where you are</h3>
+  <div class="map" role="list" aria-label="Skill map, levels from 0 to 5">
+    <div class="mrow" role="listitem"><span class="nm">1 Exact speculative decoding <em>now</em></span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">2 Relaxed checks and dose</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">3 KV cache and the two error channels</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">4 Sparse attention at decode time</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">5 Quantization as a perturbation</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">6 How reasoning length is set</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">7 Experiment design and statistics</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">8 Speed accounting</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+  </div>
+  <p class="fsub">Levels are strict. 2 means "can follow along", 4 means "can do it alone". Subskills 5 and 6 are not tested yet.</p>
+
+  <!-- ===================== LESSON 1 ===================== -->
+  <div class="qhead" id="l1">
+    <div class="qlabel">Lesson 1 · Exact speculative decoding</div>
+    <h2>How the target corrects the draft's guess</h2>
+  </div>
+
+  <p>A small draft model guesses the next tokens quickly. The large target model checks the guesses. The goal is to get the draft's speed and still produce exactly what the target alone would produce.</p>
+
+  <h3>Greedy decoding: compare the best tokens</h3>
+  <p>You know this case. The target runs one step at the position. If its best token is the same as the draft's token, keep it. If not, use the target's best token. That token is free, because the check already computed it.</p>
+
+  <h3>Sampling: compare the probabilities</h3>
+  <p>With temperature, both models pick tokens at random. "Same token or not" is then the wrong test. The right test compares two numbers for the proposed token:</p>
+  <p class="say">p = the probability the target gives the token.<br>q = the probability the draft gives it.</p>
+
+  <figure>
+    <div>
+      <div class="ftitle">100 tries at one position, two tokens</div>
+      <div class="fsub">The draft gives A 0.6 and C 0.4. The target gives A 0.3 and C 0.7.</div>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i class="fa"></i>token A</span>
+      <span><i class="fc"></i>token C</span>
+      <span><i class="frej"></i>rejected proposal</span>
+      <span><i class="fnew"></i>redrawn from the target</span>
+    </div>
+    <div class="tries">
+      <div class="trow">
+        <div class="tl"><b>1. Draft proposes</b><span>A too often, C too rarely</span></div>
+        <div class="tbar" role="img" aria-label="Draft proposes A 60 times and C 40 times">
+          <div class="sg fa" style="width:60%">A 60</div><div class="sg fc" style="width:40%">C 40</div>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tl"><b>2. Target checks</b><span>keeps half of the A's, all of the C's</span></div>
+        <div class="tbar" role="img" aria-label="After the check: 30 A kept, 30 A rejected, 40 C kept">
+          <div class="sg fa" style="width:30%">A 30</div><div class="sg frej" style="width:30%">rejected 30</div><div class="sg fc" style="width:40%">C 40</div>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tl"><b>3. Rejected ones are redrawn</b><span>only C came out short, so all 30 become C</span></div>
+        <div class="tbar" role="img" aria-label="Final output: 30 A, 30 redrawn C, 40 kept C">
+          <div class="sg fa" style="width:30%">A 30</div><div class="sg fnew" style="width:30%">C 30</div><div class="sg fc" style="width:40%">C 40</div>
+        </div>
+      </div>
+      <div class="trow">
+        <div class="tl"><b>What the target wants</b><span>same as row 3</span></div>
+        <div class="tbar" role="img" aria-label="Target wants A 30 times and C 70 times">
+          <div class="sg fa" style="width:30%">A 30</div><div class="sg fc" style="width:70%">C 70</div>
+        </div>
+      </div>
+    </div>
+    <figcaption>The output is 30 A and 70 C, exactly the target's mix. The draft only decided which tries needed a correction.</figcaption>
+  </figure>
+
+  <h3>The rule</h3>
+  <ol>
+    <li><strong>Keep</strong> the proposed token with probability p divided by q, but never more than 1.</li>
+    <li>If it is <strong>rejected</strong>, draw a new token from the target, only among the tokens that came out short. Each one is picked in proportion to how short it is (p minus q).</li>
+  </ol>
+
+  <figure class="dia">
+    <div>
+      <div class="ftitle">Keep probability for a proposed token</div>
+      <div class="fsub">It rises with p ÷ q and stops at 1. This is the "clamp" you described.</div>
+    </div>
+    <svg viewBox="0 0 400 248" role="img" aria-label="Keep probability equals p divided by q up to 1, then stays at 1. Token B at 0.25, token A at 0.5, token C at 1.">
+      <line class="grid" x1="44" y1="115" x2="384" y2="115"/>
+      <line class="grid" x1="44" y1="40" x2="384" y2="40"/>
+      <line class="ax" x1="44" y1="190" x2="384" y2="190"/>
+      <line class="ax" x1="44" y1="190" x2="44" y2="32"/>
+      <line class="ax" x1="157.3" y1="190" x2="157.3" y2="195"/>
+      <line class="ax" x1="270.7" y1="190" x2="270.7" y2="195"/>
+      <line class="ax" x1="384" y1="190" x2="384" y2="195"/>
+      <text class="t2" x="44" y="210" text-anchor="middle">0</text>
+      <text class="t2" x="157.3" y="210" text-anchor="middle">1</text>
+      <text class="t2" x="270.7" y="210" text-anchor="middle">2</text>
+      <text class="t2" x="380" y="210" text-anchor="middle">3</text>
+      <text class="t2" x="37" y="194" text-anchor="end">0</text>
+      <text class="t2" x="37" y="119" text-anchor="end">0.5</text>
+      <text class="t2" x="37" y="44" text-anchor="end">1</text>
+      <text class="t2" x="214" y="238" text-anchor="middle">target probability ÷ draft probability (p ÷ q)</text>
+      <text class="t2" x="4" y="14">keep probability</text>
+      <polyline class="ln" points="44,190 157.3,40 384,40"/>
+      <circle class="pt" cx="72.3" cy="152.5" r="5.5"/>
+      <circle class="pt" cx="100.7" cy="115" r="5.5"/>
+      <circle class="pt" cx="242.3" cy="40" r="5.5"/>
+      <text class="t" x="86" y="166">B: 0.2 ÷ 0.8, keep 0.25</text>
+      <text class="t" x="114" y="128">A: 0.3 ÷ 0.6, keep 0.5</text>
+      <text class="t" x="172" y="66">C: 0.7 ÷ 0.4 = 1.75, keep 1</text>
+      <text class="t2" x="384" y="28" text-anchor="end">too rarely proposed: keep all</text>
+    </svg>
+    <figcaption>Left of 1 the draft proposes the token too often, so only part is kept. Right of 1 the draft proposes it too rarely, so every proposal is kept. B is the token from the chat (draft 0.8, target 0.2).</figcaption>
+  </figure>
+
+  <h3>Why the output is exact</h3>
+  <ul>
+    <li>A token the draft proposes <strong>too often</strong> is cut down to exactly the target's rate. A: 60 proposed, half kept, 30 out.</li>
+    <li>A token the draft proposes <strong>too rarely</strong> keeps all its proposals and is still short. C: 40 out, 30 short.</li>
+    <li>The number of rejections always equals the total shortfall (30 and 30 here). So the redraws fill every gap, with nothing left over.</li>
+  </ul>
+  <p>This works at any temperature. Greedy decoding is the special case where each model puts all its probability on one token: same token, keep; different token, the target's token replaces it.</p>
+
+  <h3>One cycle checks several tokens</h3>
+  <figure>
+    <div>
+      <div class="ftitle">One draft-then-check cycle with a draft of 5 tokens</div>
+      <div class="fsub">The target checks all five positions in one pass, from left to right.</div>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i class="fa"></i>draft token</span>
+      <span><i class="fnew"></i>token from the target</span>
+      <span><i class="frej"></i>thrown away</span>
+    </div>
+    <div class="strip">
+      <div class="srow">
+        <div class="tl"><b>Draft writes</b><span>5 tokens</span></div>
+        <div class="toks" role="img" aria-label="Five draft tokens"><i class="tk fa">1</i><i class="tk fa">2</i><i class="tk fa">3</i><i class="tk fa">4</i><i class="tk fa">5</i></div>
+      </div>
+      <div class="srow">
+        <div class="tl"><b>Target checks</b><span>the first rejection ends the cycle</span></div>
+        <div class="toks" role="img" aria-label="Tokens 1 to 3 pass, token 4 is rejected, token 5 is not used"><i class="tk mark">✓</i><i class="tk mark">✓</i><i class="tk mark">✓</i><i class="tk mark">✗</i><i class="tk mark">–</i></div>
+      </div>
+      <div class="srow">
+        <div class="tl"><b>Added to the output</b><span>3 accepted + 1 from the target</span></div>
+        <div class="toks" role="img" aria-label="Three draft tokens kept, the fourth replaced by the target's token, the fifth thrown away"><i class="tk fa">1</i><i class="tk fa">2</i><i class="tk fa">3</i><i class="tk fnew">4</i><i class="tk frej">5</i></div>
+      </div>
+    </div>
+    <figcaption>Token 5 was written after a token that no longer exists, so it is thrown away. This cycle added 4 tokens for one target pass. The average of this number over many cycles is the <strong>acceptance length</strong>. (Some papers count only the 3 accepted draft tokens, so check the definition.)</figcaption>
+  </figure>
+
+  <div class="note">
+    <p><strong>Remember</strong></p>
+    <ul>
+      <li>Keep a proposal with probability p ÷ q, at most 1. If rejected, redraw from the tokens that came out short.</li>
+      <li>The result follows the target exactly. The draft changes the speed, never the output.</li>
+      <li>Any rule that keeps <em>more</em> than this (for example "keep it if it is in the target's top choices") is faster per cycle but changes the output. Those are the relaxed rules of lesson 2, and that is where the length tax comes in.</li>
+    </ul>
+  </div>
+</main>
