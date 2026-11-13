@@ -63,28 +63,30 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
 
 /* 100-tries bars */
 .tries{display:flex;flex-direction:column;gap:12px;font-family:var(--ui);font-size:13.5px}
-.trow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;align-items:center}
+.trow{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 14px;align-items:center}
 .tl b{display:block;font-weight:600;color:var(--ink)}
-.tl span{color:var(--ink-3);font-size:12.5px;line-height:1.3;display:block}
+.tl span{color:var(--ink-2);font-size:14px;line-height:1.3;display:block}
 .tbar{display:flex;height:42px}
 .sg{box-sizing:border-box;display:grid;place-items:center;text-align:center;border-radius:4px;color:var(--ink);
   font-size:13px;line-height:1.15;font-variant-numeric:tabular-nums;padding:0 2px;overflow:hidden}
 .sg.frej{color:var(--ink-2)}
-@media (max-width:520px){ .trow{grid-template-columns:1fr} }
+@media (max-width:600px){ .trow{grid-template-columns:1fr} }
 
 /* token strip */
 .strip{display:flex;flex-direction:column;gap:12px;font-family:var(--ui);font-size:13.5px}
-.srow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;align-items:center}
+.srow{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 14px;align-items:center}
 .toks{display:flex;gap:6px}
 .tk{flex:1 1 0;max-width:62px;height:38px;border-radius:4px;box-sizing:border-box;display:grid;place-items:center;color:var(--ink);font-size:13px;font-style:normal}
 .tk.frej{color:var(--ink-3)}
 .tk.mark{border:none;background:none;font-size:17px;font-weight:600}
-@media (max-width:520px){ .srow{grid-template-columns:1fr} }
+.small{font-family:var(--ui);font-size:14px;line-height:1.5;color:var(--ink-2)}
+@media (max-width:600px){ .srow{grid-template-columns:1fr} }
 
 /* line chart */
-.dia svg{display:block;width:100%;max-width:470px;height:auto;margin:0 auto;color:var(--ink);font-family:var(--ui)}
-.dia .t{font-size:14px;fill:currentColor}
-.dia .t2{font-size:13px;fill:var(--ink-2)}
+.dia svg{display:block;width:100%;max-width:430px;height:auto;margin:0 auto;color:var(--ink);font-family:var(--ui)}
+.dia .t{font-size:17px;fill:currentColor}
+.dia .t2{font-size:16px;fill:var(--ink-2)}
+.dia .dash{stroke:var(--axis);stroke-width:1;stroke-dasharray:4 4;fill:none}
 .dia .ax{stroke:var(--axis);stroke-width:1;fill:none}
 .dia .grid{stroke:var(--rule);stroke-width:1;fill:none}
 .dia .ln{stroke:var(--s1);stroke-width:2.5;fill:none;stroke-linejoin:round}
@@ -94,6 +96,8 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
 .map{display:flex;flex-direction:column;gap:0;font-family:var(--ui);font-size:14.5px;border-top:1px solid var(--rule)}
 .mrow{display:grid;grid-template-columns:minmax(0,1fr) 96px 34px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}
 .mrow .nm{color:var(--ink)}
+.mrow .nm.cur{font-weight:600}
+.mrow a{color:var(--link)}
 .mrow .nm em{font-style:normal;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
 .cells{display:flex;gap:3px}
 .cells i{flex:1;height:10px;border-radius:2px;background:var(--rule)}
@@ -105,24 +109,20 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
   <div class="kicker">Study notes · started 13 November 2026</div>
   <h1>Length-tax study notes</h1>
   <p class="lede">One page for the whole course. Each lesson is a short text with one or two pictures. New lessons are added at the bottom, and a check question follows in the chat.</p>
-
-  <ul class="toc" aria-label="Lessons">
-    <li><span class="n">1</span><a href="#l1">Exact speculative decoding: how the target corrects the draft's guess</a></li>
-    <li class="todo"><span class="n">2</span>Relaxed checks and where the length tax comes in (next)</li>
-  </ul>
+  <p class="small"><strong>Length tax:</strong> a lossy speed-up can make a reasoning model think for longer, and the extra tokens take back part of the speed-up.</p>
 
   <h3>Where you are</h3>
   <div class="map" role="list" aria-label="Skill map, levels from 0 to 5">
-    <div class="mrow" role="listitem"><span class="nm">1 Exact speculative decoding <em>now</em></span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
-    <div class="mrow" role="listitem"><span class="nm">2 Relaxed checks and dose</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
-    <div class="mrow" role="listitem"><span class="nm">3 KV cache and the two error channels</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm cur">1 <a href="#l1">Exact speculative decoding (lesson 1, now)</a></span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">2 Relaxed checks and how much they change</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">3 KV cache: two ways an error spreads</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
     <div class="mrow" role="listitem"><span class="nm">4 Sparse attention at decode time</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
-    <div class="mrow" role="listitem"><span class="nm">5 Quantization as a perturbation</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
-    <div class="mrow" role="listitem"><span class="nm">6 How reasoning length is set</span><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="lv">1/5</span></div>
+    <div class="mrow" role="listitem"><span class="nm">5 Quantization as a small error</span><span class="cells" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="lv">–</span></div>
+    <div class="mrow" role="listitem"><span class="nm">6 How reasoning length is set</span><span class="cells" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="lv">–</span></div>
     <div class="mrow" role="listitem"><span class="nm">7 Experiment design and statistics</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
     <div class="mrow" role="listitem"><span class="nm">8 Speed accounting</span><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="lv">2/5</span></div>
   </div>
-  <p class="fsub">Levels are strict. 2 means "can follow along", 4 means "can do it alone". Subskills 5 and 6 are not tested yet.</p>
+  <p class="fsub">Levels are strict: 2 = can follow, 4 = can do alone. – = not tested yet. A row becomes a link when its lesson is on this page.</p>
 
   <!-- ===================== LESSON 1 ===================== -->
   <div class="qhead" id="l1">
@@ -130,25 +130,25 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
     <h2>How the target corrects the draft's guess</h2>
   </div>
 
-  <p>A small draft model guesses the next tokens quickly. The large target model checks the guesses. The goal is to get the draft's speed and still produce exactly what the target alone would produce.</p>
+  <p>A small draft model guesses the next tokens quickly. The large target model checks the guesses. The goal: run faster than the target alone, and still produce text with exactly the target's probabilities.</p>
 
   <h3>Greedy decoding: compare the best tokens</h3>
-  <p>You know this case. The target runs one step at the position. If its best token is the same as the draft's token, keep it. If not, use the target's best token. That token is free, because the check already computed it.</p>
+  <p>You know this case. The target computes its own best token for that position. If it is the same as the draft's token, keep it. If not, use the target's token. It costs nothing extra, because the check already computed it.</p>
 
   <h3>Sampling: compare the probabilities</h3>
-  <p>With temperature, both models pick tokens at random. "Same token or not" is then the wrong test. The right test compares two numbers for the proposed token:</p>
+  <p>With temperature above 0, both models sample: each token is picked with its probability. "Same token or not" is then a poor test. The good test compares two numbers for the proposed token:</p>
   <p class="say">p = the probability the target gives the token.<br>q = the probability the draft gives it.</p>
 
   <figure>
     <div>
       <div class="ftitle">100 tries at one position, two tokens</div>
-      <div class="fsub">The draft gives A 0.6 and C 0.4. The target gives A 0.3 and C 0.7.</div>
+      <div class="fsub">Draft (q): A 0.6, C 0.4. Target (p): A 0.3, C 0.7.</div>
     </div>
     <div class="legend" aria-hidden="true">
       <span><i class="fa"></i>token A</span>
       <span><i class="fc"></i>token C</span>
-      <span><i class="frej"></i>rejected proposal</span>
-      <span><i class="fnew"></i>redrawn from the target</span>
+      <span><i class="frej"></i>rejected</span>
+      <span><i class="fnew"></i>redrawn</span>
     </div>
     <div class="tries">
       <div class="trow">
@@ -158,19 +158,19 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
         </div>
       </div>
       <div class="trow">
-        <div class="tl"><b>2. Target checks</b><span>keeps half of the A's, all of the C's</span></div>
+        <div class="tl"><b>2. Target checks</b><span>keeps A with 0.3 ÷ 0.6 = half; keeps all C</span></div>
         <div class="tbar" role="img" aria-label="After the check: 30 A kept, 30 A rejected, 40 C kept">
           <div class="sg fa" style="width:30%">A 30</div><div class="sg frej" style="width:30%">rejected 30</div><div class="sg fc" style="width:40%">C 40</div>
         </div>
       </div>
       <div class="trow">
-        <div class="tl"><b>3. Rejected ones are redrawn</b><span>only C came out short, so all 30 become C</span></div>
+        <div class="tl"><b>3. Rejected ones are redrawn</b><span>C has 40 but needs 70, so all 30 become C</span></div>
         <div class="tbar" role="img" aria-label="Final output: 30 A, 30 redrawn C, 40 kept C">
           <div class="sg fa" style="width:30%">A 30</div><div class="sg fnew" style="width:30%">C 30</div><div class="sg fc" style="width:40%">C 40</div>
         </div>
       </div>
       <div class="trow">
-        <div class="tl"><b>What the target wants</b><span>same as row 3</span></div>
+        <div class="tl"><b>What the target wants</b><span>same as row 3: A 30, C 70</span></div>
         <div class="tbar" role="img" aria-label="Target wants A 30 times and C 70 times">
           <div class="sg fa" style="width:30%">A 30</div><div class="sg fc" style="width:70%">C 70</div>
         </div>
@@ -181,62 +181,64 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
 
   <h3>The rule</h3>
   <ol>
-    <li><strong>Keep</strong> the proposed token with probability p divided by q, but never more than 1.</li>
-    <li>If it is <strong>rejected</strong>, draw a new token from the target, only among the tokens that came out short. Each one is picked in proportion to how short it is (p minus q).</li>
+    <li><strong>Keep</strong> the proposed token with probability p ÷ q (at most 1).</li>
+    <li>If it is <strong>rejected</strong>, draw a new token only from the tokens the draft proposes too rarely (p &gt; q). The chance of each is proportional to p − q.</li>
   </ol>
+  <p>Step 2 is not a fresh draw from the target. A fresh draw would sometimes pick A again and give 39 A and 61 C in the example.</p>
+  <p class="small">Letters: this page follows Leviathan et al. (p = target, q = draft). Chen et al. swap the two letters. Check which one is the target before you read a formula in a paper.</p>
 
   <figure class="dia">
     <div>
       <div class="ftitle">Keep probability for a proposed token</div>
       <div class="fsub">It rises with p ÷ q and stops at 1. This is the "clamp" you described.</div>
     </div>
-    <svg viewBox="0 0 400 248" role="img" aria-label="Keep probability equals p divided by q up to 1, then stays at 1. Token B at 0.25, token A at 0.5, token C at 1.">
-      <line class="grid" x1="44" y1="115" x2="384" y2="115"/>
-      <line class="grid" x1="44" y1="40" x2="384" y2="40"/>
+    <svg viewBox="0 0 400 244" role="img" aria-label="Keep probability equals p divided by q up to 1, then stays at 1. Token A has p divided by q of 0.5 and keep probability 0.5. Token C has p divided by q of 1.75 and keep probability 1.">
+      <line class="grid" x1="44" y1="120" x2="384" y2="120"/>
+      <line class="grid" x1="44" y1="50" x2="384" y2="50"/>
+      <line class="dash" x1="214" y1="6" x2="214" y2="190"/>
       <line class="ax" x1="44" y1="190" x2="384" y2="190"/>
-      <line class="ax" x1="44" y1="190" x2="44" y2="32"/>
-      <line class="ax" x1="157.3" y1="190" x2="157.3" y2="195"/>
-      <line class="ax" x1="270.7" y1="190" x2="270.7" y2="195"/>
+      <line class="ax" x1="44" y1="190" x2="44" y2="44"/>
+      <line class="ax" x1="214" y1="190" x2="214" y2="195"/>
       <line class="ax" x1="384" y1="190" x2="384" y2="195"/>
-      <text class="t2" x="44" y="210" text-anchor="middle">0</text>
-      <text class="t2" x="157.3" y="210" text-anchor="middle">1</text>
-      <text class="t2" x="270.7" y="210" text-anchor="middle">2</text>
-      <text class="t2" x="380" y="210" text-anchor="middle">3</text>
-      <text class="t2" x="37" y="194" text-anchor="end">0</text>
-      <text class="t2" x="37" y="119" text-anchor="end">0.5</text>
-      <text class="t2" x="37" y="44" text-anchor="end">1</text>
-      <text class="t2" x="214" y="238" text-anchor="middle">target probability ÷ draft probability (p ÷ q)</text>
-      <text class="t2" x="4" y="14">keep probability</text>
-      <polyline class="ln" points="44,190 157.3,40 384,40"/>
-      <circle class="pt" cx="72.3" cy="152.5" r="5.5"/>
-      <circle class="pt" cx="100.7" cy="115" r="5.5"/>
-      <circle class="pt" cx="242.3" cy="40" r="5.5"/>
-      <text class="t" x="86" y="166">B: 0.2 ÷ 0.8, keep 0.25</text>
-      <text class="t" x="114" y="128">A: 0.3 ÷ 0.6, keep 0.5</text>
-      <text class="t" x="172" y="66">C: 0.7 ÷ 0.4 = 1.75, keep 1</text>
-      <text class="t2" x="384" y="28" text-anchor="end">too rarely proposed: keep all</text>
+      <text class="t2" x="44" y="212" text-anchor="middle">0</text>
+      <text class="t2" x="214" y="212" text-anchor="middle">1</text>
+      <text class="t2" x="384" y="212" text-anchor="middle">2</text>
+      <text class="t2" x="37" y="195" text-anchor="end">0</text>
+      <text class="t2" x="37" y="125" text-anchor="end">0.5</text>
+      <text class="t2" x="37" y="55" text-anchor="end">1</text>
+      <text class="t2" x="214" y="236" text-anchor="middle">p ÷ q (target ÷ draft)</text>
+      <text class="t2" x="129" y="18" text-anchor="middle">proposed too often:</text>
+      <text class="t2" x="129" y="37" text-anchor="middle">keep part</text>
+      <text class="t2" x="299" y="18" text-anchor="middle">proposed too rarely:</text>
+      <text class="t2" x="299" y="37" text-anchor="middle">keep all</text>
+      <polyline class="ln" points="44,190 214,50 384,50"/>
+      <circle class="pt" cx="129" cy="120" r="5.5"/>
+      <circle class="pt" cx="341.5" cy="50" r="5.5"/>
+      <text class="t" x="142" y="140">A: 0.5</text>
+      <text class="t" x="341.5" y="76" text-anchor="middle">C: 1</text>
     </svg>
-    <figcaption>Left of 1 the draft proposes the token too often, so only part is kept. Right of 1 the draft proposes it too rarely, so every proposal is kept. B is the token from the chat (draft 0.8, target 0.2).</figcaption>
+    <figcaption>A and C are the tokens of the first figure. A: p ÷ q = 0.3 ÷ 0.6 = 0.5, so half is kept. C: p ÷ q = 0.7 ÷ 0.4 = 1.75, so every proposal is kept.</figcaption>
   </figure>
 
-  <h3>Why the output is exact</h3>
+  <h3>Why the result is exact</h3>
   <ul>
-    <li>A token the draft proposes <strong>too often</strong> is cut down to exactly the target's rate. A: 60 proposed, half kept, 30 out.</li>
-    <li>A token the draft proposes <strong>too rarely</strong> keeps all its proposals and is still short. C: 40 out, 30 short.</li>
-    <li>The number of rejections always equals the total shortfall (30 and 30 here). So the redraws fill every gap, with nothing left over.</li>
+    <li>A token the draft proposes <strong>too often</strong> is cut down to the target's rate. A: 60 proposed, 30 kept. The target wants 30.</li>
+    <li>A token the draft proposes <strong>too rarely</strong> keeps all its proposals. C: 40 proposed, 40 kept. The target wants 70, so 30 are missing.</li>
+    <li>Rejected tries = missing tokens, always (30 = 30 here). So the redraws fill the gap exactly.</li>
   </ul>
-  <p>This works at any temperature. Greedy decoding is the special case where each model puts all its probability on one token: same token, keep; different token, the target's token replaces it.</p>
+  <p>This works at any temperature, as long as p and q are the probabilities each model really samples from (after temperature, top-k and top-p). Greedy decoding is the special case where each model puts all its probability on one token.</p>
+  <p>Two other tests, for comparison. Keeping the draft's token when it equals the target's <em>best</em> token changes the output. Keeping it when it equals a fresh <em>sample</em> from the target is exact, but keeps only 46 of 100 proposals in the example. The rule above keeps 70.</p>
 
   <h3>One cycle checks several tokens</h3>
   <figure>
     <div>
-      <div class="ftitle">One draft-then-check cycle with a draft of 5 tokens</div>
-      <div class="fsub">The target checks all five positions in one pass, from left to right.</div>
+      <div class="ftitle">One cycle: draft 5 tokens, check once</div>
+      <div class="fsub">One target pass gives six sets of probabilities: one for each draft position, and one for the position after them.</div>
     </div>
     <div class="legend" aria-hidden="true">
       <span><i class="fa"></i>draft token</span>
-      <span><i class="fnew"></i>token from the target</span>
-      <span><i class="frej"></i>thrown away</span>
+      <span><i class="fnew"></i>new token (redrawn)</span>
+      <span><i class="frej"></i>dropped</span>
     </div>
     <div class="strip">
       <div class="srow">
@@ -244,23 +246,23 @@ figcaption{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--in
         <div class="toks" role="img" aria-label="Five draft tokens"><i class="tk fa">1</i><i class="tk fa">2</i><i class="tk fa">3</i><i class="tk fa">4</i><i class="tk fa">5</i></div>
       </div>
       <div class="srow">
-        <div class="tl"><b>Target checks</b><span>the first rejection ends the cycle</span></div>
+        <div class="tl"><b>Target checks</b><span>the first ✗ ends the cycle; 5 is not used</span></div>
         <div class="toks" role="img" aria-label="Tokens 1 to 3 pass, token 4 is rejected, token 5 is not used"><i class="tk mark">✓</i><i class="tk mark">✓</i><i class="tk mark">✓</i><i class="tk mark">✗</i><i class="tk mark">–</i></div>
       </div>
       <div class="srow">
-        <div class="tl"><b>Added to the output</b><span>3 accepted + 1 from the target</span></div>
-        <div class="toks" role="img" aria-label="Three draft tokens kept, the fourth replaced by the target's token, the fifth thrown away"><i class="tk fa">1</i><i class="tk fa">2</i><i class="tk fa">3</i><i class="tk fnew">4</i><i class="tk frej">5</i></div>
+        <div class="tl"><b>Result</b><span>3 kept + 1 new = 4 tokens; token 5 dropped</span></div>
+        <div class="toks" role="img" aria-label="Three draft tokens kept, a new token in place of the fourth, the fifth dropped"><i class="tk fa">1</i><i class="tk fa">2</i><i class="tk fa">3</i><i class="tk fnew">new</i><i class="tk frej">5</i></div>
       </div>
     </div>
-    <figcaption>Token 5 was written after a token that no longer exists, so it is thrown away. This cycle added 4 tokens for one target pass. The average of this number over many cycles is the <strong>acceptance length</strong>. (Some papers count only the 3 accepted draft tokens, so check the definition.)</figcaption>
+    <figcaption>Token 5 was written after a token that no longer exists, so it is dropped. This cycle added 4 tokens for one target pass plus 5 draft steps. If all 5 pass, the sixth set of probabilities gives one more token for free, so a cycle adds between 1 and 6 tokens. The average is the <strong>acceptance length</strong>. Some papers count only the kept draft tokens (one less), so check the definition.</figcaption>
   </figure>
 
   <div class="note">
     <p><strong>Remember</strong></p>
     <ul>
-      <li>Keep a proposal with probability p ÷ q, at most 1. If rejected, redraw from the tokens that came out short.</li>
-      <li>The result follows the target exactly. The draft changes the speed, never the output.</li>
-      <li>Any rule that keeps <em>more</em> than this (for example "keep it if it is in the target's top choices") is faster per cycle but changes the output. Those are the relaxed rules of lesson 2, and that is where the length tax comes in.</li>
+      <li>Keep a proposal with probability p ÷ q (at most 1). If rejected, redraw from the tokens with p &gt; q, in proportion to p − q.</li>
+      <li>The result has exactly the target's probabilities. The draft changes the speed and which sample you get. Two sampled runs still differ from each other, so compare many samples, never one pair.</li>
+      <li>For one proposal at one position, no exact rule keeps more than this one. A rule that keeps more (example: "keep it if it is in the target's top choices") adds more tokens per cycle but changes the output. Lesson 2 covers these relaxed rules and the length tax.</li>
     </ul>
   </div>
 </main>
